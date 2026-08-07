@@ -429,6 +429,62 @@
   .secure-pay-box strong{ display:block; font-size:.85rem; color:var(--ink); font-family:'Work Sans',sans-serif; }
   .secure-pay-box span{ font-size:.76rem; color:var(--ink-soft); }
 
+  /* ---------- CONTACT / COURS D'ESSAI GRATUIT ---------- */
+  .contact-shell{ display:grid; grid-template-columns:.85fr 1.15fr; gap:44px; align-items:start; }
+  @media (max-width:860px){ .contact-shell{ grid-template-columns:1fr; } }
+
+  .contact-side{ padding-top:6px; }
+  .contact-side h3{ font-size:1.3rem; }
+  .contact-side p{ font-size:.95rem; max-width:38ch; }
+  .contact-side .stat{
+    margin-top:28px; padding:22px; background:#fff; border:1px solid var(--line);
+    border-radius:6px; display:flex; align-items:center; gap:18px;
+    box-shadow:0 14px 30px -22px rgba(27,42,74,0.3);
+  }
+  .contact-side .stat b{
+    font-family:'Lora',serif; font-size:2.1rem; color:var(--correction-red); flex-shrink:0;
+  }
+  .contact-side .stat span{ font-size:.85rem; color:var(--ink-soft); line-height:1.4; }
+
+  #contactForm{
+    background:#fff; border:1px solid var(--line); border-radius:6px;
+    padding:32px 30px; box-shadow:0 20px 44px -26px rgba(27,42,74,0.32);
+  }
+  #contactForm label{
+    display:block; font-size:.82rem; font-weight:600; color:var(--ink); margin:16px 0 6px;
+  }
+  #contactForm label:first-of-type{ margin-top:0; }
+  #contactForm input,
+  #contactForm select,
+  #contactForm textarea{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line);
+    border-radius:var(--radius); background:var(--paper);
+    font-family:'Work Sans', sans-serif; font-size:.92rem; color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    appearance:none; -webkit-appearance:none;
+  }
+  #contactForm select{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23445070' stroke-width='1.6' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
+  }
+  #contactForm textarea{ min-height:100px; resize:vertical; }
+  #contactForm input:focus, #contactForm select:focus, #contactForm textarea:focus{
+    outline:none; border-color:var(--correction-red); background:#fff;
+    box-shadow:0 0 0 3px rgba(176,17,38,0.1);
+  }
+  #contactForm input:disabled{
+    background:#EDEFF4; color:var(--ink-soft); cursor:not-allowed; border-color:var(--line);
+  }
+  #contactForm .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px 18px; }
+  @media (max-width:520px){ #contactForm .form-row{ grid-template-columns:1fr; } }
+  #contactForm button[type="submit"]{ width:100%; justify-content:center; margin-top:22px; }
+  .form-note{ font-size:.8rem; color:var(--ink-soft); margin-top:12px; text-align:center; }
+  #confirmation{
+    display:none; margin-top:16px; padding:13px 16px; border-radius:4px;
+    background:#EAF6EC; color:#1E6B34; font-size:.88rem; font-weight:600;
+    border:1px solid #BFE3C8; text-align:center;
+  }
+
   /* ---------- FOOTER ---------- */
   footer{ border-top:1px solid var(--line); padding:40px 0; margin-top:20px; }
   .footer-wrap{
@@ -813,7 +869,7 @@
         <form id="contactForm">
           <!-- CHAMP GRISÉ ET VERROUILLÉ -->
           <label>Destinataire de la demande</label>
-          <input type="text" value="soutien.bonpoint@gmail.com" disabled style="background: #e4e7ed; color: var(--ink-soft); cursor: not-allowed; border: 1px solid var(--line);">
+          <input type="text" value="soutien.bonpoint@gmail.com" disabled>
 
           <div class="form-row" style="margin-top: 14px;">
             <div>

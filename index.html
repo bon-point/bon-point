@@ -321,9 +321,36 @@
   .btn-small{ padding:8px 14px; font-size:.8rem; }
   .btn-danger{ border-color:var(--correction-red); color:var(--correction-red); background:transparent; }
   .btn-danger:hover{ background:var(--correction-red); color:#fff; }
-  .slot-card{ border:1px solid var(--line); border-radius:4px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:var(--paper); }
-  .slot-info b{ display:block; font-family:'Lora',serif; font-size:1rem; }
-  .slot-meta{ font-size:.8rem; color:var(--ink-soft); }
+  .slot-card{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    background:#fff; border:1px solid var(--line); border-radius:6px;
+    padding:14px 18px; margin-bottom:12px;
+    box-shadow:0 6px 16px -12px rgba(27,42,74,0.22);
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .slot-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 14px 28px -16px rgba(27,42,74,0.32);
+    border-color:var(--rule-blue);
+  }
+  .slot-date-badge{
+    flex-shrink:0; width:54px; height:54px; border-radius:8px;
+    background:var(--paper-2); border:1.5px solid var(--rule-blue);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'Lora',serif; color:var(--ink); line-height:1.15;
+  }
+  .slot-date-badge .slot-day{ font-size:1.15rem; font-weight:700; }
+  .slot-date-badge .slot-month{ font-size:.64rem; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); }
+  .slot-info{ flex:1 1 auto; min-width:150px; }
+  .slot-info b{ display:block; font-family:'Lora',serif; font-size:1rem; margin-bottom:3px; }
+  .slot-meta{ font-size:.8rem; color:var(--ink-soft); display:block; margin-bottom:7px; }
+  .seats-pill{
+    display:inline-flex; align-items:center; gap:4px; font-size:.7rem; font-weight:700;
+    padding:3px 10px; border-radius:12px; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .seats-pill.available{ background:var(--highlight-soft); color:#7A5200; }
+  .seats-pill.full{ background:var(--correction-red); color:#fff; }
+  .seats-pill.booked{ background:var(--paper-2); color:var(--ink-soft); border:1px solid var(--line); }
   .full-tag{ color:var(--correction-red); font-weight:700; font-size:.78rem; }
   table.admin-table{ width:100%; border-collapse:collapse; font-size:.83rem; }
   table.admin-table th, table.admin-table td{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); }
@@ -334,6 +361,73 @@
   .field-error{ color:var(--correction-red); font-size:.8rem; margin:6px 0 0; display:none; }
   .small-note{ font-size:.8rem; color:var(--ink-soft); }
   .config-warning{ background:var(--highlight-soft); border:1.5px dashed var(--correction-red); color:#7A5200; padding:14px 16px; border-radius:4px; font-size:.85rem; margin-bottom:20px; }
+
+  /* ---------- CHAMPS DE FORMULAIRE (espace réservation) ---------- */
+  #reservation label{
+    display:block; font-size:.82rem; font-weight:600; color:var(--ink);
+    margin:16px 0 6px;
+  }
+  #reservation label:first-of-type{ margin-top:0; }
+  #reservation input[type="text"],
+  #reservation input[type="email"],
+  #reservation input[type="password"],
+  #reservation input[type="date"],
+  #reservation input[type="time"],
+  #reservation input[type="number"],
+  #reservation select{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line);
+    border-radius:var(--radius); background:var(--paper);
+    font-family:'Work Sans', sans-serif; font-size:.92rem; color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    appearance:none; -webkit-appearance:none;
+  }
+  #reservation select{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23445070' stroke-width='1.6' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
+  }
+  #reservation input:focus, #reservation select:focus{
+    outline:none; border-color:var(--correction-red); background:#fff;
+    box-shadow:0 0 0 3px rgba(176,17,38,0.1);
+  }
+  #reservation .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px 18px; }
+  @media (max-width:560px){ #reservation .form-row{ grid-template-columns:1fr; } }
+
+  /* ---------- FORMULES / PAIEMENT STRIPE ---------- */
+  .tariff-options{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px; }
+  @media (max-width:680px){ .tariff-options{ grid-template-columns:1fr; } }
+  .tariff-option{ position:relative; cursor:pointer; display:block; }
+  .tariff-option input{ position:absolute; opacity:0; pointer-events:none; }
+  .tariff-option-card{
+    display:flex; flex-direction:column; gap:4px; height:100%; text-align:left;
+    background:#fff; border:1.5px solid var(--line); border-radius:6px;
+    padding:18px 16px; position:relative;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease, background .15s ease;
+  }
+  .tariff-option:hover .tariff-option-card{ border-color:var(--rule-blue); transform:translateY(-2px); }
+  .tariff-option input:checked + .tariff-option-card{
+    border-color:var(--correction-red); background:var(--paper-2);
+    box-shadow:0 10px 26px -16px rgba(176,17,38,0.4);
+  }
+  .tariff-option input:focus-visible + .tariff-option-card{
+    outline:2px solid var(--correction-red); outline-offset:2px;
+  }
+  .tariff-option-name{ font-family:'Lora',serif; font-weight:700; font-size:.96rem; color:var(--ink); }
+  .tariff-option-price{ font-family:'Lora',serif; font-weight:700; font-size:1.5rem; color:var(--ink); margin-top:2px; }
+  .tariff-option-price small{ font-size:.78rem; font-weight:500; color:var(--ink-soft); }
+  .tariff-option-desc{ font-size:.78rem; color:var(--ink-soft); line-height:1.4; margin-top:2px; }
+  .tariff-badge-pop{
+    position:absolute; top:-11px; right:14px; background:var(--correction-red); color:#fff;
+    font-family:'Kalam',cursive; font-size:.7rem; padding:3px 10px; border-radius:10px;
+    transform:rotate(2deg);
+  }
+  .secure-pay-box{
+    display:flex; align-items:center; gap:12px; margin-top:22px;
+    padding:14px 16px; background:var(--paper-2); border-radius:6px;
+    border:1px dashed var(--rule-blue);
+  }
+  .secure-pay-lock{ font-size:1.4rem; flex-shrink:0; }
+  .secure-pay-box strong{ display:block; font-size:.85rem; color:var(--ink); font-family:'Work Sans',sans-serif; }
+  .secure-pay-box span{ font-size:.76rem; color:var(--ink-soft); }
 
   /* ---------- FOOTER ---------- */
   footer{ border-top:1px solid var(--line); padding:40px 0; margin-top:20px; }
@@ -614,18 +708,49 @@
               </div>
               
               <label>Choix de la formule</label>
-              <select id="customTariff" required>
+              <div class="tariff-options">
+                <label class="tariff-option">
+                  <input type="radio" name="tariffRadio" value="29" checked>
+                  <span class="tariff-option-card">
+                    <span class="tariff-option-name">À l'heure</span>
+                    <span class="tariff-option-price">29<small>€</small></span>
+                    <span class="tariff-option-desc">Un cours ponctuel, sans engagement</span>
+                  </span>
+                </label>
+                <label class="tariff-option">
+                  <input type="radio" name="tariffRadio" value="99">
+                  <span class="tariff-option-card">
+                    <span class="tariff-badge-pop">Le plus choisi</span>
+                    <span class="tariff-option-name">Forfait mensuel 4h</span>
+                    <span class="tariff-option-price">99<small>€</small></span>
+                    <span class="tariff-option-desc">4h de cours dans le mois, tarif préférentiel</span>
+                  </span>
+                </label>
+                <label class="tariff-option">
+                  <input type="radio" name="tariffRadio" value="180">
+                  <span class="tariff-option-card">
+                    <span class="tariff-option-name">Stage intensif</span>
+                    <span class="tariff-option-price">180<small>€</small></span>
+                    <span class="tariff-option-desc">Révisions intensives avant un examen</span>
+                  </span>
+                </label>
+              </div>
+              <select id="customTariff" required class="hidden" aria-hidden="true" tabindex="-1">
                 <option value="29">À l'heure (29€)</option>
                 <option value="99">Forfait mensuel 4h (99€)</option>
                 <option value="180">Stage intensif (180€)</option>
               </select>
 
-              <div style="margin-top:24px; padding:14px; background:var(--paper); border-radius:4px; border: 1px dashed var(--rule-blue); text-align:center;">
-                <span style="font-size:0.9rem; color:var(--ink-soft);">🔒 Le paiement sécurisé s'effectuera via <b>Stripe</b> à l'étape suivante.</span>
+              <div class="secure-pay-box">
+                <span class="secure-pay-lock">🔒</span>
+                <div>
+                  <strong>Paiement 100% sécurisé via Stripe</strong>
+                  <span>Cartes bancaires acceptées · Aucune donnée bancaire stockée sur ce site</span>
+                </div>
               </div>
 
               <button class="btn btn-primary" type="submit" style="margin-top:20px; width:100%; justify-content:center;">
-                Valider et aller au paiement
+                Valider et aller au paiement →
               </button>
             </form>
           </div>
@@ -930,18 +1055,27 @@
       const taken = bookingsForSlot(slot.id).length;
       const remaining = slot.capacity - taken;
       const alreadyBooked = allBookings.some(b => b.slotId === slot.id && b.uid === currentUser.uid);
+      const badge = dateBadgeParts(slot.date);
+      const statusPill = alreadyBooked
+        ? '<span class="seats-pill booked">Déjà réservé</span>'
+        : remaining > 0
+          ? `<span class="seats-pill available">${remaining} place(s) restante(s)</span>`
+          : '<span class="seats-pill full">Complet</span>';
       const card = document.createElement('div');
       card.className = 'slot-card';
       card.innerHTML = `
+        <div class="slot-date-badge">
+          <span class="slot-day">${badge.day}</span>
+          <span class="slot-month">${badge.month}</span>
+        </div>
         <div class="slot-info">
           <b>${formatDate(slot.date)} — ${slot.time}</b>
-          <span class="slot-meta">${slot.subject} · ${slot.duration} min · ${remaining > 0 ? remaining + ' place(s) restante(s)' : ''}</span>
+          <span class="slot-meta">${slot.subject} · ${slot.duration} min</span>
+          ${statusPill}
         </div>
-        ${alreadyBooked
-          ? '<span class="full-tag" style="color:var(--ink-soft);">Déjà réservé</span>'
-          : remaining > 0
-            ? `<button class="btn btn-primary btn-small" data-book="${slot.id}">Réserver</button>`
-            : '<span class="full-tag">Complet</span>'}
+        ${!alreadyBooked && remaining > 0
+          ? `<button class="btn btn-primary btn-small" data-book="${slot.id}">Réserver</button>`
+          : ''}
       `;
       box.appendChild(card);
     });
@@ -953,6 +1087,13 @@
   function formatDate(iso) {
     const d = new Date(iso + 'T00:00:00');
     return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  function dateBadgeParts(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    const day = d.toLocaleDateString('fr-FR', { day: '2-digit' });
+    const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+    return { day, month };
   }
 
   async function bookSlot(slotId) {
@@ -991,9 +1132,14 @@
     }
     box.innerHTML = '';
     mine.forEach(b => {
+      const badge = dateBadgeParts(b.date);
       const card = document.createElement('div');
       card.className = 'slot-card';
       card.innerHTML = `
+        <div class="slot-date-badge">
+          <span class="slot-day">${badge.day}</span>
+          <span class="slot-month">${badge.month}</span>
+        </div>
         <div class="slot-info">
           <b>${formatDate(b.date)} — ${b.time}</b>
           <span class="slot-meta">${b.subject}</span>
@@ -1089,9 +1235,14 @@
     box.innerHTML = '';
     allSlots.forEach(slot => {
       const taken = bookingsForSlot(slot.id).length;
+      const badge = dateBadgeParts(slot.date);
       const card = document.createElement('div');
       card.className = 'slot-card';
       card.innerHTML = `
+        <div class="slot-date-badge">
+          <span class="slot-day">${badge.day}</span>
+          <span class="slot-month">${badge.month}</span>
+        </div>
         <div class="slot-info">
           <b>${formatDate(slot.date)} — ${slot.time}</b>
           <span class="slot-meta">${slot.subject} · ${taken}/${slot.capacity} réservé(s)</span>
@@ -1189,6 +1340,14 @@
       showToast("Utilisateur supprimé de la base.");
     } catch (err) { showToast("Erreur : " + err.message); }
   }
+
+  // Synchronise les cartes de formule (visuel) avec le <select> caché utilisé par la logique Stripe
+  document.querySelectorAll('input[name="tariffRadio"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const sel = document.getElementById('customTariff');
+      if (sel) sel.value = radio.value;
+    });
+  });
 
   const burger = document.getElementById('burgerBtn');
   const navLinks = document.getElementById('navLinks');

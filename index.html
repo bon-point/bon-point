@@ -1052,6 +1052,39 @@
     } catch (err) { showToast("Erreur : " + err.message); }
   }
 
+  /* ---------- DEMANDE PARENT & PAIEMENT ---------- */
+  const customSlotForm = document.getElementById('customSlotForm');
+  if(customSlotForm) {
+    customSlotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!requireFirebase()) return;
+      
+      const date = document.getElementById('customDate').value;
+      const time = document.getElementById('customTime').value;
+      const selectTariff = document.getElementById('customTariff');
+      const tariffText = selectTariff.options[selectTariff.selectedIndex].text;
+
+      try {
+        // Enregistre la demande directement dans les réservations Firebase
+        await db.collection('bookings').add({
+          uid: currentUser.uid,
+          studentName: currentUserData.name || currentUserData.email,
+          email: currentUserData.email,
+          date: date,
+          time: time,
+          subject: "À définir",
+          tariff: tariffText,
+          status: "Payé",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("Paiement validé ! Votre créneau est réservé ✓");
+        e.target.reset();
+      } catch (err) { 
+        showToast("Erreur : " + err.message); 
+      }
+    });
+  }
+
   /* ---------- ADMIN : CRÉNEAUX ---------- */
   document.getElementById('createSlotForm').addEventListener('submit', async (e) => {
     e.preventDefault();

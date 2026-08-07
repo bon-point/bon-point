@@ -699,7 +699,12 @@
           </div>
         </div>
         <form id="contactForm">
-          <div class="form-row">
+        <form id="contactForm">
+          <!-- NOUVEAU CHAMP GRISÉ ET VERROUILLÉ -->
+          <label>Destinataire de la demande</label>
+          <input type="text" value="soutien.bonpoint@gmail.com" disabled style="background: #e4e7ed; color: var(--ink-soft); cursor: not-allowed; border: 1px solid var(--line);">
+
+          <div class="form-row" style="margin-top: 14px;">
             <div>
               <label for="parent">Nom du parent</label>
               <input type="text" id="parent" name="parent" required>
@@ -728,14 +733,19 @@
               </select>
             </div>
           </div>
-          <label for="email">E-mail</label>
-          <input type="email" id="email" name="email" required>
+          
+          <!-- CHAMP POUR L'EMAIL DU PARENT, PLUS CLAIR -->
+          <label for="email">Votre adresse e-mail (pour vous répondre)</label>
+          <input type="email" id="email" name="email" placeholder="parent@exemple.com" required>
+          
           <label for="message">Objectif ou message (facultatif)</label>
           <textarea id="message" name="message" placeholder="Ex : préparer le brevet, reprendre confiance, remonter la moyenne…"></textarea>
+          
           <button type="submit" class="btn btn-primary">Demander mon cours d'essai gratuit</button>
           <p class="form-note">Aucun engagement. Réponse sous 24h ouvrées.</p>
           <div id="confirmation">✓ Bien reçu ! Nous revenons vers vous très vite.</div>
         </form>
+
       </div>
     </div>
   </section>

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bon Point — Soutien scolaire, Collège & Lycée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Kalam:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #FBF7EE;
+    --paper-2: #F5EFE0;
+    --ink: #1B2A4A;
+    --ink-soft: #445070;
+    --rule-blue: #C3D8EC;
+    --margin-red: #D1495B;
+    --correction-red: #B01126;
+    --highlight: #F4B942;
+    --highlight-soft: #FBE8B8;
+    --line: rgba(27,42,74,0.12);
+    --radius: 3px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 35px,
+        var(--rule-blue) 35px, var(--rule-blue) 36px
+      ),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important;}
+  }
+
+  h1,h2,h3{
+    font-family:'Lora', serif;
+    color:var(--ink);
+    margin:0 0 .4em 0;
+    letter-spacing:-0.01em;
+  }
+  p{margin:0 0 1em 0; color:var(--ink-soft);}
+  a{color:inherit;}
+
+  .pen{
+    font-family:'Kalam', cursive;
+    color:var(--correction-red);
+  }
+
+  .wrap{
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  .page{
+    position:relative;
+    padding-left:34px;
+    border-left:2px solid var(--margin-red);
+  }
+  @media (max-width:760px){
+    .page{padding-left:20px; border-left-width:1.5px;}
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(251,247,238,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+    max-width:1120px; margin:0 auto;
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:8px;
+    font-family:'Lora', serif; font-weight:700; font-size:1.3rem;
+    text-decoration:none; color:var(--ink);
+  }
+  .brand .stamp{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:50%;
+    border:2px solid var(--correction-red);
+    color:var(--correction-red);
+    font-family:'Kalam', cursive; font-weight:700; font-size:.85rem;
+    transform:rotate(-8deg);
+  }
+  .nav-links{
+    display:flex; gap:32px; list-style:none; margin:0; padding:0;
+    font-size:.95rem; font-weight:500;
+  }
+  .nav-links a{ text-decoration:none; color:var(--ink-soft); position:relative; padding:4px 0;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a::after{
+    content:''; position:absolute; left:0; bottom:-2px; width:0; height:2px;
+    background:var(--highlight); transition:width .25s ease;
+  }
+  .nav-links a:hover::after{width:100%;}
+  .nav-cta{
+    background:var(--ink); color:var(--paper); text-decoration:none;
+    padding:10px 18px; border-radius:var(--radius); font-weight:600; font-size:.9rem;
+    white-space:nowrap; border:none; cursor:pointer; font-family:'Work Sans', sans-serif;
+  }
+  .nav-cta:hover{background:var(--correction-red);}
+  .burger{display:none; background:none; border:none; cursor:pointer; padding:6px;}
+  .burger span{display:block; width:24px; height:2px; background:var(--ink); margin:5px 0;}
+  @media (max-width:840px){
+    .nav-links{
+      position:absolute; top:100%; left:0; right:0;
+      flex-direction:column; gap:0; background:var(--paper);
+      border-bottom:1px solid var(--line);
+      max-height:0; overflow:hidden; transition:max-height .3s ease;
+    }
+    .nav-links.open{max-height:320px;}
+    .nav-links li{border-top:1px solid var(--line);}
+    .nav-links a{display:block; padding:16px 28px;}
+    .nav-cta{display:none;}
+    .burger{display:block;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{padding:72px 0 40px;}
+  .hero .wrap{display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:center;}
+  @media (max-width:900px){ .hero .wrap{grid-template-columns:1fr;} }
+
+  .eyebrow{
+    font-family:'Kalam', cursive; color:var(--correction-red);
+    font-size:1.05rem; margin-bottom:10px; display:inline-block;
+    transform:rotate(-2deg);
+  }
+  .hero h1{
+    font-size:clamp(2.1rem, 4vw, 3.2rem);
+    line-height:1.15;
+  }
+  .hero h1 .underline{
+    position:relative; white-space:nowrap;
+  }
+  .hero h1 .underline svg{
+    position:absolute; left:0; bottom:-6px; width:100%; height:14px;
+  }
+  .hero p.lead{ font-size:1.1rem; max-width:46ch; }
+
+  .hero-ctas{ display:flex; gap:14px; margin-top:28px; flex-wrap:wrap; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:13px 22px; border-radius:var(--radius);
+    font-weight:600; font-size:.95rem; text-decoration:none;
+    border:1.5px solid var(--ink); cursor:pointer;
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+    font-family:'Work Sans', sans-serif;
+  }
+  .btn-primary{ background:var(--ink); color:var(--paper); }
+  .btn-primary:hover{ background:var(--correction-red); border-color:var(--correction-red); transform:translateY(-2px); }
+  .btn-ghost{ background:transparent; color:var(--ink); }
+  .btn-ghost:hover{ background:var(--ink); color:var(--paper); transform:translateY(-2px); }
+
+  .trust-row{ margin-top:26px; display:flex; gap:22px; flex-wrap:wrap; font-size:.85rem; color:var(--ink-soft);}
+  .trust-row span{ display:flex; align-items:center; gap:6px; }
+  .trust-row b{ color:var(--ink); }
+
+  .copy-card{
+    background:#fff;
+    border:1px solid var(--line);
+    box-shadow:0 18px 40px -20px rgba(27,42,74,0.35);
+    border-radius:4px;
+    padding:28px 26px 24px;
+    position:relative;
+    transform:rotate(1.4deg);
+    background-image: repeating-linear-gradient(to bottom, transparent 0 30px, var(--rule-blue) 30px 31px);
+  }
+  .copy-card::before{
+    content:''; position:absolute; top:0; bottom:0; left:52px;
+    width:1.5px; background:var(--margin-red);
+  }
+  .copy-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding-left:36px; margin-bottom:14px; font-size:.85rem; color:var(--ink-soft);
+  }
+  .copy-head strong{ color:var(--ink); display:block; font-family:'Lora',serif; font-size:1rem;}
+  .grade-badge{
+    font-family:'Kalam', cursive; font-weight:700; font-size:1.6rem;
+    color:var(--correction-red);
+    border:2.5px solid var(--correction-red);
+    border-radius:50%;
+    width:58px; height:58px;
+    display:flex; align-items:center; justify-content:center;
+    transform:rotate(-6deg);
+    flex-shrink:0;
+  }
+  .copy-body{ padding-left:36px; font-size:.92rem; color:var(--ink-soft);}
+  .copy-body .strike{ text-decoration:line-through; text-decoration-color:var(--correction-red); }
+  .copy-annotation{
+    font-family:'Kalam', cursive; color:var(--correction-red);
+    font-size:1.05rem; margin-top:6px; transform:rotate(-1deg); display:block;
+  }
+  .copy-check{ color:var(--correction-red); font-weight:700; }
+
+  /* ---------- SECTION SHELL ---------- */
+  section{ padding:84px 0; }
+  .section-head{ max-width:640px; margin-bottom:48px; }
+  .section-head h2{ font-size:clamp(1.7rem, 2.6vw, 2.3rem); }
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ---------- NIVEAUX ---------- */
+  .levels-track{
+    display:flex; align-items:center; gap:0; overflow-x:auto; padding-bottom:8px;
+  }
+  .level-group{ display:flex; gap:10px; }
+  .level-pill{
+    font-family:'Lora', serif; font-weight:600; font-size:.95rem;
+    border:1.5px solid var(--ink); border-radius:20px;
+    padding:9px 18px; white-space:nowrap; color:var(--ink);
+    background:var(--paper);
+  }
+  .level-divider{
+    margin:0 22px; font-family:'Kalam',cursive; color:var(--ink-soft); font-size:.85rem;
+    white-space:nowrap;
+  }
+  .level-cap{
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--ink-soft); margin-bottom:10px; font-weight:600;
+  }
+
+  /* ---------- MATIERES ---------- */
+  .subjects-grid{
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:22px;
+  }
+  @media (max-width:760px){ .subjects-grid{ grid-template-columns:1fr;} }
+  .subject-card{
+    background:#fff; border:1px solid var(--line); border-radius:4px;
+    padding:32px 28px; position:relative; overflow:hidden;
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .subject-card:hover{ transform:translateY(-4px); box-shadow:0 14px 28px -18px rgba(27,42,74,0.4); }
+  .subject-card .icon{
+    font-family:'Lora',serif; font-weight:700; font-size:2.1rem; color:var(--correction-red);
+    margin-bottom:14px; display:inline-block;
+  }
+  .subject-card h3{ font-size:1.3rem; margin-bottom:10px; }
+  .subject-card p{ font-size:.94rem; margin:0; }
+  .subject-card .levels{
+    display:flex; gap:6px; margin-top:18px; flex-wrap:wrap;
+  }
+  .subject-card .levels span{
+    font-size:.72rem; font-weight:600; color:var(--ink-soft);
+    border:1px solid var(--line); border-radius:10px; padding:2px 9px;
+  }
+  .subject-card .tag{
+    position:absolute; top:20px; right:20px; font-size:.7rem;
+    background:var(--highlight-soft); color:#7A5200; padding:3px 9px; border-radius:12px;
+    font-weight:600;
+  }
+
+  /* ---------- COMMENT CA MARCHE ---------- */
+  .steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:32px; }
+  @media (max-width:820px){ .steps{ grid-template-columns:1fr; } }
+  .step{ position:relative; padding-top:6px; }
+  .step .num{
+    font-family:'Kalam', cursive; font-size:2.4rem; color:var(--margin-red);
+    line-height:1; margin-bottom:10px; display:block;
+  }
+  .step h3{ font-size:1.1rem; margin-bottom:8px; }
+  .step p{ font-size:.92rem; }
+
+  /* ---------- TARIFS ---------- */
+  .pricing{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  @media (max-width:900px){ .pricing{ grid-template-columns:1fr; } }
+  .price-card{
+    background:#fff; border:1px solid var(--line); border-radius:4px;
+    padding:30px 26px; display:flex; flex-direction:column;
+  }
+  .price-card.featured{
+    border:2px solid var(--correction-red);
+    box-shadow:0 18px 34px -22px rgba(176,17,38,0.35);
+    position:relative;
+  }
+  .price-card.featured .badge{
+    position:absolute; top:-13px; left:26px; background:var(--correction-red); color:#fff;
+    font-family:'Kalam',cursive; font-size:.85rem; padding:4px 12px; border-radius:12px;
+    transform:rotate(-3deg);
+  }
+  .price-card h3{ font-size:1.1rem; }
+  .price-card .amount{ font-family:'Lora',serif; font-size:2.1rem; font-weight:700; margin:10px 0 4px; }
+  .price-card .amount span{ font-size:.9rem; font-weight:400; color:var(--ink-soft); font-family:'Work Sans',sans-serif;}
+  .price-card ul{ list-style:none; padding:0; margin:18px 0 26px; font-size:.9rem; color:var(--ink-soft); }
+  .price-card li{ padding:7px 0; border-top:1px dashed var(--line); }
+  .price-card li:first-child{ border-top:none; }
+  .price-card .btn{ margin-top:auto; text-align:center; justify-content:center; }
+
+  /* ---------- AVIS ---------- */
+  .reviews{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  @media (max-width:900px){ .reviews{ grid-template-columns:1fr; } }
+  .review{
+    background:var(--paper-2); border-left:3px solid var(--correction-red);
+    padding:18px 20px; border-radius:0 4px 4px 0;
+  }
+  .review p{ color:var(--ink); font-size:.95rem; margin-bottom:10px; }
+  .review .who{ font-family:'Kalam',cursive; color:var(--correction-red); font-size:.95rem; }
+
+  /* ---------- CONTACT ---------- */
+  .contact-shell{
+    background:#fff; border:1px solid var(--line); border-radius:6px;
+    display:grid; grid-template-columns:1fr 1fr; overflow:hidden;
+  }
+  @media (max-width:860px){ .contact-shell{ grid-template-columns:1fr; } }
+  .contact-side{
+    background:var(--ink); color:var(--paper); padding:44px 38px;
+    display:flex; flex-direction:column; justify-content:center;
+  }
+  .contact-side h3{ color:var(--paper); font-size:1.4rem; }
+  .contact-side p{ color:#C9D2E4; }
+  .contact-side .stat{ margin-top:22px; }
+  .contact-side .stat b{ font-family:'Lora',serif; font-size:1.8rem; display:block; color:var(--highlight); }
+  .contact-side .stat span{ font-size:.82rem; color:#C9D2E4; }
+
+  form{ padding:44px 38px; }
+  .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:520px){ .form-row{ grid-template-columns:1fr; } }
+  label{ display:block; font-size:.82rem; font-weight:600; margin:14px 0 6px; }
+  label:first-of-type{ margin-top:0; }
+  input, select, textarea{
+    width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:3px;
+    font-family:'Work Sans',sans-serif; font-size:.92rem; background:var(--paper);
+    color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:2px solid var(--highlight); outline-offset:1px; border-color:var(--ink);
+  }
+  textarea{ resize:vertical; min-height:80px; }
+  form .btn{ margin-top:20px; width:100%; justify-content:center; }
+  .form-note{ font-size:.8rem; color:var(--ink-soft); margin-top:10px; text-align:center; }
+  #confirmation{
+    display:none; font-family:'Kalam',cursive; color:var(--correction-red);
+    font-size:1.05rem; margin-top:14px; text-align:center;
+    padding:10px; border:1.5px dashed var(--correction-red); border-radius:4px;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{ border-top:1px solid var(--line); padding:40px 0; margin-top:20px; }
+  .footer-wrap{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+    font-size:.85rem; color:var(--ink-soft);
+  }
+  .footer-links{ display:flex; gap:22px; list-style:none; padding:0; margin:0; }
+  .footer-links a{ text-decoration:none; color:var(--ink-soft); }
+  .footer-links a:hover{ color:var(--ink); }
+
+  /* ---------- ESPACE RESERVATION / APP ---------- */
+  .app-shell{ background:#fff; border:1px solid var(--line); border-radius:6px; padding:30px 26px; }
+  .tab-row{ display:flex; gap:8px; margin-bottom:20px; }
+  .tab-btn{ flex:1; padding:10px; border:1.5px solid var(--ink); background:transparent; border-radius:3px; font-weight:600; cursor:pointer; font-size:.85rem; font-family:'Work Sans',sans-serif; color:var(--ink); }
+  .tab-btn.active{ background:var(--ink); color:var(--paper); }
+  .hidden{ display:none !important; }
+  .app-topbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .role-badge{ font-size:.68rem; font-weight:700; padding:3px 10px; border-radius:10px; background:var(--highlight-soft); color:#7A5200; text-transform:uppercase; letter-spacing:.03em; }
+  .role-badge.admin{ background:var(--correction-red); color:#fff; }
+  .btn-small{ padding:8px 14px; font-size:.8rem; }
+  .btn-danger{ border-color:var(--correction-red); color:var(--correction-red); background:transparent; }
+  .btn-danger:hover{ background:var(--correction-red); color:#fff; }
+  .slot-card{ border:1px solid var(--line); border-radius:4px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:var(--paper); }
+  .slot-info b{ display:block; font-family:'Lora',serif; font-size:1rem; }
+  .slot-meta{ font-size:.8rem; color:var(--ink-soft); }
+  .full-tag{ color:var(--correction-red); font-weight:700; font-size:.78rem; }
+  table.admin-table{ width:100%; border-collapse:collapse; font-size:.83rem; }
+  table.admin-table th, table.admin-table td{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); }
+  table.admin-table th{ color:var(--ink-soft); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
+  .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper); padding:12px 22px; border-radius:4px; font-size:.86rem; z-index:300; opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease; max-width:90vw; text-align:center; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+  .admin-grid{ display:grid; gap:26px; margin-top:26px; }
+  .field-error{ color:var(--correction-red); font-size:.8rem; margin:6px 0 0; display:none; }
+  .small-note{ font-size:.8rem; color:var(--ink-soft); }
+  .config-warning{ background:var(--highlight-soft); border:1.5px dashed var(--correction-red); color:#7A5200; padding:14px 16px; border-radius:4px; font-size:.85rem; margin-bottom:20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="#top" class="brand"><span class="stamp">✓</span> Bon Point</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#matieres">Nos matières</a></li>
+      <li><a href="#comment">Comment ça marche</a></li>
+      <li><a href="#tarifs">Tarifs</a></li>
+      <li><a href="#avis">Avis</a></li>
+      <li><a href="#reservation">Réservation</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#reservation" class="nav-cta">Mon espace</a>
+    <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">✎ Maths &amp; Physique-Chimie, à domicile et en visio</span>
+        <h1>Chaque copie peut<br>devenir une
+          <span class="underline">bonne copie
+            <svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M2 10 Q 50 2, 100 8 T 198 6" stroke="#F4B942" stroke-width="6" fill="none" stroke-linecap="round"/></svg>
+          </span>.
+        </h1>
+        <p class="lead">Des cours particuliers de maths et de physique-chimie, de la 6ᵉ à la Terminale, donnés par des enseignants spécialisés dans ces deux matières.</p>
+        <div class="hero-ctas">
+          <a href="#reservation" class="btn btn-primary">Réserver un créneau</a>
+          <a href="#tarifs" class="btn btn-ghost">Voir les tarifs</a>
+        </div>
+        <div class="trust-row">
+          <span>⭐ <b>4,9/5</b> sur 620 avis parents</span>
+          <span>🎓 <b>140+</b> enseignants et tuteurs</span>
+          <span>📍 <b>Domicile</b> ou visio</span>
+        </div>
+      </div>
+
+      <div class="copy-card" aria-hidden="true">
+        <div class="copy-head">
+          <div>
+            <strong>Contrôle de mathématiques</strong>
+            Léa D. — 3ᵉ B — Fonctions affines
+          </div>
+          <div class="grade-badge">17</div>
+        </div>
+        <div class="copy-body">
+          <p><span class="strike">8/20</span> → <strong>17/20</strong> en 6 semaines de suivi.</p>
+          <p>Méthode revue point par point, exercices corrigés chaque semaine, confiance retrouvée avant le brevet.</p>
+          <span class="copy-annotation"><span class="copy-check">✓</span> Beau travail, continue comme ça !</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NIVEAUX -->
+  <section class="page reveal">
+    <div class="wrap">
+      <p class="level-cap">Du collège au lycée, dans l'ordre du parcours scolaire</p>
+      <div class="levels-track">
+        <div class="level-group">
+          <span class="level-pill">6ᵉ</span>
+          <span class="level-pill">5ᵉ</span>
+          <span class="level-pill">4ᵉ</span>
+          <span class="level-pill">3ᵉ</span>
+        </div>
+        <span class="level-divider">— collège &nbsp;·&nbsp; lycée —</span>
+        <div class="level-group">
+          <span class="level-pill">2nde</span>
+          <span class="level-pill">1ʳᵉ</span>
+          <span class="level-pill">Terminale</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATIERES -->
+  <section id="matieres">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Nos matières</span>
+        <h2>Deux matières, mais des spécialistes dans chacune</h2>
+        <p>Pas de tuteur généraliste : un professeur de maths pour les maths, un professeur de physique-chimie pour la physique-chimie, chacun sur le programme officiel de son niveau.</p>
+      </div>
+      <div class="subjects-grid reveal">
+        <div class="subject-card">
+          <span class="tag">Le plus demandé</span>
+          <span class="icon">∑</span>
+          <h3>Mathématiques</h3>
+          <p>Du calcul et des fractions en 6ᵉ aux spécialités maths et maths expertes de Terminale : automatismes, méthode de rédaction, préparation aux contrôles, au brevet et au bac.</p>
+          <div class="levels"><span>Collège</span><span>Lycée</span><span>Brevet</span><span>Bac</span></div>
+        </div>
+        <div class="subject-card">
+          <span class="icon">Ph</span>
+          <h3>Physique-Chimie</h3>
+          <p>Des bases de la matière au collège aux exercices type bac au lycée : comprendre une notion avant de l'appliquer, rigueur dans les unités et les calculs, préparation aux évaluations.</p>
+          <div class="levels"><span>Collège</span><span>Lycée</span><span>Brevet</span><span>Bac</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMENT CA MARCHE -->
+  <section id="comment" class="page">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Comment ça marche</span>
+        <h2>Trois étapes avant le premier cours</h2>
+      </div>
+      <div class="steps reveal">
+        <div class="step">
+          <span class="num">1</span>
+          <h3>Créez votre compte</h3>
+          <p>Inscription en 30 secondes avec votre e-mail pour accéder à l'espace de réservation.</p>
+        </div>
+        <div class="step">
+          <span class="num">2</span>
+          <h3>Choisissez un créneau</h3>
+          <p>Consultez les disponibilités en temps réel et réservez le créneau qui vous convient.</p>
+        </div>
+        <div class="step">
+          <span class="num">3</span>
+          <h3>Suivi des progrès</h3>
+          <p>Retrouvez toutes vos réservations dans votre espace personnel, à tout moment.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TARIFS -->
+  <section id="tarifs">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Tarifs</span>
+        <h2>Des formules simples, sans engagement</h2>
+        <p>Tarifs identiques pour toutes les matières, du collège au lycée.</p>
+      </div>
+      <div class="pricing reveal">
+        <div class="price-card">
+          <h3>À l'heure</h3>
+          <div class="amount">29€ <span>/ heure</span></div>
+          <p>Idéal pour tester ou pour un besoin ponctuel avant un contrôle.</p>
+          <ul>
+            <li>Cours à domicile ou en visio</li>
+            <li>Compte rendu après chaque séance</li>
+            <li>Sans engagement</li>
+          </ul>
+          <a href="#reservation" class="btn btn-ghost">Réserver</a>
+        </div>
+        <div class="price-card featured">
+          <span class="badge">Le plus choisi</span>
+          <h3>Forfait mensuel</h3>
+          <div class="amount">99€ <span>/ mois</span></div>
+          <p>4 séances d'une heure par mois, en maths, en physique-chimie, ou les deux.</p>
+          <ul>
+            <li>Tuteur attitré sur la durée</li>
+            <li>Point de suivi mensuel avec les parents</li>
+            <li>Ressources et exercices entre les séances</li>
+          </ul>
+          <a href="#reservation" class="btn btn-primary">Choisir ce forfait</a>
+        </div>
+        <div class="price-card">
+          <h3>Stage de vacances</h3>
+          <div class="amount">180€ <span>/ semaine</span></div>
+          <p>Remise à niveau intensive avant le brevet ou le bac.</p>
+          <ul>
+            <li>5 séances d'1h30 sur la semaine</li>
+            <li>Bilan de fin de stage</li>
+            <li>Groupes de 1 à 3 élèves</li>
+          </ul>
+          <a href="#reservation" class="btn btn-ghost">En savoir plus</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AVIS -->
+  <section id="avis" class="page">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Ce qu'en disent les parents</span>
+        <h2>Des notes dans la marge, écrites par de vraies familles</h2>
+      </div>
+      <div class="reviews reveal">
+        <div class="review">
+          <p>Ma fille était bloquée en maths depuis la 5ᵉ. En un trimestre elle a repris confiance, et ça se voit sur ses copies.</p>
+          <div class="who">— Sophie, maman d'une élève de 3ᵉ</div>
+        </div>
+        <div class="review">
+          <p>Le tuteur s'est vraiment adapté au rythme de mon fils. Réserver un créneau en ligne, c'est très pratique.</p>
+          <div class="who">— Karim, papa d'un élève de 2nde</div>
+        </div>
+        <div class="review">
+          <p>Le stage de vacances avant le bac a fait toute la différence sur la méthode.</p>
+          <div class="who">— Camille, élève de Terminale</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESERVATION / ESPACE PERSONNEL -->
+  <section id="reservation" class="page">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Espace élèves &amp; familles</span>
+        <h2>Créez un compte et réservez votre créneau</h2>
+        <p>Les créneaux disponibles se mettent à jour en temps réel. Réservez en quelques secondes.</p>
+      </div>
+
+      <div id="configWarning" class="config-warning hidden reveal">
+        ⚠️ La base de données n'est pas encore connectée. Suis les instructions fournies pour relier ce site à ton projet Firebase gratuit — sans ça, les comptes et réservations ne fonctionnent pas.
+      </div>
+
+      <!-- LOGGED OUT -->
+      <div id="loggedOutBox" class="app-shell reveal">
+        <div class="tab-row">
+          <button type="button" class="tab-btn active" id="tabLoginBtn">Connexion</button>
+          <button type="button" class="tab-btn" id="tabSignupBtn">Créer un compte</button>
+        </div>
+        <form id="loginForm">
+          <label for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" required>
+          <label for="loginPassword">Mot de passe</label>
+          <input type="password" id="loginPassword" required>
+          <div class="field-error" id="loginError"></div>
+          <button class="btn btn-primary" type="submit" style="margin-top:16px;width:100%;justify-content:center;">Se connecter</button>
+        </form>
+        <form id="signupForm" class="hidden">
+          <label for="signupName">Nom du parent ou de l'élève</label>
+          <input type="text" id="signupName" required>
+          <label for="signupEmail">E-mail</label>
+          <input type="email" id="signupEmail" required>
+          <label for="signupPassword">Mot de passe (6 caractères min.)</label>
+          <input type="password" id="signupPassword" required minlength="6">
+          <div class="field-error" id="signupError"></div>
+          <button class="btn btn-primary" type="submit" style="margin-top:16px;width:100%;justify-content:center;">Créer mon compte</button>
+        </form>
+      </div>
+
+      <!-- LOGGED IN -->
+      <div id="loggedInBox" class="hidden">
+        <div class="app-shell reveal">
+          <div class="app-topbar">
+            <div>Connecté en tant que <b id="currentUserName"></b> <span class="role-badge" id="currentRoleBadge">Élève</span></div>
+            <button class="btn btn-ghost btn-small" id="logoutBtn" type="button">Se déconnecter</button>
+          </div>
+
+          <div id="userView">
+            <h3>Créneaux disponibles</h3>
+            <div id="slotsList"><p class="small-note">Chargement…</p></div>
+            <h3 style="margin-top:30px;">Mes réservations</h3>
+            <div id="myBookingsList"><p class="small-note">Aucune réservation pour le moment.</p></div>
+          </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="adminView" class="hidden admin-grid">
+          <div class="app-shell reveal">
+            <h3>Créer un créneau</h3>
+            <form id="createSlotForm">
+              <div class="form-row">
+                <div><label for="slotDate">Date</label><input type="date" id="slotDate" required></div>
+                <div><label for="slotTime">Heure</label><input type="time" id="slotTime" required></div>
+              </div>
+              <div class="form-row">
+                <div><label for="slotSubject">Matière</label>
+                  <select id="slotSubject"><option>Mathématiques</option><option>Physique-Chimie</option></select>
+                </div>
+                <div><label for="slotDuration">Durée (min)</label><input type="number" id="slotDuration" value="60" min="15" step="15" required></div>
+              </div>
+              <label for="slotCapacity">Places disponibles</label>
+              <input type="number" id="slotCapacity" value="1" min="1" required>
+              <button class="btn btn-primary" type="submit" style="margin-top:16px;">Ajouter le créneau</button>
+            </form>
+          </div>
+          <div class="app-shell reveal">
+            <h3>Tous les créneaux</h3>
+            <div id="adminSlotsList"><p class="small-note">Aucun créneau créé.</p></div>
+          </div>
+          <div class="app-shell reveal">
+            <h3>Toutes les réservations</h3>
+            <div style="overflow-x:auto;"><table class="admin-table" id="adminBookingsTable"><thead><tr><th>Élève</th><th>Créneau</th><th>Matière</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="app-shell reveal">
+            <h3>Utilisateurs</h3>
+            <div style="overflow-x:auto;"><table class="admin-table" id="adminUsersTable"><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Cours d'essai gratuit</span>
+        <h2>Parlons du niveau et des objectifs de l'élève</h2>
+      </div>
+      <div class="contact-shell reveal">
+        <div class="contact-side">
+          <h3>Une réponse sous 24h</h3>
+          <p>Nous vous recontactons pour un bilan gratuit de 20 minutes, sans engagement.</p>
+          <div class="stat">
+            <b>96%</b>
+            <span>des élèves suivis progressent d'au moins 2 points en un trimestre</span>
+          </div>
+        </div>
+        <form id="contactForm">
+          <div class="form-row">
+            <div>
+              <label for="parent">Nom du parent</label>
+              <input type="text" id="parent" name="parent" required>
+            </div>
+            <div>
+              <label for="eleve">Prénom de l'élève</label>
+              <input type="text" id="eleve" name="eleve" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div>
+              <label for="niveau">Classe</label>
+              <select id="niveau" name="niveau" required>
+                <option value="">Choisir…</option>
+                <option>6ᵉ</option><option>5ᵉ</option><option>4ᵉ</option><option>3ᵉ</option>
+                <option>2nde</option><option>1ʳᵉ</option><option>Terminale</option>
+              </select>
+            </div>
+            <div>
+              <label for="matiere">Matière souhaitée</label>
+              <select id="matiere" name="matiere" required>
+                <option value="">Choisir…</option>
+                <option>Mathématiques</option>
+                <option>Physique-Chimie</option>
+                <option>Les deux</option>
+              </select>
+            </div>
+          </div>
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" required>
+          <label for="message">Objectif ou message (facultatif)</label>
+          <textarea id="message" name="message" placeholder="Ex : préparer le brevet, reprendre confiance, remonter la moyenne…"></textarea>
+          <button type="submit" class="btn btn-primary">Demander mon cours d'essai gratuit</button>
+          <p class="form-note">Aucun engagement. Réponse sous 24h ouvrées.</p>
+          <div id="confirmation">✓ Bien reçu ! Nous revenons vers vous très vite.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-wrap">
+    <div>© 2026 Bon Point — Soutien scolaire, Collège &amp; Lycée</div>
+    <ul class="footer-links">
+      <li><a href="#matieres">Matières</a></li>
+      <li><a href="#tarifs">Tarifs</a></li>
+      <li><a href="#reservation">Réservation</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============ FIREBASE ============ -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<script>
+  /* ==========================================================================
+     ÉTAPE OBLIGATOIRE AVANT PUBLICATION :
+     1) Remplace les valeurs de firebaseConfig ci-dessous par celles de TON
+        projet Firebase (Console Firebase > Paramètres du projet > Général >
+        "Vos applications" > icône </> Web).
+     2) Remplace ADMIN_EMAIL par l'e-mail que TU utiliseras pour créer ton
+        compte admin. La première personne qui s'inscrit avec cet e-mail
+        devient automatiquement administrateur.
+     Voir le message de Claude pour la procédure complète pas à pas.
+  ========================================================================== */
+  const firebaseConfig = {
+    apiKey: "REMPLACER_PAR_VOTRE_CLE",
+    authDomain: "REMPLACER.firebaseapp.com",
+    projectId: "REMPLACER",
+    storageBucket: "REMPLACER.appspot.com",
+    messagingSenderId: "REMPLACER",
+    appId: "REMPLACER"
+  };
+  const ADMIN_EMAIL = "votre-email-admin@exemple.com"; // <-- À CHANGER
+
+  let auth, db, firebaseReady = false;
+  let currentUser = null, currentUserData = null;
+  let allSlots = [], allBookings = [];
+
+  try {
+    if (firebaseConfig.apiKey !== "REMPLACER_PAR_VOTRE_CLE") {
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      firebaseReady = true;
+    }
+  } catch (e) { console.error(e); }
+
+  if (!firebaseReady) {
+    document.getElementById('configWarning').classList.remove('hidden');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  function requireFirebase() {
+    if (!firebaseReady) {
+      showToast("Base de données non connectée : configure Firebase (voir instructions).");
+      return false;
+    }
+    return true;
+  }
+
+  /* ---------- TABS AUTH ---------- */
+  const tabLoginBtn = document.getElementById('tabLoginBtn');
+  const tabSignupBtn = document.getElementById('tabSignupBtn');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  tabLoginBtn.addEventListener('click', () => {
+    tabLoginBtn.classList.add('active'); tabSignupBtn.classList.remove('active');
+    loginForm.classList.remove('hidden'); signupForm.classList.add('hidden');
+  });
+  tabSignupBtn.addEventListener('click', () => {
+    tabSignupBtn.classList.add('active'); tabLoginBtn.classList.remove('active');
+    signupForm.classList.remove('hidden'); loginForm.classList.add('hidden');
+  });
+
+  /* ---------- SIGNUP ---------- */
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!requireFirebase()) return;
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const errBox = document.getElementById('signupError');
+    errBox.style.display = 'none';
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      const role = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) ? 'admin' : 'user';
+      await db.collection('users').doc(cred.user.uid).set({
+        name, email, role,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast(role === 'admin' ? "Compte admin créé ✓" : "Compte créé ✓ Bienvenue !");
+    } catch (err) {
+      errBox.textContent = translateAuthError(err);
+      errBox.style.display = 'block';
+    }
+  });
+
+  /* ---------- LOGIN ---------- */
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!requireFirebase()) return;
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errBox = document.getElementById('loginError');
+    errBox.style.display = 'none';
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      showToast("Connexion réussie ✓");
+    } catch (err) {
+      errBox.textContent = translateAuthError(err);
+      errBox.style.display = 'block';
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (firebaseReady) auth.signOut();
+  });
+
+  function translateAuthError(err) {
+    const code = err.code || '';
+    if (code.includes('email-already-in-use')) return "Cet e-mail est déjà utilisé.";
+    if (code.includes('invalid-email')) return "E-mail invalide.";
+    if (code.includes('weak-password')) return "Mot de passe trop court (6 caractères min.).";
+    if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) return "E-mail ou mot de passe incorrect.";
+    return "Une erreur est survenue : " + (err.message || code);
+  }
+
+  /* ---------- AUTH STATE ---------- */
+  if (firebaseReady) {
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        const ref = db.collection('users').doc(user.uid);
+        let snap = await ref.get();
+        if (!snap.exists) {
+          const role = (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) ? 'admin' : 'user';
+          await ref.set({ name: user.email, email: user.email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          snap = await ref.get();
+        }
+        currentUserData = snap.data();
+        showLoggedIn();
+        listenSlots();
+        listenBookings();
+        if (currentUserData.role === 'admin') listenUsers();
+      } else {
+        currentUser = null; currentUserData = null;
+        showLoggedOut();
+      }
+    });
+  }
+
+  function showLoggedIn() {
+    document.getElementById('loggedOutBox').classList.add('hidden');
+    document.getElementById('loggedInBox').classList.remove('hidden');
+    document.getElementById('currentUserName').textContent = currentUserData.name || currentUserData.email;
+    const badge = document.getElementById('currentRoleBadge');
+    if (currentUserData.role === 'admin') {
+      badge.textContent = 'Admin'; badge.classList.add('admin');
+      document.getElementById('adminView').classList.remove('hidden');
+    } else {
+      badge.textContent = 'Élève / Parent'; badge.classList.remove('admin');
+      document.getElementById('adminView').classList.add('hidden');
+    }
+  }
+  function showLoggedOut() {
+    document.getElementById('loggedOutBox').classList.remove('hidden');
+    document.getElementById('loggedInBox').classList.add('hidden');
+    loginForm.reset(); signupForm.reset();
+  }
+
+  /* ---------- SLOTS (temps réel) ---------- */
+  function listenSlots() {
+    db.collection('slots').orderBy('date').orderBy('time').onSnapshot((snap) => {
+      allSlots = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderSlots();
+      renderAdminSlots();
+    }, (err) => console.error(err));
+  }
+
+  function bookingsForSlot(slotId) {
+    return allBookings.filter(b => b.slotId === slotId);
+  }
+
+  function renderSlots() {
+    const box = document.getElementById('slotsList');
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = allSlots.filter(s => s.date >= today);
+    if (upcoming.length === 0) {
+      box.innerHTML = '<p class="small-note">Aucun créneau disponible pour le moment.</p>';
+      return;
+    }
+    box.innerHTML = '';
+    upcoming.forEach(slot => {
+      const taken = bookingsForSlot(slot.id).length;
+      const remaining = slot.capacity - taken;
+      const alreadyBooked = allBookings.some(b => b.slotId === slot.id && b.uid === currentUser.uid);
+      const card = document.createElement('div');
+      card.className = 'slot-card';
+      card.innerHTML = `
+        <div class="slot-info">
+          <b>${formatDate(slot.date)} — ${slot.time}</b>
+          <span class="slot-meta">${slot.subject} · ${slot.duration} min · ${remaining > 0 ? remaining + ' place(s) restante(s)' : ''}</span>
+        </div>
+        ${alreadyBooked
+          ? '<span class="full-tag" style="color:var(--ink-soft);">Déjà réservé</span>'
+          : remaining > 0
+            ? `<button class="btn btn-primary btn-small" data-book="${slot.id}">Réserver</button>`
+            : '<span class="full-tag">Complet</span>'}
+      `;
+      box.appendChild(card);
+    });
+    box.querySelectorAll('[data-book]').forEach(btn => {
+      btn.addEventListener('click', () => bookSlot(btn.getAttribute('data-book')));
+    });
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  async function bookSlot(slotId) {
+    if (!requireFirebase()) return;
+    const slot = allSlots.find(s => s.id === slotId);
+    if (!slot) return;
+    const taken = bookingsForSlot(slotId).length;
+    if (taken >= slot.capacity) { showToast("Ce créneau est complet."); return; }
+    try {
+      await db.collection('bookings').add({
+        slotId, uid: currentUser.uid,
+        studentName: currentUserData.name || currentUserData.email,
+        email: currentUserData.email,
+        date: slot.date, time: slot.time, subject: slot.subject,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast("Réservation confirmée ✓");
+    } catch (err) { showToast("Erreur : " + err.message); }
+  }
+
+  /* ---------- BOOKINGS (temps réel) ---------- */
+  function listenBookings() {
+    db.collection('bookings').onSnapshot((snap) => {
+      allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderSlots();
+      renderMyBookings();
+      renderAdminBookings();
+    }, (err) => console.error(err));
+  }
+
+  function renderMyBookings() {
+    const box = document.getElementById('myBookingsList');
+    const mine = allBookings.filter(b => b.uid === currentUser.uid).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    if (mine.length === 0) {
+      box.innerHTML = '<p class="small-note">Aucune réservation pour le moment.</p>';
+      return;
+    }
+    box.innerHTML = '';
+    mine.forEach(b => {
+      const card = document.createElement('div');
+      card.className = 'slot-card';
+      card.innerHTML = `
+        <div class="slot-info">
+          <b>${formatDate(b.date)} — ${b.time}</b>
+          <span class="slot-meta">${b.subject}</span>
+        </div>
+        <button class="btn btn-danger btn-small" data-cancel="${b.id}">Annuler</button>
+      `;
+      box.appendChild(card);
+    });
+    box.querySelectorAll('[data-cancel]').forEach(btn => {
+      btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-cancel')));
+    });
+  }
+
+  async function cancelBooking(bookingId) {
+    if (!requireFirebase()) return;
+    try {
+      await db.collection('bookings').doc(bookingId).delete();
+      showToast("Réservation annulée.");
+    } catch (err) { showToast("Erreur : " + err.message); }
+  }
+
+  /* ---------- ADMIN : CRÉNEAUX ---------- */
+  document.getElementById('createSlotForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!requireFirebase()) return;
+    const date = document.getElementById('slotDate').value;
+    const time = document.getElementById('slotTime').value;
+    const subject = document.getElementById('slotSubject').value;
+    const duration = parseInt(document.getElementById('slotDuration').value, 10);
+    const capacity = parseInt(document.getElementById('slotCapacity').value, 10);
+    try {
+      await db.collection('slots').add({
+        date, time, subject, duration, capacity,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast("Créneau ajouté ✓");
+      e.target.reset();
+      document.getElementById('slotDuration').value = 60;
+      document.getElementById('slotCapacity').value = 1;
+    } catch (err) { showToast("Erreur : " + err.message); }
+  });
+
+  function renderAdminSlots() {
+    const box = document.getElementById('adminSlotsList');
+    if (!box) return;
+    if (allSlots.length === 0) {
+      box.innerHTML = '<p class="small-note">Aucun créneau créé.</p>';
+      return;
+    }
+    box.innerHTML = '';
+    allSlots.forEach(slot => {
+      const taken = bookingsForSlot(slot.id).length;
+      const card = document.createElement('div');
+      card.className = 'slot-card';
+      card.innerHTML = `
+        <div class="slot-info">
+          <b>${formatDate(slot.date)} — ${slot.time}</b>
+          <span class="slot-meta">${slot.subject} · ${taken}/${slot.capacity} réservé(s)</span>
+        </div>
+        <button class="btn btn-danger btn-small" data-delslot="${slot.id}">Supprimer</button>
+      `;
+      box.appendChild(card);
+    });
+    box.querySelectorAll('[data-delslot]').forEach(btn => {
+      btn.addEventListener('click', () => deleteSlot(btn.getAttribute('data-delslot')));
+    });
+  }
+
+  async function deleteSlot(slotId) {
+    if (!confirm("Supprimer ce créneau ainsi que toutes ses réservations ?")) return;
+    try {
+      const batch = db.batch();
+      batch.delete(db.collection('slots').doc(slotId));
+      const related = allBookings.filter(b => b.slotId === slotId);
+      related.forEach(b => batch.delete(db.collection('bookings').doc(b.id)));
+      await batch.commit();
+      showToast("Créneau supprimé.");
+    } catch (err) { showToast("Erreur : " + err.message); }
+  }
+
+  /* ---------- ADMIN : RÉSERVATIONS ---------- */
+  function renderAdminBookings() {
+    const tbody = document.querySelector('#adminBookingsTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    allBookings
+      .slice()
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+      .forEach(b => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${b.studentName || b.email}</td>
+          <td>${formatDate(b.date)} ${b.time}</td>
+          <td>${b.subject}</td>
+          <td><button class="btn btn-danger btn-small" data-delbooking="${b.id}">Supprimer</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    tbody.querySelectorAll('[data-delbooking]').forEach(btn => {
+      btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-delbooking')));
+    });
+  }
+
+  /* ---------- ADMIN : UTILISATEURS ---------- */
+  function listenUsers() {
+    db.collection('users').onSnapshot((snap) => {
+      const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAdminUsers(users);
+    }, (err) => console.error(err));
+  }
+
+  function renderAdminUsers(users) {
+    const tbody = document.querySelector('#adminUsersTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.name || ''}</td>
+        <td>${u.email || ''}</td>
+        <td>${u.role === 'admin' ? '<span class="role-badge admin">Admin</span>' : '<span class="role-badge">Élève</span>'}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${u.id !== currentUser.uid ? `<button class="btn btn-ghost btn-small" data-togglerole="${u.id}" data-role="${u.role}">${u.role === 'admin' ? 'Rétrograder' : 'Promouvoir'}</button>
+          <button class="btn btn-danger btn-small" data-deluser="${u.id}">Supprimer</button>` : '<span class="small-note">Vous</span>'}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('[data-togglerole]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uid = btn.getAttribute('data-togglerole');
+        const role = btn.getAttribute('data-role');
+        toggleUserRole(uid, role === 'admin' ? 'user' : 'admin');
+      });
+    });
+    tbody.querySelectorAll('[data-deluser]').forEach(btn => {
+      btn.addEventListener('click', () => deleteUserDoc(btn.getAttribute('data-deluser')));
+    });
+  }
+
+  async function toggleUserRole(uid, newRole) {
+    try {
+      await db.collection('users').doc(uid).update({ role: newRole });
+      showToast("Rôle mis à jour ✓");
+    } catch (err) { showToast("Erreur : " + err.message); }
+  }
+
+  async function deleteUserDoc(uid) {
+    if (!confirm("Supprimer cette fiche utilisateur ? (le compte de connexion devra être supprimé séparément dans la console Firebase Authentication)")) return;
+    try {
+      await db.collection('users').doc(uid).delete();
+      showToast("Utilisateur supprimé de la base.");
+    } catch (err) { showToast("Erreur : " + err.message); }
+  }
+
+  /* ---------- Mobile nav toggle ---------- */
+  const burger = document.getElementById('burgerBtn');
+  const navLinks = document.getElementById('navLinks');
+  burger.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    burger.setAttribute('aria-expanded', isOpen);
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+  }));
+
+  /* ---------- Scroll reveal ---------- */
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  /* ---------- Formulaire de contact (lead) ---------- */
+  const form = document.getElementById('contactForm');
+  const confirmation = document.getElementById('confirmation');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (firebaseReady) {
+      try {
+        await db.collection('leads').add({
+          parent: document.getElementById('parent').value,
+          eleve: document.getElementById('eleve').value,
+          niveau: document.getElementById('niveau').value,
+          matiere: document.getElementById('matiere').value,
+          email: document.getElementById('email').value,
+          message: document.getElementById('message').value,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (err) { console.error(err); }
+    }
+    confirmation.style.display = 'block';
+    form.querySelector('button[type="submit"]').textContent = 'Envoyé ✓';
+    form.querySelector('button[type="submit"]').disabled = true;
+  });
+</script>
+
+</body>
+</html>

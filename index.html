@@ -1200,27 +1200,35 @@
   }, { threshold: 0.15 });
   revealEls.forEach(el => io.observe(el));
 
-  /* ---------- Formulaire de contact (lead) ---------- */
+    /* ---------- Formulaire de contact (envoi d'e-mail direct) ---------- */
   const form = document.getElementById('contactForm');
   const confirmation = document.getElementById('confirmation');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (firebaseReady) {
-      try {
-        await db.collection('leads').add({
-          parent: document.getElementById('parent').value,
-          eleve: document.getElementById('eleve').value,
-          niveau: document.getElementById('niveau').value,
-          matiere: document.getElementById('matiere').value,
-          email: document.getElementById('email').value,
-          message: document.getElementById('message').value,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } catch (err) { console.error(err); }
-    }
-    confirmation.style.display = 'block';
-    form.querySelector('button[type="submit"]').textContent = 'Envoyé ✓';
-    form.querySelector('button[type="submit"]').disabled = true;
+    
+    // Envoi silencieux des données vers FormSubmit
+    fetch("https://formsubmit.co/ajax/soutien.bonpoint@gmail.com", {
+      method: "POST",
+      headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+          Parent: document.getElementById('parent').value,
+          Eleve: document.getElementById('eleve').value,
+          Classe: document.getElementById('niveau').value,
+          Matiere: document.getElementById('matiere').value,
+          Email: document.getElementById('email').value,
+          Objectif: document.getElementById('message').value
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      confirmation.style.display = 'block';
+      form.querySelector('button[type="submit"]').textContent = 'Envoyé ✓';
+      form.querySelector('button[type="submit"]').disabled = true;
+    })
+    .catch(error => console.log(error));
   });
 </script>
 

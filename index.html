@@ -309,288 +309,7 @@
   .review p{ color:var(--ink); font-size:.95rem; margin-bottom:10px; }
   .review .who{ font-family:'Kalam',cursive; color:var(--correction-red); font-size:.95rem; }
 
-  /* ---------- CONTACT ---------- */
-  .contact-shell{
-    background:#fff; border:1px solid var(--line); border-radius:6px;
-    display:grid; grid-template-columns:1fr 1fr; overflow:hidden;
-  }
-  @media (max-width:860px){ .contact-shell{ grid-template-columns:1fr; } }
-  .contact-side{
-    background:var(--ink); color:var(--paper); padding:44px 38px;
-    display:flex; flex-direction:column; justify-content:center;
-  }
-  .contact-side h3{ color:var(--paper); font-size:1.4rem; }
-  .contact-side p{ color:#C9D2E4; }
-  .contact-side .stat{ margin-top:22px; }
-  .contact-side .stat b{ font-family:'Lora',serif; font-size:1.8rem; display:block; color:var(--highlight); }
-  .contact-side .stat span{ font-size:.82rem; color:#C9D2E4; }
-
-  form{ padding:44px 38px; }
-  .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  @media (max-width:520px){ .form-row{ grid-template-columns:1fr; } }
-  label{ display:block; font-size:.82rem; font-weight:600; margin:14px 0 6px; }
-  label:first-of-type{ margin-top:0; }
-  input, select, textarea{
-    width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:3px;
-    font-family:'Work Sans',sans-serif; font-size:.92rem; background:var(--paper);
-    color:var(--ink);
-  }
-  input:focus, select:focus, textarea:focus{
-    outline:2px solid var(--highlight); outline-offset:1px; border-color:var(--ink);
-  }
-  textarea{ resize:vertical; min-height:80px; }
-  form .btn{ margin-top:20px; width:100%; justify-content:center; }
-  .form-note{ font-size:.8rem; color:var(--ink-soft); margin-top:10px; text-align:center; }
-  #confirmation{
-    display:none; font-family:'Kalam',cursive; color:var(--correction-red);
-    font-size:1.05rem; margin-top:14px; text-align:center;
-    padding:10px; border:1.5px dashed var(--correction-red); border-radius:4px;
-  }
-
-  /* ---------- FOOTER ---------- */
-  footer{ border-top:1px solid var(--line); padding:40px 0; margin-top:20px; }
-  .footer-wrap{
-    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
-    font-size:.85rem; color:var(--ink-soft);
-  }
-  .footer-links{ display:flex; gap:22px; list-style:none; padding:0; margin:0; }
-  .footer-links a{ text-decoration:none; color:var(--ink-soft); }
-  .footer-links a:hover{ color:var(--ink); }
-
-  /* ---------- ESPACE RESERVATION / APP ---------- */
-  .app-shell{ background:#fff; border:1px solid var(--line); border-radius:6px; padding:30px 26px; }
-  .tab-row{ display:flex; gap:8px; margin-bottom:20px; }
-  .tab-btn{ flex:1; padding:10px; border:1.5px solid var(--ink); background:transparent; border-radius:3px; font-weight:600; cursor:pointer; font-size:.85rem; font-family:'Work Sans',sans-serif; color:var(--ink); }
-  .tab-btn.active{ background:var(--ink); color:var(--paper); }
-  .hidden{ display:none !important; }
-  .app-topbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid var(--line); }
-  .role-badge{ font-size:.68rem; font-weight:700; padding:3px 10px; border-radius:10px; background:var(--highlight-soft); color:#7A5200; text-transform:uppercase; letter-spacing:.03em; }
-  .role-badge.admin{ background:var(--correction-red); color:#fff; }
-  .btn-small{ padding:8px 14px; font-size:.8rem; }
-  .btn-danger{ border-color:var(--correction-red); color:var(--correction-red); background:transparent; }
-  .btn-danger:hover{ background:var(--correction-red); color:#fff; }
-  .slot-card{ border:1px solid var(--line); border-radius:4px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:var(--paper); }
-  .slot-info b{ display:block; font-family:'Lora',serif; font-size:1rem; }
-  .slot-meta{ font-size:.8rem; color:var(--ink-soft); }
-  .full-tag{ color:var(--correction-red); font-weight:700; font-size:.78rem; }
-  table.admin-table{ width:100%; border-collapse:collapse; font-size:.83rem; }
-  table.admin-table th, table.admin-table td{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); }
-  table.admin-table th{ color:var(--ink-soft); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
-  .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper); padding:12px 22px; border-radius:4px; font-size:.86rem; z-index:300; opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease; max-width:90vw; text-align:center; }
-  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
-  .admin-grid{ display:grid; gap:26px; margin-top:26px; }
-  .field-error{ color:var(--correction-red); font-size:.8rem; margin:6px 0 0; display:none; }
-  .small-note{ font-size:.8rem; color:var(--ink-soft); }
-  .config-warning{ background:var(--highlight-soft); border:1.5px dashed var(--correction-red); color:#7A5200; padding:14px 16px; border-radius:4px; font-size:.85rem; margin-bottom:20px; }
-</style>
-</head>
-<body>
-
-<header>
-  <nav class="nav">
-    <a href="#top" class="brand"><span class="stamp">✓</span> Bon Point</a>
-    <ul class="nav-links" id="navLinks">
-      <li><a href="#matieres">Nos matières</a></li>
-      <li><a href="#comment">Comment ça marche</a></li>
-      <li><a href="#tarifs">Tarifs</a></li>
-      <li><a href="#avis">Avis</a></li>
-      <li><a href="#reservation">Réservation</a></li>
-      <li><a href="#contact">Contact</a></li>
-    </ul>
-    <a href="#reservation" class="nav-cta">Mon espace</a>
-    <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-  </nav>
-</header>
-
-<main id="top">
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="wrap">
-      <div>
-        <span class="eyebrow">✎ Maths &amp; Physique-Chimie, à domicile et en visio</span>
-        <h1>Chaque copie peut<br>devenir une
-          <span class="underline">bonne copie
-            <svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M2 10 Q 50 2, 100 8 T 198 6" stroke="#F4B942" stroke-width="6" fill="none" stroke-linecap="round"/></svg>
-          </span>.
-        </h1>
-        <p class="lead">Des cours particuliers de maths et de physique-chimie, de la 6ᵉ à la Terminale, donnés par des enseignants spécialisés dans ces deux matières.</p>
-        <div class="hero-ctas">
-          <a href="#reservation" class="btn btn-primary">Réserver un créneau</a>
-          <a href="#tarifs" class="btn btn-ghost">Voir les tarifs</a>
-        </div>
-        <div class="trust-row">
-          <span>⭐ <b>4,9/5</b> sur 620 avis parents</span>
-          <span>🎓 <b>140+</b> enseignants et tuteurs</span>
-          <span>📍 <b>Domicile</b> ou visio</span>
-        </div>
-      </div>
-
-      <div class="copy-card" aria-hidden="true">
-        <div class="copy-head">
-          <div>
-            <strong>Contrôle de mathématiques</strong>
-            Léa D. — 3ᵉ B — Fonctions affines
-          </div>
-          <div class="grade-badge">17</div>
-        </div>
-        <div class="copy-body">
-          <p><span class="strike">8/20</span> → <strong>17/20</strong> en 6 semaines de suivi.</p>
-          <p>Méthode revue point par point, exercices corrigés chaque semaine, confiance retrouvée avant le brevet.</p>
-          <span class="copy-annotation"><span class="copy-check">✓</span> Beau travail, continue comme ça !</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- NIVEAUX -->
-  <section class="page reveal">
-    <div class="wrap">
-      <p class="level-cap">Du collège au lycée, dans l'ordre du parcours scolaire</p>
-      <div class="levels-track">
-        <div class="level-group">
-          <span class="level-pill">6ᵉ</span>
-          <span class="level-pill">5ᵉ</span>
-          <span class="level-pill">4ᵉ</span>
-          <span class="level-pill">3ᵉ</span>
-        </div>
-        <span class="level-divider">— collège &nbsp;·&nbsp; lycée —</span>
-        <div class="level-group">
-          <span class="level-pill">2nde</span>
-          <span class="level-pill">1ʳᵉ</span>
-          <span class="level-pill">Terminale</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- MATIERES -->
-  <section id="matieres">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Nos matières</span>
-        <h2>Deux matières, mais des spécialistes dans chacune</h2>
-        <p>Pas de tuteur généraliste : un professeur de maths pour les maths, un professeur de physique-chimie pour la physique-chimie, chacun sur le programme officiel de son niveau.</p>
-      </div>
-      <div class="subjects-grid reveal">
-        <div class="subject-card">
-          <span class="tag">Le plus demandé</span>
-          <span class="icon">∑</span>
-          <h3>Mathématiques</h3>
-          <p>Du calcul et des fractions en 6ᵉ aux spécialités maths et maths expertes de Terminale : automatismes, méthode de rédaction, préparation aux contrôles, au brevet et au bac.</p>
-          <div class="levels"><span>Collège</span><span>Lycée</span><span>Brevet</span><span>Bac</span></div>
-        </div>
-        <div class="subject-card">
-          <span class="icon">Ph</span>
-          <h3>Physique-Chimie</h3>
-          <p>Des bases de la matière au collège aux exercices type bac au lycée : comprendre une notion avant de l'appliquer, rigueur dans les unités et les calculs, préparation aux évaluations.</p>
-          <div class="levels"><span>Collège</span><span>Lycée</span><span>Brevet</span><span>Bac</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- COMMENT CA MARCHE -->
-  <section id="comment" class="page">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Comment ça marche</span>
-        <h2>Trois étapes avant le premier cours</h2>
-      </div>
-      <div class="steps reveal">
-        <div class="step">
-          <span class="num">1</span>
-          <h3>Créez votre compte</h3>
-          <p>Inscription en 30 secondes avec votre e-mail pour accéder à l'espace de réservation.</p>
-        </div>
-        <div class="step">
-          <span class="num">2</span>
-          <h3>Choisissez un créneau</h3>
-          <p>Consultez les disponibilités en temps réel et réservez le créneau qui vous convient.</p>
-        </div>
-        <div class="step">
-          <span class="num">3</span>
-          <h3>Suivi des progrès</h3>
-          <p>Retrouvez toutes vos réservations dans votre espace personnel, à tout moment.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TARIFS -->
-  <section id="tarifs">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Tarifs</span>
-        <h2>Des formules simples, sans engagement</h2>
-        <p>Tarifs identiques pour toutes les matières, du collège au lycée.</p>
-      </div>
-      <div class="pricing reveal">
-        <div class="price-card">
-          <h3>À l'heure</h3>
-          <div class="amount">29€ <span>/ heure</span></div>
-          <p>Idéal pour tester ou pour un besoin ponctuel avant un contrôle.</p>
-          <ul>
-            <li>Cours à domicile ou en visio</li>
-            <li>Compte rendu après chaque séance</li>
-            <li>Sans engagement</li>
-          </ul>
-          <a href="#reservation" class="btn btn-ghost">Réserver</a>
-        </div>
-        <div class="price-card featured">
-          <span class="badge">Le plus choisi</span>
-          <h3>Forfait mensuel</h3>
-          <div class="amount">99€ <span>/ mois</span></div>
-          <p>4 séances d'une heure par mois, en maths, en physique-chimie, ou les deux.</p>
-          <ul>
-            <li>Tuteur attitré sur la durée</li>
-            <li>Point de suivi mensuel avec les parents</li>
-            <li>Ressources et exercices entre les séances</li>
-          </ul>
-          <a href="#reservation" class="btn btn-primary">Choisir ce forfait</a>
-        </div>
-        <div class="price-card">
-          <h3>Stage de vacances</h3>
-          <div class="amount">180€ <span>/ semaine</span></div>
-          <p>Remise à niveau intensive avant le brevet ou le bac.</p>
-          <ul>
-            <li>5 séances d'1h30 sur la semaine</li>
-            <li>Bilan de fin de stage</li>
-            <li>Groupes de 1 à 3 élèves</li>
-          </ul>
-          <a href="#reservation" class="btn btn-ghost">En savoir plus</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- AVIS -->
-  <section id="avis" class="page">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Ce qu'en disent les parents</span>
-        <h2>Des notes dans la marge, écrites par de vraies familles</h2>
-      </div>
-      <div class="reviews reveal">
-        <div class="review">
-          <p>Ma fille était bloquée en maths depuis la 5ᵉ. En un trimestre elle a repris confiance, et ça se voit sur ses copies.</p>
-          <div class="who">— Sophie, maman d'une élève de 3ᵉ</div>
-        </div>
-        <div class="review">
-          <p>Le tuteur s'est vraiment adapté au rythme de mon fils. Réserver un créneau en ligne, c'est très pratique.</p>
-          <div class="who">— Karim, papa d'un élève de 2nde</div>
-        </div>
-        <div class="review">
-          <p>Le stage de vacances avant le bac a fait toute la différence sur la méthode.</p>
-          <div class="who">— Camille, élève de Terminale</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- RESERVATION / ESPACE PERSONNEL -->
+  /* ---------- RESERVATION / ESPACE PERSONNEL ---------- */
   <section id="reservation" class="page">
     <div class="wrap">
       <div class="section-head reveal">
@@ -642,6 +361,31 @@
             <div id="slotsList"><p class="small-note">Chargement…</p></div>
             <h3 style="margin-top:30px;">Mes réservations</h3>
             <div id="myBookingsList"><p class="small-note">Aucune réservation pour le moment.</p></div>
+
+            <!-- NOUVEAU BLOC : DEMANDE DE CRÉNEAU ET PAIEMENT STRIPE -->
+            <h3 style="margin-top:40px;">Proposer un créneau & Paiement</h3>
+            <form id="customSlotForm" class="app-shell" style="padding: 24px; border: 2px solid var(--line); transform: none;">
+              <div class="form-row">
+                <div><label>Date souhaitée</label><input type="date" id="customDate" required></div>
+                <div><label>Heure</label><input type="time" id="customTime" required></div>
+              </div>
+              
+              <label>Choix de la formule</label>
+              <select id="customTariff" required>
+                <option value="29">À l'heure (29€)</option>
+                <option value="99">Forfait mensuel 4h (99€)</option>
+                <option value="180">Stage intensif (180€)</option>
+              </select>
+
+              <div style="margin-top:24px; padding:14px; background:var(--paper); border-radius:4px; border: 1px dashed var(--rule-blue); text-align:center;">
+                <span style="font-size:0.9rem; color:var(--ink-soft);">🔒 Le paiement sécurisé s'effectuera via <b>Stripe</b> à l'étape suivante.</span>
+              </div>
+
+              <button class="btn btn-primary" type="submit" style="margin-top:20px; width:100%; justify-content:center;">
+                Valider et aller au paiement
+              </button>
+            </form>
+
           </div>
         </div>
 
@@ -698,9 +442,9 @@
             <span>des élèves suivis progressent d'au moins 2 points en un trimestre</span>
           </div>
         </div>
+        
         <form id="contactForm">
-        <form id="contactForm">
-          <!-- NOUVEAU CHAMP GRISÉ ET VERROUILLÉ -->
+          <!-- CHAMP GRISÉ ET VERROUILLÉ -->
           <label>Destinataire de la demande</label>
           <input type="text" value="soutien.bonpoint@gmail.com" disabled style="background: #e4e7ed; color: var(--ink-soft); cursor: not-allowed; border: 1px solid var(--line);">
 
@@ -784,19 +528,13 @@
   ========================================================================== */
   const firebaseConfig = {
     apiKey: "AIzaSyCeH2G4iTsBHDHRm9HgzQEFBZH-d0dZlAs",
-
-  authDomain: "bon-point.firebaseapp.com",
-
-  projectId: "bon-point",
-
-  storageBucket: "bon-point.firebasestorage.app",
-
-  messagingSenderId: "655708364953",
-
-  appId: "1:655708364953:web:1d37a834400198b5851808"
-
+    authDomain: "bon-point.firebaseapp.com",
+    projectId: "bon-point",
+    storageBucket: "bon-point.firebasestorage.app",
+    messagingSenderId: "655708364953",
+    appId: "1:655708364953:web:1d37a834400198b5851808"
   };
-  const ADMIN_EMAIL = "rondelrapon.matheo@gmail.com"; // <-- À CHANGER
+  const ADMIN_EMAIL = "rondelrapon.matheo@gmail.com"; 
 
   let auth, db, firebaseReady = false;
   let currentUser = null, currentUserData = null;
@@ -1052,7 +790,7 @@
     } catch (err) { showToast("Erreur : " + err.message); }
   }
 
-  /* ---------- DEMANDE PARENT & PAIEMENT ---------- */
+  /* ---------- DEMANDE PARENT & REDIRECTION STRIPE ---------- */
   const customSlotForm = document.getElementById('customSlotForm');
   if(customSlotForm) {
     customSlotForm.addEventListener('submit', async (e) => {
@@ -1063,9 +801,16 @@
       const time = document.getElementById('customTime').value;
       const selectTariff = document.getElementById('customTariff');
       const tariffText = selectTariff.options[selectTariff.selectedIndex].text;
+      const tariffValue = selectTariff.value;
+
+      // 🔴 REMPLACE CES 3 LIENS PAR CEUX GÉNÉRÉS DANS TON COMPTE STRIPE
+      const stripeLinks = {
+        "29": "https://buy.stripe.com/3cI7sN2NW4sK5nt2dX1oI04",
+        "99": "https://buy.stripe.com/14AfZjgEM8J09DJ19T1oI03",
+        "180": "https://buy.stripe.com/4gM3cx0FOaR83fl7yh1oI02"
+      };
 
       try {
-        // Enregistre la demande directement dans les réservations Firebase
         await db.collection('bookings').add({
           uid: currentUser.uid,
           studentName: currentUserData.name || currentUserData.email,
@@ -1074,11 +819,16 @@
           time: time,
           subject: "À définir",
           tariff: tariffText,
-          status: "Payé",
+          status: "En attente de paiement",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showToast("Paiement validé ! Votre créneau est réservé ✓");
-        e.target.reset();
+        
+        showToast("Redirection vers le paiement sécurisé...");
+        
+        setTimeout(() => {
+          window.location.href = stripeLinks[tariffValue];
+        }, 1500);
+
       } catch (err) { 
         showToast("Erreur : " + err.message); 
       }

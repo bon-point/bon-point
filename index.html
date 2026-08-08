@@ -768,9 +768,16 @@
           </div>
 
           <div id="userView">
-            <div id="pendingBookingBanner" class="hidden"></div>
             <h3>Créneaux disponibles</h3>
-            <p class="small-note" style="margin-bottom:14px;">Chaque créneau à l'heure est facturé 29€, chaque créneau de stage intensif 180€. En cliquant sur « Réserver », tu seras redirigé(e) vers le paiement sécurisé Stripe. Une fois le paiement effectué, reviens sur cette page pour prévenir l'admin — ta place sera confirmée après vérification. Dès qu'un créneau atteint son nombre de places, il passe automatiquement en « Complet » et ne peut plus être réservé.</p>
+            <p class="small-note" style="margin-bottom:14px;">Chaque créneau à l'heure est facturé 29€, chaque stage intensif 180€. En cliquant sur « Réserver », tu seras redirigé(e) vers le paiement sécurisé Stripe. Dès que le paiement est validé, ta réservation est confirmée automatiquement et tu reçois un e-mail de confirmation — aucune action supplémentaire n'est nécessaire.</p>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+              <label for="subjectFilter" style="margin:0; font-size:.82rem; font-weight:600; color:var(--ink);">Filtrer par matière</label>
+              <select id="subjectFilter" style="width:auto; padding:9px 34px 9px 14px; border:1.5px solid var(--line); border-radius:var(--radius); background:var(--paper); font-family:'Work Sans',sans-serif; font-size:.88rem; color:var(--ink);">
+                <option value="">Toutes les matières</option>
+                <option value="Mathématiques">Mathématiques</option>
+                <option value="Physique-Chimie">Physique-Chimie</option>
+              </select>
+            </div>
             <div id="slotsList"><p class="small-note">Chargement…</p></div>
             <h3 style="margin-top:30px;">Mes réservations</h3>
             <div id="myBookingsList"><p class="small-note">Aucune réservation pour le moment.</p></div>
@@ -1115,12 +1122,29 @@
     return allBookings.filter(b => b.slotId === slotId);
   }
 
+  // Écrit un document dans la collection 'mail' : l'extension Firebase
+  // "Trigger Email from Firestore" (à installer côté console Firebase) se charge
+  // ensuite d'envoyer réellement l'e-mail, sans code serveur à écrire.
+  function queueEmail(to, subject, text) {
+    if (!db || !to) return;
+    db.collection('mail').add({ to: [to], message: { subject, text } })
+      .catch(err => console.error('Erreur envoi e-mail:', err));
+  }
+
+  const subjectFilterEl = document.getElementById('subjectFilter');
+  if (subjectFilterEl) subjectFilterEl.addEventListener('change', renderSlots);
+
   function renderSlots() {
     const box = document.getElementById('slotsList');
     const today = new Date().toISOString().slice(0, 10);
-    const upcoming = allSlots.filter(s => s.date >= today);
+    const filterEl = document.getElementById('subjectFilter');
+    const subjectFilter = filterEl ? filterEl.value : '';
+    // Pour un stage sur plusieurs jours, on garde le créneau visible tant que
+    // son dernier jour n'est pas passé (pas seulement le jour de début).
+    let upcoming = allSlots.filter(s => (s.endDate || s.date) >= today);
+    if (subjectFilter) upcoming = upcoming.filter(s => s.subject === subjectFilter);
     if (upcoming.length === 0) {
-      box.innerHTML = '<p class="small-note">Aucun créneau disponible pour le moment.</p>';
+      box.innerHTML = `<p class="small-note">Aucun créneau disponible ${subjectFilter ? 'pour cette matière' : 'pour le moment'}.</p>`;
       return;
     }
     box.innerHTML = '';
@@ -1144,8 +1168,9 @@
           <span class="slot-month">${badge.month}</span>
         </div>
         <div class="slot-info">
-          <b>${formatDate(slot.date)} — ${slot.time}</b>
-          <span class="slot-meta">${slot.subject} · ${slot.duration} min · ${tariffLabel}${isStage ? ' <strong>· Stage intensif</strong>' : ''}</span>
+          <b>${isStage && slot.endDate ? `${formatDate(slot.date)} → ${formatDate(slot.endDate)}` : formatDate(slot.date)} — ${slot.time}</b>
+          <span class="slot-meta">${slot.subject} · ${slot.duration} min · ${tariffLabel}${isStage ? ` <strong>· Stage intensif (${(slot.dates || [slot.date]).length} jours)</strong>` : ''}</span>
+          ${isStage && slot.dates && slot.dates.length > 1 ? `<span class="slot-meta">📅 ${formatDaysList(slot.dates)}</span>` : ''}
           ${statusPill}
         </div>
         ${!alreadyBooked && remaining > 0
@@ -1157,7 +1182,6 @@
     box.querySelectorAll('[data-book]').forEach(btn => {
       btn.addEventListener('click', () => bookSlot(btn.getAttribute('data-book')));
     });
-    renderPendingBookingBanner();
   }
 
   function formatDate(iso) {
@@ -1172,80 +1196,47 @@
     return { day, month };
   }
 
-  const PENDING_KEY = 'bonpoint_pending_booking';
+  // Affiche la liste compacte des jours couverts par un créneau (utile pour un stage intensif)
+  function formatDaysList(dates) {
+    if (!dates || dates.length <= 1) return '';
+    return dates.map(iso => {
+      const d = new Date(iso + 'T00:00:00');
+      return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+    }).join(' · ');
+  }
 
-  function bookSlot(slotId) {
+  // Crée la réservation immédiatement (statut "En attente de paiement"), puis redirige
+  // vers Stripe avec l'identifiant de la réservation en client_reference_id.
+  // Dès que le paiement est validé, une fonction serveur (webhook Stripe, voir
+  // functions/index.js) passe automatiquement le statut à "Confirmé" et envoie
+  // les e-mails de notification — plus besoin que l'élève prévienne l'admin.
+  async function bookSlot(slotId) {
     const slot = allSlots.find(s => s.id === slotId);
     if (!slot) return;
+    if (!requireFirebase()) return;
     // Vérification stricte : on recompte les réservations existantes juste avant de réserver,
     // pour empêcher tout dépassement de la capacité (plus de nombre illimité de personnes sur un créneau).
     const taken = bookingsForSlot(slotId).length;
     if (taken >= slot.capacity) { showToast("Ce créneau est complet."); renderSlots(); return; }
 
     const tariff = slot.type === 'stage' ? '180' : '29';
-
-    // On mémorise l'intention de réservation, puis on redirige vers le paiement Stripe.
-    // La réservation ne sera créée qu'une fois le paiement confirmé manuellement au retour.
-    const pending = {
-      slotId, date: slot.date, time: slot.time, subject: slot.subject, tariff
-    };
-    localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-    showToast(`Redirection vers le paiement sécurisé (${tariff}€)…`);
-    setTimeout(() => {
-      window.location.href = STRIPE_LINKS[tariff];
-    }, 1200);
-  }
-
-  function renderPendingBookingBanner() {
-    const el = document.getElementById('pendingBookingBanner');
-    if (!el) return;
-    let pending = null;
-    try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch (e) { pending = null; }
-
-    if (!pending) { el.classList.add('hidden'); el.innerHTML = ''; return; }
-
-    // Le créneau visé existe-t-il toujours et a-t-il encore de la place ?
-    const slot = allSlots.find(s => s.id === pending.slotId);
-    const stillOpen = slot && (bookingsForSlot(slot.id).length < slot.capacity);
-
-    el.classList.remove('hidden');
-    el.innerHTML = `
-      <span class="pb-icon">⏳</span>
-      <div class="pb-text">
-        <strong>Réservation en attente de confirmation</strong>
-        <span>${formatDate(pending.date)} — ${pending.time} · ${pending.subject}${!stillOpen ? ' · ⚠️ ce créneau n\'est peut-être plus disponible' : ''}</span>
-      </div>
-      <div class="pb-actions">
-        <button class="btn btn-primary btn-small" id="confirmPendingBtn">J'ai payé, prévenir l'admin</button>
-        <button class="btn btn-ghost btn-small" id="cancelPendingBtn">Annuler</button>
-      </div>
-    `;
-    document.getElementById('confirmPendingBtn').addEventListener('click', () => confirmPendingBooking(pending));
-    document.getElementById('cancelPendingBtn').addEventListener('click', () => {
-      localStorage.removeItem(PENDING_KEY);
-      renderPendingBookingBanner();
-    });
-  }
-
-  async function confirmPendingBooking(pending) {
-    if (!requireFirebase()) return;
-    const slot = allSlots.find(s => s.id === pending.slotId);
-    if (!slot) { showToast("Ce créneau n'existe plus. Contacte-nous pour un remboursement si besoin."); return; }
-    const taken = bookingsForSlot(slot.id).length;
-    if (taken >= slot.capacity) { showToast("Ce créneau est complet entre-temps. Contacte-nous pour un remboursement si besoin."); return; }
     try {
-      await db.collection('bookings').add({
+      const bookingRef = db.collection('bookings').doc();
+      await bookingRef.set({
         slotId: slot.id, uid: currentUser.uid,
         studentName: currentUserData.name || currentUserData.email,
         email: currentUserData.email,
         date: slot.date, time: slot.time, subject: slot.subject,
-        tariff: pending.tariff || "29",
-        status: "En attente de validation admin",
+        tariff, status: "En attente de paiement",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      localStorage.removeItem(PENDING_KEY);
-      renderPendingBookingBanner();
-      showToast("Merci ! Ta réservation sera validée par l'admin sous peu.");
+      // On prévient l'admin par e-mail qu'un paiement est en cours.
+      queueEmail(ADMIN_EMAIL, "Nouvelle réservation en attente de paiement",
+        `${currentUserData.name || currentUserData.email} vient de démarrer le paiement pour le créneau du ${slot.date} à ${slot.time} (${slot.subject}, ${tariff}€).`);
+      showToast(`Redirection vers le paiement sécurisé (${tariff}€)…`);
+      setTimeout(() => {
+        window.location.href = STRIPE_LINKS[tariff] + '?client_reference_id=' + bookingRef.id;
+      }, 1000);
     } catch (err) { showToast("Erreur : " + err.message); }
   }
 
@@ -1268,9 +1259,9 @@
     box.innerHTML = '';
     mine.forEach(b => {
       const badge = dateBadgeParts(b.date);
-      const isPending = b.status === "En attente de validation admin";
+      const isConfirmed = (b.status || '').startsWith('Confirmé');
       const statusPill = b.status
-        ? `<span class="seats-pill ${isPending ? 'available' : 'confirmed'}">${isPending ? 'En attente de validation' : b.status}</span>`
+        ? `<span class="seats-pill ${isConfirmed ? 'confirmed' : 'available'}">${b.status}</span>`
         : '';
       const card = document.createElement('div');
       card.className = 'slot-card';
@@ -1289,14 +1280,21 @@
       box.appendChild(card);
     });
     box.querySelectorAll('[data-cancel]').forEach(btn => {
-      btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-cancel')));
+      btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-cancel'), true));
     });
   }
 
-  async function cancelBooking(bookingId) {
+  // notifyAdmin=true quand l'annulation est faite par l'élève lui-même (pour prévenir l'admin
+  // par e-mail) ; false quand c'est l'admin qui supprime la réservation depuis son tableau.
+  async function cancelBooking(bookingId, notifyAdmin) {
     if (!requireFirebase()) return;
     try {
+      const b = allBookings.find(x => x.id === bookingId);
       await db.collection('bookings').doc(bookingId).delete();
+      if (notifyAdmin && b) {
+        queueEmail(ADMIN_EMAIL, "Réservation annulée par l'élève",
+          `${b.studentName || b.email} a annulé sa réservation du ${b.date} à ${b.time} (${b.subject}).`);
+      }
       showToast("Réservation annulée.");
     } catch (err) { showToast("Erreur : " + err.message); }
   }
@@ -1360,20 +1358,24 @@
     const days = type === 'stage' ? Math.max(1, parseInt(document.getElementById('slotDays').value, 10) || 5) : 1;
 
     try {
-      const batch = db.batch();
+      // On calcule la liste des jours couverts (1 seul jour pour un cours simple,
+      // plusieurs jours consécutifs pour un stage intensif), mais on ne crée
+      // qu'UN SEUL créneau (document) au lieu d'un par jour.
       const startDate = new Date(date + 'T00:00:00');
+      const dates = [];
       for (let i = 0; i < days; i++) {
         const d = new Date(startDate);
         d.setDate(d.getDate() + i);
-        const iso = d.toISOString().slice(0, 10);
-        const ref = db.collection('slots').doc();
-        batch.set(ref, {
-          date: iso, time, subject, duration, capacity, type,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        dates.push(d.toISOString().slice(0, 10));
       }
-      await batch.commit();
-      showToast(type === 'stage' ? `Stage intensif ajouté ✓ (${days} créneaux créés)` : "Créneau ajouté ✓");
+      await db.collection('slots').add({
+        date,                          // date de début (sert au tri et au filtrage "à venir")
+        endDate: dates[dates.length - 1], // dernier jour couvert
+        dates,                         // tableau de tous les jours couverts par ce créneau
+        time, subject, duration, capacity, type,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast(type === 'stage' ? `Stage intensif ajouté ✓ (${days} jours)` : "Créneau ajouté ✓");
       e.target.reset();
       document.getElementById('slotDuration').value = 60;
       document.getElementById('slotCapacity').value = 1;
@@ -1402,8 +1404,9 @@
           <span class="slot-month">${badge.month}</span>
         </div>
         <div class="slot-info">
-          <b>${formatDate(slot.date)} — ${slot.time}</b>
-          <span class="slot-meta">${slot.subject} · ${taken}/${slot.capacity} réservé(s)${isStage ? ' · Stage intensif' : ''} ${isFull ? '<span class="full-tag">· Complet</span>' : ''}</span>
+          <b>${isStage && slot.endDate ? `${formatDate(slot.date)} → ${formatDate(slot.endDate)}` : formatDate(slot.date)} — ${slot.time}</b>
+          <span class="slot-meta">${slot.subject} · ${taken}/${slot.capacity} réservé(s)${isStage ? ` · Stage intensif (${(slot.dates || [slot.date]).length} jours)` : ''} ${isFull ? '<span class="full-tag">· Complet</span>' : ''}</span>
+          ${isStage && slot.dates && slot.dates.length > 1 ? `<span class="slot-meta">📅 ${formatDaysList(slot.dates)}</span>` : ''}
         </div>
         <button class="btn btn-danger btn-small" data-delslot="${slot.id}">Supprimer</button>
       `;
@@ -1434,12 +1437,10 @@
       .slice()
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
       .forEach(b => {
-        const isPending = b.status === "En attente de validation admin";
-        const statusLabel = isPending
-          ? '<span class="seats-pill available">En attente</span>'
-          : b.status
-            ? `<span class="seats-pill confirmed">${b.status}</span>`
-            : '';
+        const isConfirmed = (b.status || '').startsWith('Confirmé');
+        const statusLabel = b.status
+          ? `<span class="seats-pill ${isConfirmed ? 'confirmed' : 'available'}">${b.status}</span>`
+          : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${b.studentName || b.email}</td>
@@ -1447,24 +1448,31 @@
           <td>${b.subject}</td>
           <td>${statusLabel}</td>
           <td style="white-space:nowrap;">
-            ${isPending ? `<button class="btn btn-primary btn-small" data-validate="${b.id}">Valider</button>` : ''}
+            ${!isConfirmed ? `<button class="btn btn-primary btn-small" data-validate="${b.id}">Valider manuellement</button>` : ''}
             <button class="btn btn-danger btn-small" data-delbooking="${b.id}">Supprimer</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
     tbody.querySelectorAll('[data-delbooking]').forEach(btn => {
-      btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-delbooking')));
+      btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-delbooking'), false));
     });
     tbody.querySelectorAll('[data-validate]').forEach(btn => {
       btn.addEventListener('click', () => validateBooking(btn.getAttribute('data-validate')));
     });
   }
 
+  // Filet de sécurité : si le webhook Stripe n'a pas confirmé automatiquement
+  // (ex : paiement par un autre moyen), l'admin peut toujours valider à la main.
   async function validateBooking(bookingId) {
     if (!requireFirebase()) return;
     try {
+      const b = allBookings.find(x => x.id === bookingId);
       await db.collection('bookings').doc(bookingId).update({ status: "Confirmé ✓ (validé par l'admin)" });
+      if (b) {
+        queueEmail(b.email, "Ta réservation est confirmée !",
+          `Bonjour, ta réservation du ${b.date} à ${b.time} (${b.subject}) est confirmée. À bientôt !`);
+      }
       showToast("Réservation validée ✓");
     } catch (err) { showToast("Erreur : " + err.message); }
   }

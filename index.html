@@ -1091,7 +1091,12 @@
       allSlots = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderSlots();
       renderAdminSlots();
-    }, (err) => console.error(err));
+    }, (err) => {
+      console.error(err);
+      const box = document.getElementById('slotsList');
+      if (box) box.innerHTML = `<p class="small-note" style="color:var(--correction-red);">Erreur de chargement des créneaux : ${err.message}</p>`;
+      showToast("Erreur créneaux : " + err.message);
+    });
   }
 
   function bookingsForSlot(slotId) {

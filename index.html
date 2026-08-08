@@ -351,6 +351,7 @@
   .seats-pill.available{ background:var(--highlight-soft); color:#7A5200; }
   .seats-pill.full{ background:var(--correction-red); color:#fff; }
   .seats-pill.booked{ background:var(--paper-2); color:var(--ink-soft); border:1px solid var(--line); }
+  .seats-pill.confirmed{ background:#EAF6EC; color:#1E6B34; border:1px solid #BFE3C8; }
   .full-tag{ color:var(--correction-red); font-weight:700; font-size:.78rem; }
   table.admin-table{ width:100%; border-collapse:collapse; font-size:.83rem; }
   table.admin-table th, table.admin-table td{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); }
@@ -484,6 +485,18 @@
     background:#EAF6EC; color:#1E6B34; font-size:.88rem; font-weight:600;
     border:1px solid #BFE3C8; text-align:center;
   }
+
+  /* ---------- BANDEAU RÉSERVATION EN ATTENTE DE PAIEMENT ---------- */
+  #pendingBookingBanner{
+    background:var(--paper-2); border:1.5px dashed var(--correction-red);
+    border-radius:6px; padding:16px 18px; margin-bottom:20px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  #pendingBookingBanner .pb-icon{ font-size:1.4rem; flex-shrink:0; }
+  #pendingBookingBanner .pb-text{ flex:1 1 220px; }
+  #pendingBookingBanner .pb-text strong{ display:block; font-family:'Lora',serif; font-size:.95rem; color:var(--ink); }
+  #pendingBookingBanner .pb-text span{ font-size:.8rem; color:var(--ink-soft); }
+  #pendingBookingBanner .pb-actions{ display:flex; gap:8px; flex-shrink:0; }
 
   /* ---------- FOOTER ---------- */
   footer{ border-top:1px solid var(--line); padding:40px 0; margin-top:20px; }
@@ -750,7 +763,9 @@
           </div>
 
           <div id="userView">
+            <div id="pendingBookingBanner" class="hidden"></div>
             <h3>Créneaux disponibles</h3>
+            <p class="small-note" style="margin-bottom:14px;">Chaque créneau réservé est facturé 29€ (tarif à l'heure). En cliquant sur « Réserver », tu seras redirigé(e) vers le paiement sécurisé Stripe. Une fois le paiement effectué, reviens sur cette page pour prévenir l'admin — ta place sera confirmée après vérification.</p>
             <div id="slotsList"><p class="small-note">Chargement…</p></div>
             <h3 style="margin-top:30px;">Mes réservations</h3>
             <div id="myBookingsList"><p class="small-note">Aucune réservation pour le moment.</p></div>
@@ -838,7 +853,7 @@
           </div>
           <div class="app-shell reveal">
             <h3>Toutes les réservations</h3>
-            <div style="overflow-x:auto;"><table class="admin-table" id="adminBookingsTable"><thead><tr><th>Élève</th><th>Créneau</th><th>Matière</th><th></th></tr></thead><tbody></tbody></table></div>
+            <div style="overflow-x:auto;"><table class="admin-table" id="adminBookingsTable"><thead><tr><th>Élève</th><th>Créneau</th><th>Matière</th><th>Statut</th><th></th></tr></thead><tbody></tbody></table></div>
           </div>
           <div class="app-shell reveal">
             <h3>Utilisateurs</h3>
@@ -947,6 +962,11 @@
     appId: "1:655708364953:web:1d37a834400198b5851808"
   };
   const ADMIN_EMAIL = "rondelrapon.matheo@gmail.com"; 
+  const STRIPE_LINKS = {
+    "29": "https://buy.stripe.com/3cI7sN2NW4sK5nt2dX1oI04",
+    "99": "https://buy.stripe.com/14AfZjgEM8J09DJ19T1oI03",
+    "180": "https://buy.stripe.com/4gM3cx0FOaR83fl7yh1oI02"
+  };
 
   let auth, db, firebaseReady = false;
   let currentUser = null, currentUserData = null;
@@ -1143,6 +1163,7 @@
     box.querySelectorAll('[data-book]').forEach(btn => {
       btn.addEventListener('click', () => bookSlot(btn.getAttribute('data-book')));
     });
+    renderPendingBookingBanner();
   }
 
   function formatDate(iso) {
@@ -1157,21 +1178,76 @@
     return { day, month };
   }
 
-  async function bookSlot(slotId) {
-    if (!requireFirebase()) return;
+  const PENDING_KEY = 'bonpoint_pending_booking';
+
+  function bookSlot(slotId) {
     const slot = allSlots.find(s => s.id === slotId);
     if (!slot) return;
     const taken = bookingsForSlot(slotId).length;
     if (taken >= slot.capacity) { showToast("Ce créneau est complet."); return; }
+
+    // On mémorise l'intention de réservation, puis on redirige vers le paiement Stripe.
+    // La réservation ne sera créée qu'une fois le paiement confirmé manuellement au retour.
+    const pending = {
+      slotId, date: slot.date, time: slot.time, subject: slot.subject
+    };
+    localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+    showToast("Redirection vers le paiement sécurisé (29€)…");
+    setTimeout(() => {
+      window.location.href = STRIPE_LINKS["29"];
+    }, 1200);
+  }
+
+  function renderPendingBookingBanner() {
+    const el = document.getElementById('pendingBookingBanner');
+    if (!el) return;
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch (e) { pending = null; }
+
+    if (!pending) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+
+    // Le créneau visé existe-t-il toujours et a-t-il encore de la place ?
+    const slot = allSlots.find(s => s.id === pending.slotId);
+    const stillOpen = slot && (bookingsForSlot(slot.id).length < slot.capacity);
+
+    el.classList.remove('hidden');
+    el.innerHTML = `
+      <span class="pb-icon">⏳</span>
+      <div class="pb-text">
+        <strong>Réservation en attente de confirmation</strong>
+        <span>${formatDate(pending.date)} — ${pending.time} · ${pending.subject}${!stillOpen ? ' · ⚠️ ce créneau n\'est peut-être plus disponible' : ''}</span>
+      </div>
+      <div class="pb-actions">
+        <button class="btn btn-primary btn-small" id="confirmPendingBtn">J'ai payé, prévenir l'admin</button>
+        <button class="btn btn-ghost btn-small" id="cancelPendingBtn">Annuler</button>
+      </div>
+    `;
+    document.getElementById('confirmPendingBtn').addEventListener('click', () => confirmPendingBooking(pending));
+    document.getElementById('cancelPendingBtn').addEventListener('click', () => {
+      localStorage.removeItem(PENDING_KEY);
+      renderPendingBookingBanner();
+    });
+  }
+
+  async function confirmPendingBooking(pending) {
+    if (!requireFirebase()) return;
+    const slot = allSlots.find(s => s.id === pending.slotId);
+    if (!slot) { showToast("Ce créneau n'existe plus. Contacte-nous pour un remboursement si besoin."); return; }
+    const taken = bookingsForSlot(slot.id).length;
+    if (taken >= slot.capacity) { showToast("Ce créneau est complet entre-temps. Contacte-nous pour un remboursement si besoin."); return; }
     try {
       await db.collection('bookings').add({
-        slotId, uid: currentUser.uid,
+        slotId: slot.id, uid: currentUser.uid,
         studentName: currentUserData.name || currentUserData.email,
         email: currentUserData.email,
         date: slot.date, time: slot.time, subject: slot.subject,
+        tariff: "29",
+        status: "En attente de validation admin",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      showToast("Réservation confirmée ✓");
+      localStorage.removeItem(PENDING_KEY);
+      renderPendingBookingBanner();
+      showToast("Merci ! Ta réservation sera validée par l'admin sous peu.");
     } catch (err) { showToast("Erreur : " + err.message); }
   }
 
@@ -1194,6 +1270,10 @@
     box.innerHTML = '';
     mine.forEach(b => {
       const badge = dateBadgeParts(b.date);
+      const isPending = b.status === "En attente de validation admin";
+      const statusPill = b.status
+        ? `<span class="seats-pill ${isPending ? 'available' : 'confirmed'}">${isPending ? 'En attente de validation' : b.status}</span>`
+        : '';
       const card = document.createElement('div');
       card.className = 'slot-card';
       card.innerHTML = `
@@ -1204,6 +1284,7 @@
         <div class="slot-info">
           <b>${formatDate(b.date)} — ${b.time}</b>
           <span class="slot-meta">${b.subject}</span>
+          ${statusPill}
         </div>
         <button class="btn btn-danger btn-small" data-cancel="${b.id}">Annuler</button>
       `;
@@ -1234,13 +1315,6 @@
       const tariffText = selectTariff.options[selectTariff.selectedIndex].text;
       const tariffValue = selectTariff.value;
 
-      // 🔴 N'OUBLIE PAS DE METTRE TES VRAIS LIENS STRIPE ICI :
-      const stripeLinks = {
-        "29": "https://buy.stripe.com/3cI7sN2NW4sK5nt2dX1oI04",
-        "99": "https://buy.stripe.com/14AfZjgEM8J09DJ19T1oI03",
-        "180": "https://buy.stripe.com/4gM3cx0FOaR83fl7yh1oI02"
-      };
-
       try {
         await db.collection('bookings').add({
           uid: currentUser.uid,
@@ -1257,7 +1331,7 @@
         showToast("Redirection vers le paiement sécurisé...");
         
         setTimeout(() => {
-          window.location.href = stripeLinks[tariffValue];
+          window.location.href = STRIPE_LINKS[tariffValue];
         }, 1500);
 
       } catch (err) { 
@@ -1337,18 +1411,39 @@
       .slice()
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
       .forEach(b => {
+        const isPending = b.status === "En attente de validation admin";
+        const statusLabel = isPending
+          ? '<span class="seats-pill available">En attente</span>'
+          : b.status
+            ? `<span class="seats-pill confirmed">${b.status}</span>`
+            : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${b.studentName || b.email}</td>
           <td>${formatDate(b.date)} ${b.time}</td>
           <td>${b.subject}</td>
-          <td><button class="btn btn-danger btn-small" data-delbooking="${b.id}">Supprimer</button></td>
+          <td>${statusLabel}</td>
+          <td style="white-space:nowrap;">
+            ${isPending ? `<button class="btn btn-primary btn-small" data-validate="${b.id}">Valider</button>` : ''}
+            <button class="btn btn-danger btn-small" data-delbooking="${b.id}">Supprimer</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
     tbody.querySelectorAll('[data-delbooking]').forEach(btn => {
       btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-delbooking')));
     });
+    tbody.querySelectorAll('[data-validate]').forEach(btn => {
+      btn.addEventListener('click', () => validateBooking(btn.getAttribute('data-validate')));
+    });
+  }
+
+  async function validateBooking(bookingId) {
+    if (!requireFirebase()) return;
+    try {
+      await db.collection('bookings').doc(bookingId).update({ status: "Confirmé ✓ (validé par l'admin)" });
+      showToast("Réservation validée ✓");
+    } catch (err) { showToast("Erreur : " + err.message); }
   }
 
   function listenUsers() {

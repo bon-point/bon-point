@@ -1122,13 +1122,15 @@
     return allBookings.filter(b => b.slotId === slotId);
   }
 
-  // Écrit un document dans la collection 'mail' : l'extension Firebase
-  // "Trigger Email from Firestore" (à installer côté console Firebase) se charge
-  // ensuite d'envoyer réellement l'e-mail, sans code serveur à écrire.
-  function queueEmail(to, subject, text) {
-    if (!db || !to) return;
-    db.collection('mail').add({ to: [to], message: { subject, text } })
-      .catch(err => console.error('Erreur envoi e-mail:', err));
+  // Prévient l'admin par e-mail, sans backend ni carte bancaire : on réutilise
+  // formsubmit.co (déjà utilisé plus bas pour le formulaire "Forfait mensuel"),
+  // qui relaie simplement le message vers une adresse Gmail fixe et déjà activée.
+  function notifyAdmin(subject, text) {
+    fetch("https://formsubmit.co/ajax/soutien.bonpoint@gmail.com", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ Sujet: subject, Message: text })
+    }).catch(err => console.error('Erreur notification admin:', err));
   }
 
   const subjectFilterEl = document.getElementById('subjectFilter');
@@ -1231,7 +1233,7 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       // On prévient l'admin par e-mail qu'un paiement est en cours.
-      queueEmail(ADMIN_EMAIL, "Nouvelle réservation en attente de paiement",
+      notifyAdmin("Nouvelle réservation en attente de paiement",
         `${currentUserData.name || currentUserData.email} vient de démarrer le paiement pour le créneau du ${slot.date} à ${slot.time} (${slot.subject}, ${tariff}€).`);
       showToast(`Redirection vers le paiement sécurisé (${tariff}€)…`);
       setTimeout(() => {
@@ -1284,15 +1286,15 @@
     });
   }
 
-  // notifyAdmin=true quand l'annulation est faite par l'élève lui-même (pour prévenir l'admin
-  // par e-mail) ; false quand c'est l'admin qui supprime la réservation depuis son tableau.
-  async function cancelBooking(bookingId, notifyAdmin) {
+  // shouldNotifyAdmin=true quand l'annulation est faite par l'élève lui-même (pour prévenir
+  // l'admin par e-mail) ; false quand c'est l'admin qui supprime la réservation depuis son tableau.
+  async function cancelBooking(bookingId, shouldNotifyAdmin) {
     if (!requireFirebase()) return;
     try {
       const b = allBookings.find(x => x.id === bookingId);
       await db.collection('bookings').doc(bookingId).delete();
-      if (notifyAdmin && b) {
-        queueEmail(ADMIN_EMAIL, "Réservation annulée par l'élève",
+      if (shouldNotifyAdmin && b) {
+        notifyAdmin("Réservation annulée par l'élève",
           `${b.studentName || b.email} a annulé sa réservation du ${b.date} à ${b.time} (${b.subject}).`);
       }
       showToast("Réservation annulée.");
@@ -1462,18 +1464,16 @@
     });
   }
 
-  // Filet de sécurité : si le webhook Stripe n'a pas confirmé automatiquement
-  // (ex : paiement par un autre moyen), l'admin peut toujours valider à la main.
+  // Filet de sécurité : si Make/Stripe n'a pas confirmé automatiquement (ex : paiement
+  // par un autre moyen), l'admin peut toujours valider à la main. Dans ce cas précis,
+  // aucun e-mail automatique n'est envoyé à l'élève (ça nécessiterait un envoi vers une
+  // adresse variable, ce que formsubmit.co ne fait pas de façon fiable sans backend) —
+  // pense à prévenir l'élève toi-même si tu valides manuellement.
   async function validateBooking(bookingId) {
     if (!requireFirebase()) return;
     try {
-      const b = allBookings.find(x => x.id === bookingId);
       await db.collection('bookings').doc(bookingId).update({ status: "Confirmé ✓ (validé par l'admin)" });
-      if (b) {
-        queueEmail(b.email, "Ta réservation est confirmée !",
-          `Bonjour, ta réservation du ${b.date} à ${b.time} (${b.subject}) est confirmée. À bientôt !`);
-      }
-      showToast("Réservation validée ✓");
+      showToast("Réservation validée ✓ (pense à prévenir l'élève par e-mail si besoin)");
     } catch (err) { showToast("Erreur : " + err.message); }
   }
 

@@ -1632,23 +1632,5 @@
     .catch(error => console.log(error));
   });
 </script>
-<script>
-    // Bloquer le clic droit
-    document.addEventListener('contextmenu', e => e.preventDefault());
-
-    // Bloquer les raccourcis (F12, Ctrl+Maj+I/J/C, Ctrl+U)
-    document.addEventListener('keydown', e => {
-        if (
-            e.key === 'F12' || 
-            (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) || 
-            (e.ctrlKey && e.key === 'U')
-        ) {
-            e.preventDefault();
-        }
-    });
-
-    // Empêcher le "glisser-déposer" pour extraire des images ou du texte
-    document.addEventListener('dragstart', e => e.preventDefault());
-</script>
 </body>
 </html>

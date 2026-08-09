@@ -967,6 +967,8 @@
   // Webhook Discord : à créer dans ton serveur (Paramètres du salon > Intégrations >
   // Webhooks > Nouveau Webhook > Copier l'URL). Remplace la valeur ci-dessous.
   const DISCORD_WEBHOOK_URL = "REMPLACER_PAR_TON_WEBHOOK_DISCORD";
+  // URL du Worker Cloudflare (webhook Stripe + validation manuelle admin + rappels)
+  const WORKER_BASE_URL = "https://bon-point-auto.soutien-bonpoint.workers.dev";
 
   const STRIPE_LINKS = {
     "29": "https://buy.stripe.com/3cI7sN2NW4sK5nt2dX1oI04",
@@ -1492,16 +1494,25 @@
   }
 
   // Filet de sécurité : si le Worker Cloudflare / webhook Stripe n'a pas confirmé
-  // automatiquement (ex : paiement
-  // par un autre moyen), l'admin peut toujours valider à la main. Dans ce cas précis,
-  // aucun e-mail automatique n'est envoyé à l'élève (ça nécessiterait un envoi vers une
-  // adresse variable, ce que formsubmit.co ne fait pas de façon fiable sans backend) —
-  // pense à prévenir l'élève toi-même si tu valides manuellement.
+  // automatiquement (ex : paiement par un autre moyen), l'admin peut toujours valider
+  // à la main. Cette validation passe désormais par le Worker (au lieu de modifier
+  // Firestore directement depuis le site), pour déclencher exactement le même circuit
+  // que Stripe : e-mail de confirmation à l'élève + création/récupération du salon
+  // vocal Discord du créneau + notification Discord admin.
   async function validateBooking(bookingId) {
     if (!requireFirebase()) return;
     try {
-      await db.collection('bookings').doc(bookingId).update({ status: "Confirmé ✓ (validé par l'admin)" });
-      showToast("Réservation validée ✓ (pense à prévenir l'élève par e-mail si besoin)");
+      const idToken = await currentUser.getIdToken();
+      const res = await fetch(`${WORKER_BASE_URL}/admin-confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+        body: JSON.stringify({ bookingId })
+      });
+      if (!res.ok) {
+        const detail = await res.text();
+        throw new Error(`${res.status} — ${detail}`);
+      }
+      showToast("Réservation validée ✓ (e-mail + salon Discord envoyés automatiquement)");
     } catch (err) { showToast("Erreur : " + err.message); }
   }
 

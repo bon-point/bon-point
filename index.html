@@ -1464,7 +1464,8 @@
     });
   }
 
-  // Filet de sécurité : si Make/Stripe n'a pas confirmé automatiquement (ex : paiement
+  // Filet de sécurité : si le Worker Cloudflare / webhook Stripe n'a pas confirmé
+  // automatiquement (ex : paiement
   // par un autre moyen), l'admin peut toujours valider à la main. Dans ce cas précis,
   // aucun e-mail automatique n'est envoyé à l'élève (ça nécessiterait un envoi vers une
   // adresse variable, ce que formsubmit.co ne fait pas de façon fiable sans backend) —

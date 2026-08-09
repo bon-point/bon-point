@@ -879,7 +879,7 @@
             <span>des élèves suivis progressent d'au moins 2 points en un trimestre</span>
           </div>
         </div>
-        
+
         <form id="contactForm">
           <!-- CHAMP GRISÉ ET VERROUILLÉ -->
           <label>Destinataire de la demande</label>
@@ -914,13 +914,13 @@
               </select>
             </div>
           </div>
-          
+
           <label for="email">Votre adresse e-mail (pour vous répondre)</label>
           <input type="email" id="email" name="email" placeholder="parent@exemple.com" required>
-          
+
           <label for="message">Objectif ou message (facultatif)</label>
           <textarea id="message" name="message" placeholder="Ex : préparer le brevet, reprendre confiance, remonter la moyenne…"></textarea>
-          
+
           <button type="submit" class="btn btn-primary">Demander mon cours d'essai gratuit</button>
           <p class="form-note">Aucun engagement. Réponse sous 24h ouvrées.</p>
           <div id="confirmation">✓ Bien reçu ! Nous revenons vers vous très vite.</div>
@@ -960,7 +960,7 @@
     messagingSenderId: "655708364953",
     appId: "1:655708364953:web:1d37a834400198b5851808"
   };
-  const ADMIN_EMAIL = "rondelrapon.matheo@gmail.com"; 
+  const ADMIN_EMAIL = "rondelrapon.matheo@gmail.com";
 
   // Lien d'invitation vers ton serveur Discord (cours en visio)
   const DISCORD_INVITE_URL = "https://discord.gg/ZGwJ89xydt";
@@ -1031,6 +1031,11 @@
     errBox.style.display = 'none';
     try {
       const cred = await auth.createUserWithEmailAndPassword(email, password);
+      // Le rôle proposé ici n'est qu'une INDICATION pour l'UI : les règles Firestore
+      // revérifient indépendamment, via l'e-mail réel du compte Firebase Auth, que
+      // seul le compte admin d'origine peut obtenir role:'admin' à la création.
+      // Un élève qui modifierait ce champ dans la console du navigateur avant l'envoi
+      // se ferait donc refuser l'écriture par le serveur (permission-denied).
       const role = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) ? 'admin' : 'user';
       await db.collection('users').doc(cred.user.uid).set({
         name, email, role,
@@ -1069,6 +1074,7 @@
     if (code.includes('invalid-email')) return "E-mail invalide.";
     if (code.includes('weak-password')) return "Mot de passe trop court (6 caractères min.).";
     if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) return "E-mail ou mot de passe incorrect.";
+    if (code.includes('permission-denied')) return "Action refusée par le serveur (droits insuffisants).";
     return "Une erreur est survenue : " + (err.message || code);
   }
 
@@ -1236,8 +1242,15 @@
   // Crée la réservation immédiatement (statut "En attente de paiement"), puis redirige
   // vers Stripe avec l'identifiant de la réservation en client_reference_id.
   // Dès que le paiement est validé, une fonction serveur (webhook Stripe, voir
-  // functions/index.js) passe automatiquement le statut à "Confirmé" et envoie
-  // les e-mails de notification — plus besoin que l'élève prévienne l'admin.
+  // worker.js) passe automatiquement le statut à "Confirmé", vérifie que le montant
+  // payé correspond bien au tarif attendu, et envoie les e-mails de notification.
+  //
+  // SÉCURITÉ : l'identifiant du document de réservation est désormais fixé à
+  // "{slotId}_{uid}" (au lieu d'un identifiant aléatoire). Combiné aux nouvelles
+  // règles Firestore, cela empêche un élève de créer plusieurs réservations en
+  // attente sur le même créneau (spam de fausses réservations non payées) : une
+  // deuxième tentative sur le même créneau est traitée comme une modification
+  // d'un document existant, refusée par les règles pour un simple élève.
   async function bookSlot(slotId) {
     const slot = allSlots.find(s => s.id === slotId);
     if (!slot) return;
@@ -1248,8 +1261,9 @@
     if (taken >= slot.capacity) { showToast("Ce créneau est complet."); renderSlots(); return; }
 
     const tariff = slot.type === 'stage' ? '180' : '29';
+    const bookingId = `${slot.id}_${currentUser.uid}`;
     try {
-      const bookingRef = db.collection('bookings').doc();
+      const bookingRef = db.collection('bookings').doc(bookingId);
       await bookingRef.set({
         slotId: slot.id, uid: currentUser.uid,
         studentName: currentUserData.name || currentUserData.email,
@@ -1593,7 +1607,7 @@
   const confirmation = document.getElementById('confirmation');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     fetch("https://formsubmit.co/ajax/soutien.bonpoint@gmail.com", {
       method: "POST",
       headers: {

@@ -966,7 +966,7 @@
   const DISCORD_INVITE_URL = "https://discord.gg/ZGwJ89xydt";
   // Webhook Discord : à créer dans ton serveur (Paramètres du salon > Intégrations >
   // Webhooks > Nouveau Webhook > Copier l'URL). Remplace la valeur ci-dessous.
-  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1536002815791595582/jXmaU0dN0jNf3xfbXDg7Qvx77RQWWaYfvyX2xzpYCENDvd8B8uMV82GdJnjNn7-XL2bl";
+  const DISCORD_WEBHOOK_URL = "REMPLACER_PAR_TON_WEBHOOK_DISCORD";
 
   const STRIPE_LINKS = {
     "29": "https://buy.stripe.com/3cI7sN2NW4sK5nt2dX1oI04",
@@ -1302,7 +1302,7 @@
           ${statusPill}
         </div>
         <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-          ${isConfirmed ? `<a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" class="btn btn-primary btn-small">Rejoindre le Discord (visio)</a>` : ''}
+          ${isConfirmed ? `<a href="${(allSlots.find(s => s.id === b.slotId) || {}).discordInviteUrl || DISCORD_INVITE_URL}" target="_blank" rel="noopener" class="btn btn-primary btn-small">Rejoindre le Discord (visio)</a>` : ''}
           <button class="btn btn-danger btn-small" data-cancel="${b.id}">Annuler</button>
         </div>
       `;

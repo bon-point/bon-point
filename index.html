@@ -961,6 +961,13 @@
     appId: "1:655708364953:web:1d37a834400198b5851808"
   };
   const ADMIN_EMAIL = "rondelrapon.matheo@gmail.com"; 
+
+  // Lien d'invitation vers ton serveur Discord (cours en visio)
+  const DISCORD_INVITE_URL = "https://discord.gg/ZGwJ89xydt";
+  // Webhook Discord : à créer dans ton serveur (Paramètres du salon > Intégrations >
+  // Webhooks > Nouveau Webhook > Copier l'URL). Remplace la valeur ci-dessous.
+  const DISCORD_WEBHOOK_URL = "REMPLACER_PAR_TON_WEBHOOK_DISCORD";
+
   const STRIPE_LINKS = {
     "29": "https://buy.stripe.com/3cI7sN2NW4sK5nt2dX1oI04",
     "99": "https://buy.stripe.com/14AfZjgEM8J09DJ19T1oI03",
@@ -1133,6 +1140,23 @@
     }).catch(err => console.error('Erreur notification admin:', err));
   }
 
+  // Prévient également sur Discord (webhook du serveur) — gratuit, instantané,
+  // aucune config à faire côté élève.
+  function notifyDiscord(text) {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.startsWith('REMPLACER')) return;
+    fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text })
+    }).catch(err => console.error('Erreur notification Discord:', err));
+  }
+
+  // Envoie la notification sur les deux canaux (e-mail + Discord) en un seul appel
+  function notifyAdminEverywhere(subject, text) {
+    notifyAdmin(subject, text);
+    notifyDiscord(`**${subject}**\n${text}`);
+  }
+
   const subjectFilterEl = document.getElementById('subjectFilter');
   if (subjectFilterEl) subjectFilterEl.addEventListener('change', renderSlots);
 
@@ -1233,7 +1257,7 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       // On prévient l'admin par e-mail qu'un paiement est en cours.
-      notifyAdmin("Nouvelle réservation en attente de paiement",
+      notifyAdminEverywhere("Nouvelle réservation en attente de paiement",
         `${currentUserData.name || currentUserData.email} vient de démarrer le paiement pour le créneau du ${slot.date} à ${slot.time} (${slot.subject}, ${tariff}€).`);
       showToast(`Redirection vers le paiement sécurisé (${tariff}€)…`);
       setTimeout(() => {
@@ -1277,7 +1301,10 @@
           <span class="slot-meta">${b.subject}</span>
           ${statusPill}
         </div>
-        <button class="btn btn-danger btn-small" data-cancel="${b.id}">Annuler</button>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+          ${isConfirmed ? `<a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" class="btn btn-primary btn-small">Rejoindre le Discord (visio)</a>` : ''}
+          <button class="btn btn-danger btn-small" data-cancel="${b.id}">Annuler</button>
+        </div>
       `;
       box.appendChild(card);
     });
@@ -1294,7 +1321,7 @@
       const b = allBookings.find(x => x.id === bookingId);
       await db.collection('bookings').doc(bookingId).delete();
       if (shouldNotifyAdmin && b) {
-        notifyAdmin("Réservation annulée par l'élève",
+        notifyAdminEverywhere("Réservation annulée par l'élève",
           `${b.studentName || b.email} a annulé sa réservation du ${b.date} à ${b.time} (${b.subject}).`);
       }
       showToast("Réservation annulée.");

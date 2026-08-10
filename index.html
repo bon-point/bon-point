@@ -323,6 +323,16 @@
   }
   .step h3{ font-size:1.1rem; margin-bottom:8px; }
   .step p{ font-size:.92rem; }
+  .steps-extra{
+    margin-top:32px; display:grid; grid-template-columns:repeat(2,1fr); gap:18px;
+  }
+  @media (max-width:760px){ .steps-extra{ grid-template-columns:1fr; } }
+  .steps-extra-card{
+    background:var(--paper-2); border-left:3px solid var(--correction-red);
+    border-radius:0 4px 4px 0; padding:16px 18px;
+  }
+  .steps-extra-card p{ font-size:.9rem; color:var(--ink); margin:0; }
+  .steps-extra-card .icon{ margin-right:6px; }
 
   /* ---------- TARIFS ---------- */
   .pricing{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
@@ -691,6 +701,7 @@
               </div>
             </div>
           </div>
+          <p class="proof-caption">Exemple illustratif et anonymisé, inspiré d'un accompagnement réel.</p>
         </div>
       </div>
     </div>
@@ -775,6 +786,15 @@
           <span class="num">✎</span>
           <h3>Cours en présentiel</h3>
           <p>Les cours en présentiel (à domicile) ne sont proposés qu'en <b>Île-de-France</b>. Envoyez-moi un e-mail à <a href="mailto:soutien.bonpoint@gmail.com">soutien.bonpoint@gmail.com</a> afin d'en discuter ensemble avant la réservation.</p>
+        </div>
+      </div>
+
+      <div class="steps-extra reveal">
+        <div class="steps-extra-card">
+          <p><span class="icon">📅</span>Il m'arrive aussi de partager ponctuellement des créneaux où je suis moi-même disponible : vous pouvez alors vous y inscrire directement, sans passer par un premier échange par e-mail.</p>
+        </div>
+        <div class="steps-extra-card">
+          <p><span class="icon">💬</span>Les cours en visio se déroulent sur Discord : une fois votre réservation confirmée, il vous suffit de cliquer sur le lien reçu pour rejoindre directement la visioconférence.</p>
         </div>
       </div>
     </div>
@@ -1092,10 +1112,10 @@
   const ADMIN_EMAIL = "rondelrapon.matheo@gmail.com";
 
   // Lien d'invitation vers ton serveur Discord (cours en visio)
-  const DISCORD_INVITE_URL = "https://discord.gg/ZGwJ89xydt";
+  const DISCORD_INVITE_URL = "https://discord.gg/ghFcqDYNTg";
   // Webhook Discord : à créer dans ton serveur (Paramètres du salon > Intégrations >
   // Webhooks > Nouveau Webhook > Copier l'URL). Remplace la valeur ci-dessous.
-  const DISCORD_WEBHOOK_URL = "REMPLACER_PAR_TON_WEBHOOK_DISCORD";
+  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1536097295035273389/xPdS16DZYKp6zmPhVFTDifMa9p7BzaIjuPMvoalG5mfSYNWh3fEVnw5PKSDd9uB0YD37";
   // URL du Worker Cloudflare (webhook Stripe + validation manuelle admin + rappels)
   const WORKER_BASE_URL = "https://bon-point-auto.soutien-bonpoint.workers.dev";
 

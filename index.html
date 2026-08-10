@@ -1345,7 +1345,12 @@
     }
     box.innerHTML = '';
     upcoming.forEach(slot => {
-      const taken = bookingsForSlot(slot.id).length;
+      // CORRECTIF : on utilise le compteur fiable stocké sur le créneau
+      // (bookedCount, tenu à jour par transaction + règles Firestore) plutôt
+      // que bookingsForSlot(), qui ne reflète que les réservations que
+      // l'utilisateur courant a le droit de lire (donc 0 pour un élève,
+      // faisant croire à tort qu'il reste toujours de la place).
+      const taken = slot.bookedCount || 0;
       const remaining = slot.capacity - taken;
       const alreadyBooked = allBookings.some(b => b.slotId === slot.id && b.uid === currentUser.uid);
       const badge = dateBadgeParts(slot.date);
@@ -1413,27 +1418,45 @@
   // attente sur le même créneau (spam de fausses réservations non payées) : une
   // deuxième tentative sur le même créneau est traitée comme une modification
   // d'un document existant, refusée par les règles pour un simple élève.
+  // CORRECTIF SÉCURITÉ : la réservation se fait désormais dans une transaction
+  // Firestore atomique, qui (1) relit la capacité et le nombre de places déjà
+  // prises DIRECTEMENT depuis le serveur au moment de l'écriture, (2) incrémente
+  // slots.bookedCount de 1, et (3) crée la réservation — le tout en une seule
+  // opération indivisible. Les règles Firestore rejettent l'écriture si
+  // bookedCount dépasserait capacity. Ça élimine complètement la possibilité de
+  // réserver un créneau complet, y compris en cas de double clic simultané par
+  // deux élèves sur la toute dernière place (un des deux échoue proprement et
+  // la transaction se ré-exécute avec les données à jour).
   async function bookSlot(slotId) {
     const slot = allSlots.find(s => s.id === slotId);
     if (!slot) return;
     if (!requireFirebase()) return;
-    // Vérification stricte : on recompte les réservations existantes juste avant de réserver,
-    // pour empêcher tout dépassement de la capacité (plus de nombre illimité de personnes sur un créneau).
-    const taken = bookingsForSlot(slotId).length;
-    if (taken >= slot.capacity) { showToast("Ce créneau est complet."); renderSlots(); return; }
 
     const tariff = slot.type === 'stage' ? '180' : '29';
     const bookingId = `${slot.id}_${currentUser.uid}`;
+    const slotRef = db.collection('slots').doc(slotId);
+    const bookingRef = db.collection('bookings').doc(bookingId);
+
     try {
-      const bookingRef = db.collection('bookings').doc(bookingId);
-      await bookingRef.set({
-        slotId: slot.id, uid: currentUser.uid,
-        studentName: currentUserData.name || currentUserData.email,
-        email: currentUserData.email,
-        date: slot.date, time: slot.time, subject: slot.subject,
-        tariff, status: "En attente de paiement",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      await db.runTransaction(async (tx) => {
+        const slotSnap = await tx.get(slotRef);
+        if (!slotSnap.exists) throw new Error("Ce créneau n'existe plus.");
+        const freshSlot = slotSnap.data();
+        const takenNow = freshSlot.bookedCount || 0;
+        if (takenNow >= freshSlot.capacity) {
+          throw new Error("Ce créneau est complet.");
+        }
+        tx.update(slotRef, { bookedCount: takenNow + 1 });
+        tx.set(bookingRef, {
+          slotId: slot.id, uid: currentUser.uid,
+          studentName: currentUserData.name || currentUserData.email,
+          email: currentUserData.email,
+          date: freshSlot.date, time: freshSlot.time, subject: freshSlot.subject,
+          tariff, status: "En attente de paiement",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
       });
+
       // On prévient l'admin par e-mail qu'un paiement est en cours, et sur Discord
       // via le Worker (le message est reconstruit côté serveur à partir de la
       // réservation elle-même, jamais à partir d'un texte envoyé par le navigateur).
@@ -1444,11 +1467,27 @@
       setTimeout(() => {
         window.location.href = STRIPE_LINKS[tariff] + '?client_reference_id=' + bookingRef.id;
       }, 1000);
-    } catch (err) { showToast("Erreur : " + err.message); }
+    } catch (err) {
+      showToast("Erreur : " + err.message);
+      renderSlots();
+    }
   }
 
+  // CORRECTIF : un élève normal n'a jamais le droit (règles Firestore) de lister
+  // TOUTE la collection "bookings" — seuls admin/worker le peuvent (confidentialité
+  // des autres élèves). L'ancienne version faisait un onSnapshot() non filtré pour
+  // tout le monde : pour un élève, ça échouait silencieusement (permission-denied),
+  // et allBookings restait vide en permanence. Conséquence concrète : le contrôle
+  // "ce créneau est complet" (basé sur bookingsForSlot().length) ne se déclenchait
+  // JAMAIS pour un élève, qui pouvait donc toujours réserver un créneau complet.
+  // On filtre désormais la requête par uid pour un élève (autorisé par les
+  // nouvelles règles), et on garde le listen complet pour l'admin/worker.
   function listenBookings() {
-    db.collection('bookings').onSnapshot((snap) => {
+    const isPrivileged = currentUserData && currentUserData.role === 'admin';
+    const query = isPrivileged
+      ? db.collection('bookings')
+      : db.collection('bookings').where('uid', '==', currentUser.uid);
+    query.onSnapshot((snap) => {
       allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderSlots();
       renderMyBookings();
@@ -1483,7 +1522,7 @@
           ${statusPill}
         </div>
         <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-          ${isConfirmed ? `<a href="${(allSlots.find(s => s.id === b.slotId) || {}).discordInviteUrl || DISCORD_INVITE_URL}" target="_blank" rel="noopener" class="btn btn-primary btn-small">Rejoindre le Discord (visio)</a>` : ''}
+          ${isConfirmed ? `<button class="btn btn-primary btn-small" data-joindiscord="${b.slotId}">Rejoindre le Discord (visio)</button>` : ''}
           <button class="btn btn-danger btn-small" data-cancel="${b.id}">Annuler</button>
         </div>
       `;
@@ -1492,6 +1531,26 @@
     box.querySelectorAll('[data-cancel]').forEach(btn => {
       btn.addEventListener('click', () => cancelBooking(btn.getAttribute('data-cancel'), true));
     });
+    box.querySelectorAll('[data-joindiscord]').forEach(btn => {
+      btn.addEventListener('click', () => joinDiscord(btn.getAttribute('data-joindiscord')));
+    });
+  }
+
+  // CORRECTIF SÉCURITÉ : le lien Discord n'est plus stocké sur le document
+  // public slots/{slotId} (lisible par tout le monde, même sans avoir payé),
+  // mais dans slots/{slotId}/private/discord, dont les règles Firestore ne
+  // le rendent lisible qu'à l'admin/worker et aux élèves ayant une
+  // réservation CONFIRMÉE sur ce créneau. On va donc le chercher à la
+  // demande, au clic, plutôt que de l'afficher directement dans le HTML.
+  async function joinDiscord(slotId) {
+    if (!requireFirebase()) return;
+    try {
+      const snap = await db.collection('slots').doc(slotId).collection('private').doc('discord').get();
+      const url = (snap.exists && snap.data().discordInviteUrl) || DISCORD_INVITE_URL;
+      window.open(url, '_blank', 'noopener');
+    } catch (err) {
+      showToast("Impossible de récupérer le lien Discord : " + err.message);
+    }
   }
 
   // shouldNotifyAdmin=true quand l'annulation est faite par l'élève lui-même (pour prévenir
@@ -1507,7 +1566,23 @@
         // en relisant la réservation dans Firestore, donc elle doit encore exister.
         await notifyBookingEvent(bookingId, 'cancelled');
       }
-      await db.collection('bookings').doc(bookingId).delete();
+
+      // CORRECTIF : on libère la place sur le créneau (bookedCount - 1) dans la
+      // même transaction que la suppression, sinon la place resterait comptée
+      // comme prise pour toujours après une annulation.
+      const bookingRef = db.collection('bookings').doc(bookingId);
+      await db.runTransaction(async (tx) => {
+        const bookingSnap = await tx.get(bookingRef);
+        if (!bookingSnap.exists) return;
+        const slotId = bookingSnap.data().slotId;
+        const slotRef = db.collection('slots').doc(slotId);
+        const slotSnap = await tx.get(slotRef);
+        tx.delete(bookingRef);
+        if (slotSnap.exists) {
+          const current = slotSnap.data().bookedCount || 0;
+          tx.update(slotRef, { bookedCount: Math.max(0, current - 1) });
+        }
+      });
       showToast("Réservation annulée.");
     } catch (err) { showToast("Erreur : " + err.message); }
   }
@@ -1586,6 +1661,7 @@
         endDate: dates[dates.length - 1], // dernier jour couvert
         dates,                         // tableau de tous les jours couverts par ce créneau
         time, subject, duration, capacity, type,
+        bookedCount: 0,                // NOUVEAU : compteur de places prises, tenu à jour par transaction
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       showToast(type === 'stage' ? `Stage intensif ajouté ✓ (${days} jours)` : "Créneau ajouté ✓");
@@ -1605,7 +1681,7 @@
     }
     box.innerHTML = '';
     allSlots.forEach(slot => {
-      const taken = bookingsForSlot(slot.id).length;
+      const taken = slot.bookedCount || 0;
       const badge = dateBadgeParts(slot.date);
       const isStage = slot.type === 'stage';
       const isFull = taken >= slot.capacity;

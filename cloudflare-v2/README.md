@@ -1,50 +1,38 @@
-# Nouveau serveur Cloudflare Bon Point v2
+# Bon Point — Cloudflare Worker v2
 
-**Projet neuf**, isolé du précédent Worker `bon-point-auto`. Les anciens paiements Stripe et l'ancien Worker ne sont pas réutilisés.
+État vérifié au **11 octobre 2026** : le Worker `bon-point-v2` est déployé sur Cloudflare à l'adresse `https://bon-point-v2.soutien-bonpoint.workers.dev`, sur une base D1 distincte de l'ancien `bon-point-auto` (qui n'a pas été modifié).
 
-## État
-- Code prêt dans `cloudflare-v2/src/index.js` mais **aucun déploiement Cloudflare effectué**.
-- Aucun compte Cloudflare ni secret Stripe associé dans cette conversation.
-- `PAYMENTS_ENABLED=false` dans `wrangler.toml` et `window.BONPOINT_CHECKOUT_API=""` sur le site.
-- Le seul compte Stripe actuellement visible dans ChatGPT est un compte test nommé « New business », **pas celui du projet**. Aucun encaissement réel possible.
+## Drapeaux de sécurité actuels
 
-## Architecture
-1. **Offres** : base D1 (`offers`) avec cinq tarifs modifiables par API administrateur, en euros **centimes**.
-2. **Propositions** : le responsable confirme le planning avec un parent, puis crée une proposition nominative (`POST /api/admin/proposals` avec `X-Admin-Key` côté administrateur uniquement). Le Worker crée une URL privée valable 7 jours.
-3. **Paiement** : le parent consulte son devis, les CGV, valide la commande ; le Worker fixe le prix à partir de D1 et crée une session Stripe Checkout. Le paiement n'est jamais validé depuis la page de retour.
-4. **Confirmation** : webhook Stripe HMAC contrôlant mode, ID, montant, devise et e-mail, puis insertion d'une tâche de confirmation en D1.
-5. **Google Meet** : obligatoire pour 6e/5e/4e/3e ; le lien Google Meet est créé manuellement par l'organisateur et renseigné dans la proposition *avant paiement*. Le parent le reçoit par e-mail seulement après paiement vérifié.
-6. **Discord** : possible au lycée uniquement si le participant respecte l'âge minimum de Discord (15 ans en France) et que le parent le confirme. Le bot crée une invitation individuelle au serveur ; les permissions de salon privé sont une configuration Discord distincte. Google Meet reste possible au lycée.
-7. **Rétractation** : enregistrement horodaté en D1 et accusé par e-mail via Brevo, avec file de reprises. Contrôle juridique nécessaire avant mise en production.
-
-## Cloudflare : étapes de préparation par le propriétaire autorisé
-1. Se connecter au compte Cloudflare approprié. Accès nécessaire au tableau de bord Cloudflare ; **je ne dispose pas de cet accès**.
-2. Depuis le dossier `cloudflare-v2`, créer la D1 via `npx wrangler d1 create bon-point-v2`, préférer si souhaité la juridiction UE (`--jurisdiction eu`, selon conditions Cloudflare). Inscrire l'ID de D1 dans `wrangler.toml`.
-3. Initialiser la base : `npx wrangler d1 migrations apply bon-point-v2 --remote`. Vérifier dans D1 que les cinq offres et les tables de commandes sont présentes.
-4. Ajouter les secrets Cloudflare, jamais dans GitHub : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `ADMIN_API_KEY` (clé aléatoire longue), `MAIL_API_KEY`, `MAIL_SENDER`. Pour Discord : `DISCORD_BOT_TOKEN`, `DISCORD_CHANNEL_ID`. `OWNER_EMAIL` pour réception des demandes.
-5. Configurer chez Stripe, sur le **nouveau compte confirmé**, le webhook `https://<NOUVEAU-WORKER>/stripe/webhook` avec événements `checkout.session.completed` et `checkout.session.async_payment_succeeded`. Tester uniquement en **mode test**.
-6. Déployer le Worker via `npx wrangler deploy`. Tester `GET /health` : tant que les secrets et `PAYMENTS_ENABLED=true` ne sont pas tous présents, le paiement reste désactivé.
-7. Après tests, saisir l'URL HTTPS du nouveau Worker dans `config-paiement.js`. Le site affiche alors les nouveaux prix issus de D1, et les propositions nominatives peuvent devenir payables **uniquement** quand le serveur l'autorise.
-
-## Gestion des prix
-- `GET /api/offers` : liste publique des tarifs actifs.
-- `POST /api/admin/offers/:id` avec `X-Admin-Key` depuis un environnement d'administration protégé, par exemple body `{"price_cents":79000,"active":true}`. Ne jamais inclure cette clé dans le navigateur.
-- Le prix d'une proposition est **figé dans la commande** lors de sa création : modifier le catalogue ne modifie pas les montants déjà proposés.
-- Si un prix change, relire et adapter les **CGV** et communications commerciales en plus de la base.
-
-## Créer une proposition nominative (uniquement administrateur)
-Exemple de corps JSON pour `POST /api/admin/proposals` :
-```json
-{"offer":"brevet","email":"parent@exemple.fr","grade":"3e","method":"meet","meet_url":"https://meet.google.com/abc-defg-hij"}
+```toml
+PAYMENTS_ENABLED = "false"
+STRIPE_MODE = "test"
+SITE_INTAKE_ENABLED = "false"
+PARENT_PORTAL_ENABLED = "false"
 ```
-Le lien Meet ci-dessus est un **format fictif**, pas un véritable accès utilisable. Ne partager les vrais liens que dans les propositions privées. Pour une classe du collège, le Worker refuse la méthode Discord.
 
-## Prérequis avant de facturer
-- Identité professionnelle, statut/éventuel représentant légal, coordonnées et obligations fiscales à confirmer ; ne pas fournir ici de pièce d'identité ni d'informations bancaires.
-- CGV exactes, conditions de rétractation, médiateur de la consommation, RGPD (base juridique, conservation, fournisseurs, transferts, demandes de suppression), confirmation écrite des créneaux.
-- Sécuriser l'API admin (Cloudflare Access recommandé), limiter le débit public et installer Turnstile contre les demandes de rétractation abusives.
-- Tester les webhooks répétés, refus de paiement, remboursements, indisponibilité du mail et des liens Meet/Discord, délais et relances.
-- La livraison mail est **au moins une fois** : une erreur après envoi peut conduire à un second message. Prévoir une gestion de déduplication avant le réel.
+Aucun paiement réel, collecte automatique des demandes ni connexion privée parents n'est ouvert. L'API publique du catalogue reste consultable, mais le paiement est refusé tant que les prérequis et la configuration ne sont pas validés. Le déclencheur planifié v2 est `*/5 * * * *` pour le nettoyage des sessions expirées et les éventuelles notifications différées.
 
-## Attention
-Cloudflare et Stripe demandent des comptes et des paramètres qu'une simple modification GitHub ne peut pas créer. Aucune clé privée n'a été placée dans le dépôt et aucun achat réel n'a été exécuté.
+## Architecture et fonctionnalités
+
+- `src/index.js` : offres, propositions nominatives, paiements Stripe conditionnels, vérification des webhooks, rétractation, accès Google Meet/Discord encadré.
+- `src/site-services.js` : demandes de rendez-vous et diagnostics, authentification parent par code e-mail, dossiers privés, commandes, références de factures et accès administrateur.
+- `migrations/0001_init.sql` : offres, commandes, notifications, rétractations.
+- `migrations/0002_payment_plan.sql` : modalités de règlement des commandes.
+- `migrations/0003_site_services.sql` : tables privées des services famille.
+
+Les tables de la migration **0003** ont été créées directement sur la base D1 existante le 11 octobre 2026, après contrôle de leur caractère additif. **Attention :** avant d'exécuter `wrangler d1 migrations apply --remote`, vérifier l'historique/registre des migrations et l'état du schéma avec une sauvegarde. La colonne `orders.payment_plan` existe déjà ; rejouer l'ancienne migration 0002 (ALTER TABLE) sans registre cohérent peut échouer. Ne pas appliquer toutes les migrations aveuglément à la base en production.
+
+## Guides
+
+- `SITE-SERVICES.md` : explications de toutes les pages publiques, endpoints, gestion des comptes parents, activations et contrôles de sécurité.
+- `GOOGLE-MEET.md` : organisation des cours à distance.
+- `../INFOS-LEGALES-A-COMPLETER.md` : points juridiques à terminer.
+
+## Points à finaliser avant toute activation
+
+L'immatriculation et les informations fiscales, les mentions légales/CGV, le médiateur de la consommation, les engagements de protection des données, les contrats de sous-traitance et les durées de conservation doivent être vérifiés.
+
+Ensuite seulement, tester les services avec de fausses données : e-mail de l'expéditeur Brevo, API admin privée, secret de code parent, Turnstile serveur, activation séparée des deux drapeaux. Ajouter des limitations de débit et contrôle d'accès administrateur. Les parents doivent obtenir une session individuelle vérifiée, et les factures doivent être effectivement émises et communiquées par un canal sûr.
+
+**Discord n'est pas refondu par ce changement** : les anciens salons, commandes et webhooks ne sont pas touchés. Aucun identifiant privé ou secret ne doit être ajouté au dépôt GitHub public.

@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {generateKeyPairSync,sign,webcrypto} from "node:crypto";
+import {generateKeyPairSync,sign} from "node:crypto";
 import fs from "node:fs";
 
-globalThis.crypto=webcrypto;
 const js=fs.readFileSync("discord-bot/src/index.js","utf8");
 const {default:worker}=await import("data:text/javascript;base64,"+Buffer.from(js).toString("base64"));
 const {privateKey,publicKey}=generateKeyPairSync("ed25519");

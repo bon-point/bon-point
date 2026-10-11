@@ -1,0 +1,20 @@
+name = "bon-point-discord"
+main = "src/index.js"
+compatibility_date = "2026-10-11"
+workers_dev = true
+
+[vars]
+DISCORD_PUBLIC_KEY = "NOT_CONFIGURED"
+DISCORD_GUILD_ID = "NOT_CONFIGURED"
+DISCORD_ADMIN_CHANNEL_ID = "NOT_CONFIGURED"
+DISCORD_NOTIFICATIONS_ENABLED = "false"
+DISCORD_SYNC_FROM = "9999-12-31T00:00:00.000Z"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bon-point-v2"
+database_id = "fe8c895c-f678-4681-825b-3718e4e9cd66"
+migrations_dir = "../cloudflare-v2/migrations"

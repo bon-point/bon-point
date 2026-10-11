@@ -1,0 +1,31 @@
+name: Deploy Bon Point Cloudflare v2 (manual only)
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    if: github.ref_name == 'refonte-premium-lancement-2026'
+    runs-on: ubuntu-latest
+    environment: cloudflare-staging
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Cloudflare authorization
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+      - name: Install Wrangler
+        run: npm install --no-save wrangler@4
+      - name: Apply D1 schema then deploy the isolated Worker
+        working-directory: cloudflare-v2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler d1 migrations apply bon-point-v2 --remote
+          npx wrangler deploy

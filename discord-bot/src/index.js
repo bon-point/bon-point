@@ -89,14 +89,14 @@ async function sendQueued(env){
 export default {
  async fetch(request,env){
   const url=new URL(request.url);
-  if(url.pathname==="/health"&&request.method==="GET")return json({name:"Bon Point Discord",version:1,discord_interactions_configured:configuredKey(env),notifications_configured:!!enabled(env)});
+  if(url.pathname==="/health"&&request.method==="GET")return json({name:"Bon Point Discord",version:1,discord_interactions_configured:configuredKey(env)&&/^\d{17,22}$/.test(env.DISCORD_GUILD_ID||""),notifications_configured:!!enabled(env)});
   if(url.pathname!=="/interactions")return new Response("Not found",{status:404});
   if(request.method!=="POST")return new Response("Method not allowed",{status:405});
   const interaction=await authorized(request,env);
   if(!interaction)return new Response("Invalid Discord signature",{status:401});
   if(interaction.type===1)return json({type:1});
   if(interaction.type!==2)return ephemeral("Interaction non prise en charge.");
-  if(env.DISCORD_GUILD_ID&&env.DISCORD_GUILD_ID!=="NOT_CONFIGURED"&&interaction.guild_id!==env.DISCORD_GUILD_ID)return ephemeral("Cette commande est réservée au serveur Bonpoint.");
+  if(!/^\d{17,22}$/.test(env.DISCORD_GUILD_ID||"")||interaction.guild_id!==env.DISCORD_GUILD_ID)return ephemeral("Cette commande est réservée au serveur Bonpoint.");
   return reply(interaction.data?.name);
  },
  async scheduled(_event,env,ctx){

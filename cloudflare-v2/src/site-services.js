@@ -70,7 +70,7 @@ async function diagnostic(req,env,h){
  if(!intakeEnabled(env))return h.fail("Service désactivé ; utilisez le formulaire e-mail",503,req);
  if(!browserOrigin(req))return h.fail("Origine refusée",403,req);
  const d=await body(req),x=sanitized(d),chapters=text(d.chapters,650),goal=text(d.goal,100),notes=text(d.notes,650);
- if(!x.valid||chapters.length<3||!GOALS.has(goal))return h.fail("Diagnostic incomplet",400,req);
+ if(d.parent_confirmed!==true||!x.valid||chapters.length<3||!GOALS.has(goal))return h.fail("Diagnostic incomplet",400,req);
  if(!await verifyHuman(d,env))return h.fail("Vérification de sécurité nécessaire",400,req);
  if(!await limit(env,"diagnostic_requests",x.parent_email))return h.fail("Trop de demandes récentes. Contactez Bon Point par e-mail.",429,req);
  const id=crypto.randomUUID();

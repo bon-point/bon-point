@@ -79,6 +79,7 @@ async function diagnostic(req,env,h){
  return h.json({received:true,reference:id},201,req);
 }
 async function parentCode(req,env,h){
+ if(env.PARENT_SELF_SERVICE_CODES!=="true")return h.fail("Demandez votre code de connexion à Bon Point.",403,req);
  if(!parentsEnabled(env))return h.fail("Accès privé indisponible",503,req);
  if(!browserOrigin(req))return h.fail("Origine refusée",403,req);
  const d=await body(req),mail=emailOf(d.email);
@@ -127,12 +128,13 @@ async function parentDashboard(req,env,h){
  const account=await authenticated(req,env);if(!account)return h.fail("Session expirée ou invalide",401,req);
  const mail=account.email;
  const [sessions,bookings,orders,invoices]=await env.DB.batch([
-  env.DB.prepare("SELECT session_date,subject,summary,next_step FROM progress_entries WHERE parent_email=? ORDER BY session_date DESC LIMIT 50").bind(mail),
+  env.DB.prepare("SELECT id,session_date,subject,summary,next_step FROM progress_entries WHERE parent_email=? ORDER BY session_date DESC LIMIT 50").bind(mail),
   env.DB.prepare("SELECT requested_date,subject,period,status FROM booking_requests WHERE parent_email=? ORDER BY created_at DESC LIMIT 30").bind(mail),
   env.DB.prepare("SELECT o.id,f.title,o.locked_price_cents,o.payment_plan,o.state,o.created_at FROM orders o JOIN offers f ON f.id=o.offer_id WHERE lower(o.parent_email)=? AND o.state IN ('proposed','paid') ORDER BY o.created_at DESC LIMIT 30").bind(mail),
   env.DB.prepare("SELECT invoice_number,total_cents,issued_on,status FROM invoices WHERE parent_email=? ORDER BY issued_on DESC LIMIT 30").bind(mail)
  ]);
- return h.json({parent:{display_name:account.display_name,email:mail},sessions:sessions.results,bookings:bookings.results,orders:orders.results,invoices:invoices.results},200,req);
+ const files=await env.DB.prepare("SELECT id,progress_id,file_name,size_bytes,created_at FROM session_files WHERE parent_email=? ORDER BY created_at DESC LIMIT 100").bind(mail).all();
+ return h.json({parent:{display_name:account.display_name,email:mail},sessions:sessions.results,bookings:bookings.results,orders:orders.results,invoices:invoices.results,files:files.results},200,req);
 }
 async function parentLogout(req,env,h){
  if(!parentsEnabled(env))return h.fail("Accès privé indisponible",503,req);

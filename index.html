@@ -54,7 +54,8 @@ footer{background:#101b2b;color:#d2dce4;padding:42px 0 25px}.foot{display:flex;j
 .premium-card li:before{content:"✦";color:#ffb591}
 .premium-kicker{font-size:.77rem;font-weight:850;letter-spacing:.13em;text-transform:uppercase;color:#ffbea4;margin-bottom:15px}
 .premium-price{font:600 3rem Georgia,serif;color:#fff;letter-spacing:-.04em}
-.premium-price span{font:500 .89rem system-ui,sans-serif;color:#d5dfe9}
+.premium-price>span[data-live-price]{display:inline;font:600 clamp(2.1rem,3.5vw,3rem)/1.1 Georgia,serif;color:#fff;letter-spacing:-.035em;white-space:nowrap}
+.premium-price>span:not([data-live-price]){display:inline-block;font:600 .88rem/1.45 system-ui,sans-serif;color:#e9eef4;letter-spacing:0}
 .premium-card .btn{background:#f6f5f1;color:#17273d;border-color:#f6f5f1}
 .premium-card .btn:hover{background:#f5c2a2}
 .protection-note{font-size:.83rem;color:#d5dfe9!important;margin-top:25px}
@@ -67,6 +68,42 @@ footer{background:#101b2b;color:#d2dce4;padding:42px 0 25px}.foot{display:flex;j
 .installment-item b{color:white}
 .prelaunch-info{margin:0;background:#fff1dc;border-bottom:1px solid #dec18f;text-align:center;color:#67461e;padding:12px 18px;font-size:.82rem}
 .prelaunch-info strong{color:#53340f}
+
+/* Lisibilité et mise en page : correctifs pour mobile, tablette et lecteurs avec zoom */
+html{overflow-x:clip}
+body{font-size:17px;line-height:1.7;text-rendering:optimizeLegibility}
+h1,h2,h3{overflow-wrap:break-word;hyphens:auto}
+h1{font-size:clamp(2.6rem,5.4vw,5.1rem);line-height:1.12}
+h2{font-size:clamp(1.95rem,3.4vw,3.25rem);line-height:1.2}
+p,li{overflow-wrap:break-word}
+.eyebrow,.premium-kicker{font-size:.84rem;line-height:1.55;letter-spacing:.075em}
+.small,.micro,.fine,.protection-note,.prelaunch-info{font-size:.88rem;line-height:1.6}
+.price .subhead,.price li,.subject ul,.card p,.faq-list p,.dark .steps4 p,.premium-card li{font-size:.98rem;line-height:1.65}
+.price .money{font-size:clamp(2rem,3vw,2.65rem);line-height:1.15}
+.price .money [data-live-price]{font:inherit;letter-spacing:inherit}
+.premium-section .premium-card{min-width:0}
+.premium-card .premium-price{font-size:clamp(2rem,3.2vw,2.9rem);line-height:1.3;margin-bottom:6px}
+.premium-price>span:not([data-live-price]){white-space:normal}
+.premium-card p,.premium-section .premium-card p,.premium-card li,.premium-card .installment-item{color:#f0f4f8!important}
+.premium-card .installment-item{font-size:.96rem}
+.premium-card .installment-intro{font-size:.96rem!important;color:#eff4fa!important}
+.premium-card .premium-kicker{color:#ffc5a9!important}
+.price,.card,.subject,.premium-card{min-width:0}
+.about-text{max-width:900px;margin:auto}
+.about-text h2{max-width:20ch}
+.about-text>p:not(.eyebrow){max-width:72ch;font-size:1.05rem}
+.about-benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:26px 0 32px}
+.about-benefits>div{background:#fff;border:1px solid #dfe3e5;border-radius:12px;padding:16px 14px;font-weight:700;font-size:.92rem;line-height:1.5}
+.about-benefits span{color:#347760;margin-right:9px}
+.dark .steps4 p,.dark .intro p{color:#f0f4f8}
+.footlinks a{color:#f1f5f9;text-underline-offset:3px}
+.navlinks a{font-size:.94rem}
+.btn{min-height:46px;line-height:1.4}
+.contact-box .micro{font-size:.86rem}
+.fields2>*,.contact-grid>*,.hero-grid>*{min-width:0}
+@media(max-width:980px){.hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}.hero h1{font-size:clamp(2.5rem,5vw,4rem)}}
+@media(max-width:780px){.hero-grid{grid-template-columns:1fr}.about-benefits{grid-template-columns:1fr}.navlinks{z-index:55}.premium-card .premium-price{font-size:2.5rem}}
+@media(max-width:460px){body{font-size:16px}.wrap{width:calc(100% - 32px)}.premium-card{padding:23px 18px}.premium-price>span[data-live-price]{font-size:2.3rem}.premium-card h3{font-size:1.8rem}.hero-art{padding-right:0}.about-benefits>div{padding:13px}.dash-body h2{font-size:1.55rem}}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"EducationalOrganization","name":"Bon Point","url":"https://bon-point.github.io/bon-point/","description":"Accompagnement individuel en mathématiques et physique-chimie du collège au lycée.","email":"soutien.bonpoint@gmail.com","areaServed":{"@type":"Country","name":"France"},"availableLanguage":"fr"}</script></head>
 <body><a class="skip" href="#main">Aller au contenu</a><div class="strap">MATHÉMATIQUES & PHYSIQUE-CHIMIE · COLLÈGE & LYCÉE · VISIO & ÎLE-DE-FRANCE</div>
@@ -92,7 +129,7 @@ footer{background:#101b2b;color:#d2dce4;padding:42px 0 25px}.foot{display:flex;j
 <article class="premium-card motion-reveal"><p class="premium-kicker">Baccalauréat · Première / Terminale</p><h3>Bac Excellence</h3><p>Un cadre de préparation renforcé aux épreuves de mathématiques et/ou de physique-chimie : notions clés, méthodologie et sujets type bac.</p><div class="premium-price"><span data-live-price="bac">1 290 €</span> <span>· programme de 20 h</span><p class="installment-intro">Échéancier au choix, sans frais supplémentaires :</p><p class="installment-item">Mensuel : <b>3 × 430 €</b></p><p class="installment-item">Trimestriel : <b>2 × 645 €</b></p></div><ul><li>Diagnostic et feuille de route individualisée</li><li>20 heures individuelles à planifier sur 10 semaines environ</li><li>Sujets type bac et corrections détaillées</li><li>Suivi de la rédaction, des méthodes et des erreurs</li><li>Bilans réguliers avec les parents</li></ul><a class="btn" href="checkout.html?offre=bac">Choisir mon échéancier ↗</a></article>
 </div><p class="protection-note">Admission après échange préalable avec le parent pour vérifier l’adéquation du programme et les disponibilités. Mensualités ou versements trimestriels au choix, après acceptation d’un échéancier et sous réserve de l’activation légale de cette modalité. Pas de prélèvement automatique à ce stade. Prix proposés, à confirmer avant la vente. Ces programmes ne garantissent pas une note ou l'obtention du diplôme.</p>
 </div></section>
-<section class="block" id="apropos"><div class="wrap about"><div class="portrait"><span class="fallback" aria-hidden="true">BP</span><img src="matheo.png" alt="Portrait de Mathéo, fondateur de Bon Point" loading="lazy" onerror="this.style.display='none'"><span class="portrait-tag">Mathéo · Votre interlocuteur Bon Point</span></div><div><p class="eyebrow">À propos de Bon Point</p><h2>Un accompagnement humain, exigeant et accessible.</h2><p>Je m'appelle Mathéo Rondel Rapon. Je poursuis une formation en école d'ingénieurs au CESI et j'accompagne des élèves en mathématiques et en physique-chimie.</p><p>Ayant moi-même rencontré des difficultés dans mon parcours scolaire, j'accorde une grande importance aux explications claires, à la méthode et à la confiance. Mon expérience de l'aide aux devoirs en milieu associatif renforce cette approche.</p><p>Avec Bon Point, mon objectif est de proposer aux familles un cadre sérieux, bienveillant et adapté au rythme de chaque élève.</p><ul><li>Un interlocuteur unique, pour un suivi cohérent</li><li>Mathématiques et physique-chimie au collège et au lycée</li><li>Échanges réguliers avec les parents</li></ul><a class="btn btn-outline" href="#contact">Faire connaissance ↗</a></div></div></section>
+<section class="block" id="apropos"><div class="wrap about-text"><p class="eyebrow">À propos de Bonpoint</p><h2>Un accompagnement humain, exigeant et accessible.</h2><p>Je m'appelle Mathéo Rondel--Rapon. Étudiant en école d'ingénieurs, j'accompagne les élèves en mathématiques et en physique-chimie, du collège au lycée.</p><p>Ayant moi-même rencontré des difficultés dans mon parcours, j'accorde une grande importance aux explications claires, aux méthodes de travail et à la confiance en soi. Mon expérience de l'aide aux devoirs en milieu associatif nourrit cette approche.</p><p>Avec Bonpoint, je propose aux familles un cadre sérieux, progressif et adapté aux objectifs de chaque élève.</p><div class="about-benefits"><div><span aria-hidden="true">✓</span> Un interlocuteur unique</div><div><span aria-hidden="true">✓</span> Maths &amp; physique-chimie</div><div><span aria-hidden="true">✓</span> Échanges réguliers avec les parents</div></div><a class="btn btn-outline" href="#contact">Prendre contact ↗</a></div></section>
 <section class="block" id="faq" style="background:white"><div class="wrap"><div class="intro center"><p class="eyebrow">Questions fréquentes</p><h2>Tout savoir avant de commencer.</h2></div><div class="faq-list">
 <details><summary>À quels niveaux s'adressent les cours ?</summary><p>De la 6e à la Terminale, en mathématiques et physique-chimie. Les besoins sont précisés avec le parent avant les premières séances.</p></details>
 <details><summary>Les cours sont-ils en ligne ou à domicile ?</summary><p>Au collège, les séances à distance se déroulent sur Google Meet. Au lycée, Google Meet reste disponible et Discord est une option uniquement si l’élève respecte les conditions d’âge du service. À domicile en Île-de-France, les disponibilités et le tarif sont à confirmer par devis.</p></details>

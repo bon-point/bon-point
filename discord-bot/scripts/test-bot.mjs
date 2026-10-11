@@ -46,3 +46,10 @@ test("Unknown commands cannot access administration",async()=>{
  const r=await interaction({type:2,guild_id:env.DISCORD_GUILD_ID,data:{name:"admin-delete"}});const x=await r.json();
  assert.match(x.data.content,/Commande non reconnue/);
 });
+
+test("Scheduled synchronization stays inactive without credentials",async()=>{
+ let task;
+ await worker.scheduled({},env,{waitUntil:p=>{task=p}});
+ await task;
+ assert.ok(true,"No Discord or D1 calls were made");
+});

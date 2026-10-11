@@ -174,7 +174,7 @@ async function sendConfirmation(env,order){
 }
 async function drainOutbox(env){
  // Recover timed-out leases. Delivery is at-least-once, not exactly-once.
- await env.DB.prepare("UPDATE outbox SET state='queued' WHERE state='sending' AND claimed_at < datetime('now', '-15 minutes') AND attempts < 6").run();
+ await env.DB.prepare("UPDATE outbox SET state='queued' WHERE state='sending' AND datetime(claimed_at) < datetime('now', '-15 minutes') AND attempts < 6").run();
  const rows=await env.DB.prepare("SELECT * FROM outbox WHERE state='queued' AND attempts < 6 ORDER BY created_at LIMIT 10").all();
  for(const row of rows.results){
   const lease=await env.DB.prepare("UPDATE outbox SET state='sending',attempts=attempts+1,claimed_at=? WHERE id=? AND state='queued'").bind(now(),row.id).run();

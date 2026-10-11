@@ -23,7 +23,7 @@ async function requestJSON(req){
   if(Number(req.headers.get("content-length")||0)>10000)throw Error("Too large");
   return req.json();
 }
-function enabled(env){return env.PAYMENTS_ENABLED==="true" && !!(env.DB&&env.STRIPE_SECRET_KEY&&env.STRIPE_WEBHOOK_SECRET&&env.ADMIN_API_KEY&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
+function enabled(env){const mode=env.STRIPE_MODE;const validKey=mode==="test"?env.STRIPE_SECRET_KEY?.startsWith("sk_test_"):mode==="live"&&env.STRIPE_SECRET_KEY?.startsWith("sk_live_");return env.PAYMENTS_ENABLED==="true" && !!(validKey&&env.DB&&env.STRIPE_WEBHOOK_SECRET&&env.ADMIN_API_KEY&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
 function adminAllowed(req,env){
  const candidate=req.headers.get("X-Admin-Key")||"",known=env.ADMIN_API_KEY||"";
  if(candidate.length<32||known.length!==candidate.length)return false;
@@ -173,6 +173,8 @@ async function sendConfirmation(env,order){
  "<p>Bonjour,</p><p>Votre paiement pour "+title+" est confirmé.</p><p>Référence : "+ref+"</p><p>"+details+" : <a href='"+url+"'>Accéder à la visioconférence</a></p><p>Les créneaux doivent être convenus avec le responsable légal avant le cours. Contact : soutien.bonpoint@gmail.com.</p>");
 }
 async function drainOutbox(env){
+ // Recover timed-out leases. Delivery is at-least-once, not exactly-once.
+ await env.DB.prepare("UPDATE outbox SET state='queued' WHERE state='sending' AND claimed_at < datetime('now', '-15 minutes') AND attempts < 6").run();
  const rows=await env.DB.prepare("SELECT * FROM outbox WHERE state='queued' AND attempts < 6 ORDER BY created_at LIMIT 10").all();
  for(const row of rows.results){
   const lease=await env.DB.prepare("UPDATE outbox SET state='sending',attempts=attempts+1,claimed_at=? WHERE id=? AND state='queued'").bind(now(),row.id).run();
@@ -218,8 +220,8 @@ export default{
    if(req.method==="GET"&&url.pathname==="/api/offers")return env.DB?publicOffers(req,env):fail("Non configuré",503,req);
    if(req.method==="GET"&&url.pathname==="/api/proposal")return env.DB?proposal(req,env,url):fail("Non configuré",503,req);
    if(req.method==="POST"&&url.pathname==="/api/checkout")return checkout(req,env);
-   if(req.method==="POST"&&url.pathname==="/stripe/webhook")return stripeWebhook(req,env);
-   if(req.method==="POST"&&url.pathname==="/api/withdrawal")return withdrawal(req,env);
+   if(req.method==="POST"&&url.pathname==="/stripe/webhook"){const result=await stripeWebhook(req,env);if(result.ok && env.DB && env.MAIL_API_KEY)ctx.waitUntil(drainOutbox(env));return result}
+   if(req.method==="POST"&&url.pathname==="/api/withdrawal"){const result=await withdrawal(req,env);if(result.ok && env.DB && env.MAIL_API_KEY)ctx.waitUntil(drainOutbox(env));return result}
    if(req.method==="POST"&&url.pathname==="/api/admin/proposals")return env.DB?adminProposal(req,env):fail("Non configuré",503,req);
    const m=url.pathname.match(/^\/api\/admin\/offers\/([a-z]+)$/);
    if(req.method==="POST"&&m)return env.DB?adminUpdateOffer(req,env,m[1]):fail("Non configuré",503,req);

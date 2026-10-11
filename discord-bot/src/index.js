@@ -38,6 +38,34 @@ function reply(name){
   default:return ephemeral("Commande non reconnue. Utilisez `/aide`.");
  }
 }
+const COMMANDS=[
+ {name:"aide",description:"Découvrir les commandes et le fonctionnement de Bon Point",type:1},
+ {name:"site",description:"Obtenir le lien du site officiel Bon Point",type:1},
+ {name:"reserver",description:"Ouvrir le calendrier de réservation des cours",type:1},
+ {name:"support",description:"Savoir comment contacter Bon Point",type:1}
+];
+const COMMAND_SCHEMA="four-public-commands-v1";
+function registrationReady(env){
+ return env.DISCORD_AUTO_REGISTER==="true"&&env.DB&&configuredKey(env)&&/^\d{17,22}$/.test(env.DISCORD_GUILD_ID||"")&&/^\d{17,22}$/.test(env.DISCORD_APPLICATION_ID||"")&&env.DISCORD_BOT_TOKEN;
+}
+async function registerGuildCommands(env){
+ if(!registrationReady(env))return;
+ const row=await env.DB.prepare("SELECT value FROM discord_bot_state WHERE name='command_schema'").first();
+ if(row?.value===COMMAND_SCHEMA)return;
+ const endpoint=API+"/applications/"+env.DISCORD_APPLICATION_ID+"/guilds/"+env.DISCORD_GUILD_ID+"/commands";
+ for(const command of COMMANDS){
+  const response=await fetch(endpoint,{
+   method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bot "+env.DISCORD_BOT_TOKEN},
+   body:JSON.stringify(command)
+  });
+  if(!response.ok){
+   console.warn("Discord command registration failed",command.name,response.status);
+   return;
+  }
+ }
+ await env.DB.prepare("INSERT INTO discord_bot_state(name,value,updated_at) VALUES('command_schema',?,datetime('now')) ON CONFLICT(name) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at").bind(COMMAND_SCHEMA).run();
+ console.log("Bon Point Discord commands registered in configured guild");
+}
 function safeDate(d){return /^20\d{2}-\d{2}-\d{2}$/.test(d||"")?d.split("-").reverse().join("/"):"date à confirmer"}
 function safeTime(t){return /^([01]\d|2[0-3]):[0-5]\d$/.test(t||"")?t:"horaire à confirmer"}
 function enabled(env){return env.DISCORD_NOTIFICATIONS_ENABLED==="true"&&env.DB&&env.DISCORD_BOT_TOKEN&&/^\d{17,22}$/.test(env.DISCORD_ADMIN_CHANNEL_ID||"")}
@@ -100,7 +128,11 @@ export default {
   return reply(interaction.data?.name);
  },
  async scheduled(_event,env,ctx){
-  if(!enabled(env))return;
-  ctx.waitUntil((async()=>{await enqueue(env);await sendQueued(env)})());
+  ctx.waitUntil((async()=>{
+   await registerGuildCommands(env);
+   if(!enabled(env))return;
+   await enqueue(env);
+   await sendQueued(env);
+  })());
  }
 };

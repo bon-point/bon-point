@@ -46,7 +46,7 @@ function parisToUTC(day,time){
 function acceptedSchedule(day,time){
  const [hh,mm]=time.split(":").map(Number),clock=hh*60+mm;
  const n=new Date(day+"T12:00:00Z").getUTCDay();
- if(n===0||n===6)return clock>=8*60&&clock<=22*60;
+ if(n===0||n===6)return clock>=8*60&&clock<=18*60;
  if(n===4)return clock>=13*60+30&&clock<=22*60;
  return clock>=18*60&&clock<=22*60;
 }

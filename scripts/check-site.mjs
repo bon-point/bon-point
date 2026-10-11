@@ -67,6 +67,6 @@ assert.match(services,/PARENT_AUTH_SECRET/,'Private parent authentication secret
 assert.match(services,/parent_email=\?/,'Parent records must be scoped to the logged-in email');
 assert.match(services,/h\.adminAllowed\(req,env\)/,'Admin writes must check the existing admin key');
 assert.match(fs.readFileSync('parents.html','utf8'),/Authorization/,'Dashboard must authenticate');
-assert.match(fs.readFileSync('reserver.html','utf8'),/pas un créneau disponible|créneau n.est réservé/i,'No invented availability or instant booking');
+assert.match(fs.readFileSync('reserver.html','utf8'),/l.agenda n.affiche pas des disponibilités en temps réel/i,'No invented availability or instant booking');
 for(const n of ['reserver.html','diagnostic.html','parents.html'])assert.ok(page.includes('href="'+n+'"'),'Homepage missing new tool '+n);
 console.log('OK gated private services, parent data boundaries and new pages');

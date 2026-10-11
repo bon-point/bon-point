@@ -1,5 +1,9 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Préparer une réservation — Bon Point</title><style>
 :root{--ink:#142235;--rust:#c44c36;--bg:#faf8f4}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px/1.65 system-ui,sans-serif;color:var(--ink)}.wrap{max-width:980px;width:calc(100% - 36px);margin:auto}header{background:var(--ink);color:white;padding:16px 0}header a{color:white;text-decoration:none;font-weight:800;font-size:1.2rem}.cols{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin:55px auto}.box{padding:30px;border:1px solid #dde3e6;background:#fff;border-radius:18px}h1{font:600 clamp(2rem,5vw,3.25rem) Georgia,serif;line-height:1.15}h2{font:600 1.6rem Georgia,serif}p{color:#536478}.eyebrow{text-transform:uppercase;letter-spacing:.12em;color:var(--rust);font-weight:850;font-size:.78rem}.price{font:600 2.8rem Georgia,serif;margin:15px 0}.notice{background:#fff0da;border:1px solid #e4c99e;padding:15px;border-radius:10px;color:#6b4625}.btn{display:inline-flex;padding:13px 18px;border-radius:10px;background:var(--ink);color:white;text-decoration:none;font-weight:750;border:0}.btn[disabled]{opacity:.5;cursor:not-allowed}.field{margin:16px 0}label{display:block;font-weight:750;margin-bottom:6px}input,select{padding:11px;width:100%;border:1px solid #b9c6cd;border-radius:8px}small{color:#526274}.box li{padding-bottom:7px}footer{padding:24px;margin-top:60px;border-top:1px solid #dce1e4}footer a{margin-right:20px;color:var(--ink)}@media(max-width:740px){.cols{grid-template-columns:1fr;margin:30px auto}.box{padding:22px}}</style></head><body><header><div class="wrap"><a href="index.html">✓ bon point.</a></div></header><main class="wrap"><div class="cols"><div><p class="eyebrow">Votre accompagnement</p><h1>Choisir le bon programme, puis réserver sereinement.</h1><p>Le premier échange avec le parent est gratuit. Le paiement en ligne sera proposé après confirmation des créneaux et vérification des conditions de la prestation.</p><p><a href="index.html#offres">← Voir toutes les formules</a></p><div class="notice" id="notice"><strong>Paiement indisponible pour le moment.</strong> Après notre premier échange, un lien de commande nominatif pourra vous être communiqué. Aucune somme ne sera débitée depuis cette page tant que le service est désactivé.</div><p>Déjà client ? <a href="espace.html#reservation">Retrouvez vos réservations confirmées et leur accès Discord.</a></p></div><div class="box"><p class="eyebrow">Récapitulatif</p><h2 id="nom">Accompagnement Bon Point</h2><div class="price" id="prix">Sur demande</div><p id="details">Choisissez une formule depuis la page d'accueil.</p><ul><li>Accompagnement individuel en visio</li><li>Échange préalable avec le responsable légal</li><li>Aucun abonnement renouvelé automatiquement</li><li>Une confirmation écrite avant le démarrage</li></ul><div class="field" id="selectionField"><label for="offre">Votre formule indicative</label><select id="offre"></select></div>
+<div class="field" id="scheduleField" hidden><label for="schedule">Mode de règlement envisagé</label><select id="schedule">
+<option value="monthly">3 mensualités sans frais</option>
+<option value="quarterly">2 échéances trimestrielles sans frais</option>
+</select><p id="scheduleExplanation" style="font-size:.85rem"></p><p style="font-size:.8rem">Échéancier soumis à validation contractuelle. Aucun prélèvement n'est activé.</p></div>
 <div id="payBox" hidden>
 <p><strong>Le règlement est proposé seulement après validation écrite de votre planning.</strong></p>
 <div class="field"><label><input type="checkbox" id="parentConfirmed" style="width:auto"> Je confirme être parent ou responsable légal et accepter cette proposition nominative.</label></div>
@@ -13,11 +17,24 @@
 'use strict';
 const catalogue=window.BONPOINT_TARIFS,api=String(window.BONPOINT_CHECKOUT_API||'').replace(/\/$/,'');
 const query=new URLSearchParams(location.search),token=query.get('token')||'';
-const ids=Object.keys(catalogue),el=document.getElementById('offre');
+const ids=Object.keys(catalogue),el=document.getElementById('offre'),schedule=document.getElementById('schedule');
 ids.forEach(id=>el.add(new Option(catalogue[id].label,id)));
 el.value=ids.includes(query.get('offre'))?query.get('offre'):'progression';
 function show(){const p=catalogue[el.value];document.getElementById('nom').textContent=p.label;document.getElementById('prix').textContent=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:0}).format(p.priceCents/100);document.getElementById('details').textContent=p.description}
-el.addEventListener('change',show);show();
+function updateSchedule(){
+const id=el.value,premium=id==='brevet'||id==='bac';
+document.getElementById('scheduleField').hidden=!premium;
+if(!premium)return;
+const price=catalogue[id].priceCents;
+const first=Math.ceil(price/3),second=Math.floor((price-first)/2),third=price-first-second;
+const eur=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n/100);
+document.getElementById('scheduleExplanation').textContent=schedule.value==='monthly'?
+'Versements proposés : '+[first,second,third].map(eur).join(' puis ')+' à un mois d’intervalle.' :
+'Versements proposés : '+eur(price/2)+' puis '+eur(price-price/2)+' à trois mois d’intervalle.';
+}
+schedule.value=query.get('plan')==='quarterly'?'quarterly':'monthly';
+el.addEventListener('change',()=>{show();updateSchedule()});
+schedule.addEventListener('change',updateSchedule);show();updateSchedule();
 const payment=document.getElementById('pay'),status=document.getElementById('paymentMessage'),notice=document.getElementById('notice');
 const parent=document.getElementById('parentConfirmed'),cgv=document.getElementById('cgvAccepted');const discordAge=document.getElementById('discordAgeConfirmed'),discordRow=document.getElementById('discordAgeRow');let needsDiscord=false;
 function update(){payment.disabled=!(parent.checked&&cgv.checked&&(!needsDiscord||discordAge.checked))}
@@ -36,8 +53,10 @@ document.getElementById('nom').textContent=info.title || catalogue[info.offer].l
 document.getElementById('details').textContent=info.description || catalogue[info.offer].description;
 document.getElementById('selectionField').hidden=true;
 needsDiscord=info.method==='discord';discordRow.hidden=!needsDiscord;
+if(info.plan==='monthly'||info.plan==='quarterly'){schedule.value=info.plan;updateSchedule();schedule.disabled=true;}
   notice.textContent=info.active&&info.status==='proposed'?'Proposition vérifiée. Vous pourrez régler après avoir confirmé les conditions.':'Paiement temporairement indisponible. Contactez Bon Point.';
   if(!(info.active&&info.status==='proposed'))return;
+if(info.plan==='monthly'||info.plan==='quarterly'){notice.textContent='Échéancier enregistré : les paiements fractionnés ne sont pas encore disponibles. Contactez Bonpoint pour une proposition écrite.';return;}
   document.getElementById('payBox').hidden=false;
   payment.addEventListener('click',async()=>{
     payment.disabled=true;status.textContent='Ouverture de la page Stripe…';

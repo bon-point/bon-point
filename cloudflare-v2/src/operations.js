@@ -58,7 +58,7 @@ async function booking(req,env,h){
  const name=safeString(d.parent_name,90),email=normalEmail(d.email),grade=safeString(d.grade,30),subject=safeString(d.subject,40);
  const date=safeString(d.date,10),time=safeString(d.time,5),notes=safeString(d.notes,450),kind=safeString(d.session_type,12),offer=safeString(d.offer,25);
  const starts=validSlot(date,time);
- if(name.length<2||!EMAIL.test(email)||!GRADES.has(grade)||!SUBJECTS.has(subject)||!DURATION[kind]||kind==="course"&&!OFFERS.has(offer)||!starts)return h.fail("Créneau ou informations invalides (48 h minimum).",400,req);
+ if(d.parent_confirmed!==true||name.length<2||!EMAIL.test(email)||!GRADES.has(grade)||!SUBJECTS.has(subject)||!DURATION[kind]||kind==="course"&&!OFFERS.has(offer)||!starts)return h.fail("Créneau ou informations invalides (48 h minimum).",400,req);
  if(!await turnstile(d,env))return h.fail("Vérification anti-robot nécessaire",400,req);
  const hourly=await env.DB.prepare("SELECT count(*) AS n FROM booking_requests WHERE parent_email=? AND created_at>?").bind(email,future(-60)).first();
  if(Number(hourly?.n||0)>=3)return h.fail("Trop de demandes récentes.",429,req);

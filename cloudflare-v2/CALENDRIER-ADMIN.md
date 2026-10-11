@@ -7,9 +7,9 @@
 Fuseau : **Europe/Paris**.
 - Lundi, mardi, mercredi, vendredi : à partir de **18 h**.
 - Jeudi : à partir de **13 h 30**.
-- Samedi et dimanche : le week-end, à convenir.
+- Samedi et dimanche : de **8 h à 18 h**.
 
-Le calendrier **ne vérifie pas les vraies disponibilités de Google Calendar**. Il propose des heures indicatives de 30 min en 30 min (jusqu'à 22 h en semaine, 9 h–20 h le week-end). L'utilisateur peut suggérer un autre horaire, mais le serveur rejette les horaires hors de la plage de traitement provisoire (8 h–22 h le week-end ; 13 h 30–22 h le jeudi ; 18 h–22 h les autres jours). Faire confirmer les heures de fin par le propriétaire, puis mettre les deux côtés en cohérence.
+Le calendrier **ne vérifie pas les vraies disponibilités de Google Calendar**. Il propose des heures indicatives de 30 min en 30 min (jusqu'à 22 h en semaine, 8 h–18 h le week-end). L'utilisateur peut suggérer un autre horaire, mais le serveur rejette les horaires hors de la plage de traitement provisoire (8 h–18 h le week-end ; 13 h 30–22 h le jeudi ; 18 h–22 h les autres jours). Faire confirmer les heures de fin par le propriétaire, puis mettre les deux côtés en cohérence.
 
 Les demandes nouvelles doivent être déposées au moins **48 h** avant leur commencement. Le calendrier utilise une marge visuelle de 3 jours. Un créneau ne devient « confirmé » que lorsqu'il est accepté par l'administrateur. L'acceptation exige plus de 50 heures pour laisser de la marge au rappel. Les rappels programmés sont déclenchés 48 h 30 avant et le Worker fait un passage environ toutes les 5 minutes. **La livraison e-mail n'est pas garantie si le fournisseur est indisponible ou si l'encaissement est trop tardif.**
 

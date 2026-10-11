@@ -1,5 +1,11 @@
 # Bon Point — Bot Discord sans hébergement permanent
 
+## État confirmé au 11 octobre 2026
+
+Les quatre commandes `/aide`, `/site`, `/reserver`, `/support` ont été enregistrées avec succès auprès de Discord pour le serveur `1536096215996043286`. La table privée D1 `discord_bot_state` contient `command_schema = four-public-commands-v1`, horodaté `2026-10-11 20:30:46 UTC`. Le token du bot demeure en secret Cloudflare ; le registre d'installation ne contient aucun secret. Le déclencheur planifié a été ramené à `*/5 * * * *` après l'installation. La configuration `DISCORD_AUTO_REGISTER=true` est conservée : elle est idempotente et n'effectue plus d'écriture quand le schéma déjà enregistré correspond.
+
+Les notifications vers Discord sont **encore désactivées** : il faut récupérer l'identifiant du salon privé `#réservations-à-traiter`, confirmer ses permissions, fixer `DISCORD_SYNC_FROM` à une date actuelle pour éviter la reprise d'anciens dossiers, puis activer `DISCORD_NOTIFICATIONS_ENABLED` après tests.
+
 Le nouveau bot utilise des **interactions HTTP sécurisées (Ed25519)** sur **Cloudflare Workers**. Il n'a pas besoin d'être connecté au Gateway ni d'une machine en ligne 24 h/24 : il peut apparaître « hors ligne » dans la liste des membres, même lorsque ses commandes fonctionnent.
 
 ## Ce qui a été préparé

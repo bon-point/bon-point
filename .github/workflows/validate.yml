@@ -17,7 +17,11 @@ jobs:
         run: node --input-type=module --check < cloudflare-v2/src/index.js
       - name: Check new private services Worker syntax
         run: node --input-type=module --check < cloudflare-v2/src/site-services.js
+      - name: Check calendar and administration Worker syntax
+        run: node --input-type=module --check < cloudflare-v2/src/operations.js
+      - name: Test scheduling and private services
+        run: node scripts/test-booking.mjs
       - name: Check shared site scripts
-        run: node --check services.js
+        run: node --check services.js && node --check calendrier.js
       - name: Check JS, internal links and price consistency
         run: node scripts/check-site.mjs

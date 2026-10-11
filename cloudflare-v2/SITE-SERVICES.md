@@ -18,12 +18,7 @@ Ce module ajoute quatre pages publiques et un espace privé :
 
 ## D1 et endpoints
 
-Migration à appliquer uniquement après vérification de la base et des sauvegardes :
-```sh
-cd cloudflare-v2
-npx wrangler d1 migrations apply bon-point-v2 --remote
-npx wrangler deploy
-```
+Les tables de la migration 0003 ont été créées sur D1 le 11 octobre 2026, et le Worker v2 a été déployé avec tous les nouveaux services privés **désactivés**. Avant toute future migration via Wrangler, contrôler le registre des migrations et le schéma réel : la colonne existante `orders.payment_plan` ne doit pas être ajoutée une deuxième fois. Faire une sauvegarde.
 
 Le module `src/site-services.js` s'importe dans `src/index.js`. Les routes publiques nouvelles sont :
 

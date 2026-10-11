@@ -13,5 +13,5 @@ crons = ["*/5 * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "bon-point-v2"
-database_id = "REMPLACER_APRES_CREATION_D1"
+database_id = "fe8c895c-f678-4681-825b-3718e4e9cd66"
 migrations_dir = "migrations"

@@ -64,7 +64,7 @@ async function booking(req,env,h){
  if(Number(hourly?.n||0)>=3)return h.fail("Trop de demandes récentes.",429,req);
  const id=crypto.randomUUID();
  await env.DB.prepare("INSERT INTO booking_requests(id,parent_email,parent_name,grade,subject,requested_date,period,notes,status,created_at,time_local,starts_at_utc,session_type,offer_id,reminder_due_at) VALUES(?,?,?,?,?,?,?,?, 'requested',?,?,?,?,?,?)")
- .bind(id,email,name,grade,subject,date,time,notes,utcNow(),time,starts,kind,kind==="course"?offer:null,new Date(Date.parse(starts)-48*3600000).toISOString()).run();
+ .bind(id,email,name,grade,subject,date,time,notes,utcNow(),time,starts,kind,kind==="course"?offer:null,new Date(Date.parse(starts)-(48*60+30)*60000).toISOString()).run();
  try{await h.email(env,env.OWNER_EMAIL||env.MAIL_SENDER,"Bon Point — Nouveau créneau demandé","<p>Nouvelle proposition de rendez-vous à confirmer.</p><p>"+h.safe(date)+" à "+h.safe(time)+" (Paris), "+h.safe(kind==="intro"?"premier échange":"cours")+".</p><p>Référence : "+h.safe(id)+"</p><p>Parent : "+h.safe(email)+"</p>")}
  catch(err){console.error("Booking email failed",err.message)}
  return h.json({received:true,confirmed:false,reference:id},201,req);
@@ -146,7 +146,7 @@ async function staffRoute(req,env,h,url){
   const item=await env.DB.prepare("SELECT * FROM booking_requests WHERE id=?").bind(id).first();
   if(!item)return h.fail("Demande introuvable",404,req);
   if(status==="confirmed"){
-   if(!item.starts_at_utc||Date.parse(item.starts_at_utc)<Date.now()+49*3600000)return h.fail("Au moins 49 h nécessaires pour confirmer et rappeler 48 h avant.",409,req);
+   if(!item.starts_at_utc||Date.parse(item.starts_at_utc)<Date.now()+50*3600000)return h.fail("Au moins 50 h nécessaires pour confirmer et assurer le rappel J-2.",409,req);
    const nearby=await env.DB.prepare("SELECT id FROM booking_requests WHERE id!=? AND status='confirmed' AND starts_at_utc>? AND starts_at_utc<? LIMIT 1").bind(id,new Date(Date.parse(item.starts_at_utc)-60*60000).toISOString(),new Date(Date.parse(item.starts_at_utc)+60*60000).toISOString()).first();
    if(nearby)return h.fail("Conflit avec un cours confirmé.",409,req);
   }

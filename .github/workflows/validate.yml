@@ -13,6 +13,6 @@ jobs:
         with:
           node-version: "22"
       - name: Check Worker module syntax
-        run: node --input-type=module --check < workers/src/index.js
+        run: node --input-type=module --check < cloudflare-v2/src/index.js
       - name: Check JS, internal links and price consistency
         run: node scripts/check-site.mjs

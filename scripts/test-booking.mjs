@@ -15,7 +15,10 @@ assert.equal(acceptedSchedule('2026-10-15','13:00'),false,'Thursday before 13:30
 assert.equal(acceptedSchedule('2026-10-12','18:00'),true,'Weekday 18:00');
 assert.equal(acceptedSchedule('2026-10-12','17:30'),false,'Weekday before 18:00');
 assert.equal(acceptedSchedule('2026-10-17','10:00'),true,'Saturday proposed');
-assert.equal(acceptedSchedule('2026-10-18','18:00'),true,'Sunday 18:00 is within the schedule');
+assert.equal(acceptedSchedule('2026-10-18','18:00'),false,'The weekend ends at 18:00, not a start time');
+assert.equal(acceptedSchedule('2026-10-18','17:00','course'),true,'Last one-hour weekend course starts at 17:00');
+assert.equal(acceptedSchedule('2026-10-18','17:30','course'),false,'One-hour course must finish by 18:00');
+assert.equal(acceptedSchedule('2026-10-18','17:30','intro'),true,'20-minute intro may start at 17:30');
 assert.equal(acceptedSchedule('2026-10-18','18:30'),false,'No weekend courses after 18:00');
 assert.equal(acceptedSchedule('2026-10-17','08:00'),true,'Weekend starts at 08:00');
 assert.equal(acceptedSchedule('2026-10-17','07:30'),false,'No weekend courses before 08:00');

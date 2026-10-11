@@ -29,6 +29,10 @@ Un `GET /health` permet de vérifier l'état de la configuration sans divulguer 
 5. Dans le Developer Portal, définir l'**Interactions Endpoint URL** vers l'URL ci-dessus : Discord envoie un PING signé et vérifie que le bot répond correctement. Cela **ne fonctionne pas** tant que la clé publique n'est pas renseignée.
 6. Dans la section **Installation**, autoriser l'application sur le serveur avec l'étendue `applications.commands`, et ajouter le bot avec uniquement les permissions nécessaires si les alertes administratives sont souhaitées.
 
+### Enregistrement automatique (recommandé)
+
+Le bot peut désormais inscrire lui-même ses quatre commandes de serveur, sans terminal, à la prochaine exécution planifiée (environ cinq minutes). Pour cela : configurer **DISCORD_APPLICATION_ID**, **DISCORD_GUILD_ID**, **DISCORD_PUBLIC_KEY**, puis ajouter **DISCORD_BOT_TOKEN** dans les Secrets du Worker ; après un test, activer **DISCORD_AUTO_REGISTER=true**. Le code inscrit chaque commande séparément, sans effacer les autres commandes. Le succès est consigné dans la table privée `discord_bot_state`.
+
 ### Enregistrer les commandes
 
 Dans un terminal Node.js 22, après avoir défini les variables d'environnement **uniquement en local** :

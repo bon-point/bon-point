@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
-const names=['index.html','espace.html','checkout.html','retractation.html','paiement-confirme.html','cgv.html','confidentialite.html','mentions-legales.html','reserver.html','diagnostic.html','parents.html'];
+const names=['index.html','espace.html','checkout.html','retractation.html','paiement-confirme.html','cgv.html','confidentialite.html','mentions-legales.html','reserver.html','diagnostic.html','parents.html','admin.html'];
 for (const name of names) {
   const html=fs.readFileSync(name,'utf8');
   assert.match(html,/<html lang="fr">/,name+': invalid language');
@@ -69,4 +69,17 @@ assert.match(services,/h\.adminAllowed\(req,env\)/,'Admin writes must check the 
 assert.match(fs.readFileSync('parents.html','utf8'),/Authorization/,'Dashboard must authenticate');
 assert.match(fs.readFileSync('reserver.html','utf8'),/l.agenda n.affiche pas des disponibilités en temps réel/i,'No invented availability or instant booking');
 for(const n of ['reserver.html','diagnostic.html','parents.html'])assert.ok(page.includes('href="'+n+'"'),'Homepage missing new tool '+n);
+
+assert.ok(!fs.existsSync('ressources.html'),'Temporary resources library should be removed');
+assert.ok(!page.includes('href="ressources.html"'),'No broken library link on homepage');
+assert.match(fs.readFileSync('admin.html','utf8'),/api\/staff\/verify/,'Admin 2FA required');
+assert.match(fs.readFileSync('admin.html','utf8'),/data-view="progress"/,'Progress administration required');
+assert.match(fs.readFileSync('parents.html','utf8'),/Télécharger le récapitulatif PDF/,'Parent private PDF download required');
+assert.match(services,/PARENT_SELF_SERVICE_CODES/,'Parent OTP issuance must be admin controlled');
+const operations=fs.readFileSync('cloudflare-v2/src/operations.js','utf8');
+assert.match(operations,/ADMIN_PANEL_ENABLED/,'Administration should be feature gated');
+assert.match(operations,/session_file_blobs/,'Private PDF storage required');
+assert.match(operations,/bookingReminders/,'Booking reminders required');
+assert.match(fs.readFileSync('cloudflare-v2/wrangler.toml','utf8'),/ADMIN_PANEL_ENABLED = "false"/,'No admin activation without credentials');
+assert.match(fs.readFileSync('cloudflare-v2/wrangler.toml','utf8'),/REPORT_UPLOADS_ENABLED = "false"/,'No PDF upload before review');
 console.log('OK gated private services, parent data boundaries and new pages');

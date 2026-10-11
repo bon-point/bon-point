@@ -15,7 +15,10 @@ assert.equal(acceptedSchedule('2026-10-15','13:00'),false,'Thursday before 13:30
 assert.equal(acceptedSchedule('2026-10-12','18:00'),true,'Weekday 18:00');
 assert.equal(acceptedSchedule('2026-10-12','17:30'),false,'Weekday before 18:00');
 assert.equal(acceptedSchedule('2026-10-17','10:00'),true,'Saturday proposed');
-assert.equal(acceptedSchedule('2026-10-18','19:00'),true,'Sunday proposed');
+assert.equal(acceptedSchedule('2026-10-18','18:00'),true,'Sunday 18:00 is within the schedule');
+assert.equal(acceptedSchedule('2026-10-18','18:30'),false,'No weekend courses after 18:00');
+assert.equal(acceptedSchedule('2026-10-17','08:00'),true,'Weekend starts at 08:00');
+assert.equal(acceptedSchedule('2026-10-17','07:30'),false,'No weekend courses before 08:00');
 
 function isoDay(d){return [d.getUTCFullYear(),String(d.getUTCMonth()+1).padStart(2,'0'),String(d.getUTCDate()).padStart(2,'0')].join('-')}
 const far=new Date(Date.now()+10*86400000);const futureDay=isoDay(far);

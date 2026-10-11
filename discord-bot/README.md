@@ -20,6 +20,15 @@ Script Cloudflare : `bon-point-discord`. Endpoint prévu :
 
 Un `GET /health` permet de vérifier l'état de la configuration sans divulguer de secrets. Le Worker n'accepte pas les interactions tant que la **clé publique Ed25519** et l'**ID du serveur** ne sont pas correctement configurés.
 
+## Identifiants publics configurés (11 octobre 2026)
+
+- Application Discord : `1536007822855110707`
+- Serveur Bonpoint-Visioconférence : `1536096215996043286`
+- Clé publique Ed25519 : présente dans `wrangler.toml` et dans le Worker Cloudflare.
+- Endpoint à coller dans Discord Developer Portal, section **General Information → Interactions Endpoint URL** : `https://bon-point-discord.soutien-bonpoint.workers.dev/interactions`.
+
+La configuration des identifiants publics a été enregistrée et contrôlée dans Cloudflare. **Discord n'a pas encore validé l'URL et aucun token privé n'a été fourni à ce nouveau Worker.** L'enregistrement automatique reste désactivé ; il faudra activer `DISCORD_AUTO_REGISTER=true` après avoir enregistré `DISCORD_BOT_TOKEN` directement dans les secrets Cloudflare. Ne pas régénérer le token de l'ancienne application tant que `bon-point-auto` peut encore l'utiliser.
+
 ### Configuration Discord Developer Portal
 
 1. Ouvrir [Discord Developer Portal](https://discord.com/developers/applications), sélectionner **Bonpoint Bot**.

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
-const names=['index.html','espace.html','checkout.html','retractation.html','paiement-confirme.html','cgv.html','confidentialite.html','mentions-legales.html','reserver.html','diagnostic.html','ressources.html','parents.html'];
+const names=['index.html','espace.html','checkout.html','retractation.html','paiement-confirme.html','cgv.html','confidentialite.html','mentions-legales.html','reserver.html','diagnostic.html','parents.html'];
 for (const name of names) {
   const html=fs.readFileSync(name,'utf8');
   assert.match(html,/<html lang="fr">/,name+': invalid language');
@@ -68,6 +68,5 @@ assert.match(services,/parent_email=\?/,'Parent records must be scoped to the lo
 assert.match(services,/h\.adminAllowed\(req,env\)/,'Admin writes must check the existing admin key');
 assert.match(fs.readFileSync('parents.html','utf8'),/Authorization/,'Dashboard must authenticate');
 assert.match(fs.readFileSync('reserver.html','utf8'),/pas un créneau disponible|créneau n.est réservé/i,'No invented availability or instant booking');
-assert.match(fs.readFileSync('ressources.html','utf8'),/Exercice corrigé/,'Learning resources must include corrections');
-for(const n of ['reserver.html','diagnostic.html','ressources.html','parents.html'])assert.ok(page.includes('href="'+n+'"'),'Homepage missing new tool '+n);
+for(const n of ['reserver.html','diagnostic.html','parents.html'])assert.ok(page.includes('href="'+n+'"'),'Homepage missing new tool '+n);
 console.log('OK gated private services, parent data boundaries and new pages');

@@ -1,20 +1,27 @@
-# Bon Point — Refonte premium et préparation au lancement
+# Bon Point — Site premium et nouveau serveur Cloudflare v2
 
-Cette branche héberge la refonte de la vitrine et un **prototype sécurisé de nouvelle infrastructure de paiement**, sans activation des encaissements réels.
+La refonte est actuellement sur une branche de préparation. Le site public n'est pas modifié tant que la PR n'est pas fusionnée.
 
-## Fonctionnalités
-- Design responsive avec animations adaptées aux préférences de réduction du mouvement.
-- Accompagnements : séance ciblée, Progression, Ambition, Brevet Excellence et Bac Excellence.
-- Formulaire de contact destiné aux parents. Il prépare un brouillon e-mail à envoyer manuellement.
-- Catalogue public dans tarifs.js, synchronisé par test automatisé avec les montants contrôlés côté serveur dans workers/src/index.js.
-- Checkout après proposition nominative validée par le professeur, à condition d'avoir configuré le Worker ; par défaut inactif.
-- Webhook Stripe signé et tentative de livraison d'une invitation Discord à usage unique après paiement, par e-mail du parent ; visio alternative lorsque Discord n'est pas approprié. **Prototype non déployé et non testé de bout en bout.**
-- Page de rétractation avec e-mail de secours ; API de traitement/accusé à activer avant vente en ligne.
-- Page espace.html conservant l'ancien système Firebase et les liens Discord privés des anciennes réservations confirmées ; nouveaux anciens paiements désactivés.
-- Documents légaux provisoires : mentions légales, CGV et confidentialité, à personnaliser.
-- Tests GitHub Actions : syntaxe du Worker et des scripts HTML, liens, cohérence du catalogue de prix.
+## Site
+- Motion design accessible et interface mobile
+- Cinq formules de maths/physique-chimie, incluant Brevet Excellence et Bac Excellence
+- Demande de rendez-vous par e-mail rédigé par le parent
+- Parcours de proposition nominative et Stripe en mode désactivé par défaut
+- Gestion des prix dans D1 une fois le Worker configuré
+- Visios Google Meet pour les collégiens, Google Meet ou Discord avec âge requis pour les lycéens
+- Ancien espace conservé en lecture des réservations existantes ; anciens paiements désactivés
 
-## Important
-Aucun compte Stripe en mode réel n'a été relié. Un seul compte de test intitulé New business est visible et son affectation à Bon Point n'est pas confirmée. Cloudflare, Firestore, Discord et Brevo restent à configurer et tester. **Ne pas publier comme vente opérationnelle** tant que les obligations légales et les tests de bout en bout ne sont pas satisfaits.
+## Nouveau backend
+Code neuf sous `cloudflare-v2/` (aucune dépendance à l'ancien Worker). Documentation : `cloudflare-v2/README.md`.
+Les anciennes tentatives de Worker de cette branche ont été supprimées pour éviter une confusion de déploiement.
 
-Consulter workers/README.md et AVANT-PUBLICATION.md avant toute fusion vers main.
+## Ce qui est réellement opérationnel
+Les fichiers sont enregistrés et les contrôles statiques Github Actions vérifient la structure et les montants initiaux.
+**Aucun service Cloudflare n'a été déployé** via ce chat. Aucune clé privée n'a été fournie. Aucun paiement de bout en bout, aucun envoi Brevo ni invitation Discord réelle n'a été testé.
+Le seul Stripe aperçu est un mauvais compte de test ; il doit être remplacé par le bon compte, avec les exigences Stripe applicables au titulaire.
+
+## Avant fusion et encaissement
+Compléter l'identité professionnelle, les CGV, la confidentialité et le médiateur.
+Confirmer le bon compte Stripe et l'éligibilité à l'encaissement, déployer Cloudflare D1 et les secrets, produire de vrais liens Meet via le calendrier du propriétaire, configurer le bot Discord, mettre en place l'antispam et tester toutes les situations.
+
+**Ne pas activer PAYMENTS_ENABLED sur une activité non vérifiée.**

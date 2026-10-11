@@ -1,0 +1,11 @@
+# Checklist de lancement
+- [ ] Activité et capacité à facturer : vérifier le statut adapté et les obligations, avec l'accompagnement d'un adulte responsable si nécessaire
+- [ ] Vérifier formation/expériences présentées et autorisation d'utilisation du portrait
+- [ ] Valider les trois formules et les prix avec les conditions réelles de la prestation
+- [ ] Compléter mentions légales, CGV, politique de confidentialité
+- [ ] Définir délai de réponse et disponibilités réelles
+- [ ] Tester le formulaire sur ordinateur et téléphone (ouvre un brouillon, pas un envoi)
+- [ ] Tester adresse e-mail destinataire et réponse aux parents
+- [ ] Ne pas afficher d'avis, de notes avant/après ou de statistiques sans justificatifs et autorisations
+- [ ] Vérifier l'exactitude du référencement et de l'adresse web avant publication
+- [ ] Pour paiement et réservation automatisés : règles de sécurité Firebase + rôles serveur + transactions + sessions Stripe serveur + webhooks vérifiés + e-mails + tests

@@ -34,3 +34,5 @@ CREATE TABLE IF NOT EXISTS session_files (
  created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_session_files_parent ON session_files(parent_email,progress_id);
+
+CREATE TABLE IF NOT EXISTS admin_login_attempts (ip_hash TEXT PRIMARY KEY, attempts INTEGER NOT NULL, window_started TEXT NOT NULL);

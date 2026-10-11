@@ -18,7 +18,7 @@ function schedule(s){
 const day=dayOfWeek(s),result=[];
 let start=18*60,end=21*60;
 if(day===4){start=13*60+30;end=21*60}
-else if(day===0||day===6){start=9*60;end=20*60}
+else if(day===0||day===6){start=8*60;end=18*60}
 for(let i=start;i<=end;i+=30)result.push(two(Math.floor(i/60))+':'+two(i%60));
 return result;
 }

@@ -6,6 +6,8 @@ workers_dev = true
 [vars]
 PAYMENTS_ENABLED = "false"
 STRIPE_MODE = "test"
+SITE_INTAKE_ENABLED = "false"
+PARENT_PORTAL_ENABLED = "false"
 
 [triggers]
 crons = ["*/5 * * * *"]

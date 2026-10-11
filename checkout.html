@@ -3,6 +3,7 @@
 <div id="payBox" hidden>
 <p><strong>Le règlement est proposé seulement après validation écrite de votre planning.</strong></p>
 <div class="field"><label><input type="checkbox" id="parentConfirmed" style="width:auto"> Je confirme être parent ou responsable légal et accepter cette proposition nominative.</label></div>
+<div class="field" id="discordAgeRow" hidden><label><input type="checkbox" id="discordAgeConfirmed" style="width:auto"> Je confirme, en tant que parent, que le participant à Discord respecte l’âge minimum applicable au service (15 ans en France). Si ce n'est pas le cas, contactez Bon Point pour utiliser Google Meet.</label></div>
 <div class="field"><label><input type="checkbox" id="cgvAccepted" style="width:auto"> J'ai lu et j'accepte les <a href="cgv.html" target="_blank" rel="noopener">conditions générales de vente</a> et les informations sur la rétractation.</label></div>
 <button type="button" class="btn" id="pay" disabled>Commander avec obligation de paiement</button>
 <p role="status" id="paymentMessage" aria-live="polite"></p>
@@ -18,9 +19,9 @@ el.value=ids.includes(query.get('offre'))?query.get('offre'):'progression';
 function show(){const p=catalogue[el.value];document.getElementById('nom').textContent=p.label;document.getElementById('prix').textContent=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:0}).format(p.priceCents/100);document.getElementById('details').textContent=p.description}
 el.addEventListener('change',show);show();
 const payment=document.getElementById('pay'),status=document.getElementById('paymentMessage'),notice=document.getElementById('notice');
-const parent=document.getElementById('parentConfirmed'),cgv=document.getElementById('cgvAccepted');
-function update(){payment.disabled=!(parent.checked&&cgv.checked)}
-[parent,cgv].forEach(x=>x.addEventListener('change',update));
+const parent=document.getElementById('parentConfirmed'),cgv=document.getElementById('cgvAccepted');const discordAge=document.getElementById('discordAgeConfirmed'),discordRow=document.getElementById('discordAgeRow');let needsDiscord=false;
+function update(){payment.disabled=!(parent.checked&&cgv.checked&&(!needsDiscord||discordAge.checked))}
+[parent,cgv,discordAge].forEach(x=>x.addEventListener('change',update));
 if(!token||!api)return;
 if(!/^[0-9a-f]{64}$/.test(token)){notice.textContent='Lien de paiement invalide. Contactez Bon Point.';return}
 (async()=>{
@@ -28,15 +29,20 @@ if(!/^[0-9a-f]{64}$/.test(token)){notice.textContent='Lien de paiement invalide.
   const response=await fetch(api+'/api/proposal?token='+encodeURIComponent(token),{headers:{'Accept':'application/json'}});
   if(!response.ok)throw Error('Proposition introuvable ou expirée');
   const info=await response.json();
-  if(!catalogue[info.offer]||catalogue[info.offer].priceCents!==info.amount)throw Error('Prix incohérent : paiement bloqué');
-  el.value=info.offer;el.disabled=true;show();document.getElementById('selectionField').hidden=true;
+  if(!catalogue[info.offer]||!Number.isInteger(info.amount)||info.amount<100)throw Error('Proposition tarifaire non valide');
+  el.value=info.offer;el.disabled=true;show();
+document.getElementById('prix').textContent=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:0}).format(info.amount/100);
+document.getElementById('nom').textContent=info.title || catalogue[info.offer].label;
+document.getElementById('details').textContent=info.description || catalogue[info.offer].description;
+document.getElementById('selectionField').hidden=true;
+needsDiscord=info.method==='discord';discordRow.hidden=!needsDiscord;
   notice.textContent=info.active&&info.status==='proposed'?'Proposition vérifiée. Vous pourrez régler après avoir confirmé les conditions.':'Paiement temporairement indisponible. Contactez Bon Point.';
   if(!(info.active&&info.status==='proposed'))return;
   document.getElementById('payBox').hidden=false;
   payment.addEventListener('click',async()=>{
     payment.disabled=true;status.textContent='Ouverture de la page Stripe…';
     try{
-     const r=await fetch(api+'/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,cgv_accepted:cgv.checked,parent_confirmed:parent.checked})});
+     const r=await fetch(api+'/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,cgv_accepted:cgv.checked,parent_confirmed:parent.checked,discord_age_confirmed:discordAge.checked})});
      const result=await r.json();
      if(!r.ok||!result.url)throw Error(result.error||'Paiement indisponible');
      if(!/^https:\/\/checkout\.stripe\.com\//.test(result.url))throw Error('Lien de paiement inattendu');

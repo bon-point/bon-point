@@ -224,6 +224,7 @@ async function readReport(req,env,h,path){
  for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
  return new Response(bytes,{status:200,headers:{"content-type":"application/pdf","content-disposition":"attachment; filename=\"compte-rendu.pdf\"","cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer","access-control-allow-origin":ORIGIN,"vary":"Origin"}});
 }
+export const schedulingPolicy=Object.freeze({parisToUTC,acceptedSchedule,validSlot});
 export async function operations(req,env,h){
  const path=new URL(req.url).pathname;
  if(path==="/api/site/bookings"&&req.method==="POST")return booking(req,env,h);

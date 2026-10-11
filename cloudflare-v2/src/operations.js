@@ -161,6 +161,29 @@ async function staffRoute(req,env,h,url){
   return h.json({saved:true},200,req);
  }
  if(path==="/api/staff/parent-code"&&req.method==="POST")return issueParentCode(req,env,h);
+ if(path==="/api/staff/proposals"&&req.method==="POST"){
+  const d=await jsonBody(req),bookingId=safeString(d.booking_id,36),link=safeString(d.meet_url,140),plan=safeString(d.plan,15)||"once";
+  if(!/^[0-9a-f-]{36}$/i.test(bookingId)||!/^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}\/?$/i.test(link)||plan!=="once")
+   return h.fail("Réservation, lien Google Meet ou règlement invalide",400,req);
+  const b=await env.DB.prepare("SELECT * FROM booking_requests WHERE id=? AND session_type='course' AND status='confirmed'").bind(bookingId).first();
+  if(!b||b.order_id||!b.starts_at_utc||Date.parse(b.starts_at_utc)<Date.now()+49*3600000)return h.fail("Séance non confirmée ou créneau trop proche",409,req);
+  const offer=await env.DB.prepare("SELECT id,price_cents FROM offers WHERE id=? AND active=1").bind(b.offer_id).first();
+  if(!offer)return h.fail("Offre indisponible",404,req);
+  const grade=({Seconde:"seconde","Première":"premiere",Terminale:"terminale"})[b.grade]||b.grade;
+  const access=random(),orderId=crypto.randomUUID();
+  await env.DB.batch([
+   env.DB.prepare("INSERT INTO orders(id,token_hash,offer_id,locked_price_cents,parent_email,grade,method,meet_url,expires_at,payment_plan,state,created_at) VALUES(?,?,?,?,? ,?,'meet',?,?,'once','proposed',?)")
+     .bind(orderId,await sha(access),offer.id,offer.price_cents,b.parent_email,grade,link,future(7*24*60),utcNow()),
+   env.DB.prepare("UPDATE booking_requests SET order_id=? WHERE id=? AND order_id IS NULL AND status='confirmed'").bind(orderId,bookingId)
+  ]);
+  const url="https://bon-point.github.io/bon-point/checkout.html?token="+access;
+  if(d.notify_parent===true){
+   if(env.PAYMENTS_ENABLED!=="true")return h.json({created:true,private_checkout_url:url,not_sent:true,note:"Aucun e-mail de paiement envoyé car le paiement est désactivé."},201,req);
+   await h.email(env,b.parent_email,"Bon Point — Proposition nominative à examiner","<p>Bonjour,</p><p>Votre créneau du "+h.safe(b.requested_date)+" à "+h.safe(b.time_local)+" est confirmé sous réserve du règlement de la prestation.</p><p>Vous pouvez consulter votre proposition nominative, les conditions générales et procéder au règlement ici : <a href='"+url+"'>Voir ma proposition</a>.</p><p>La proposition ne constitue pas un abonnement automatique.</p>");
+  }
+  return h.json({created:true,order_id:orderId,private_checkout_url:url},201,req);
+ }
+
  if(path==="/api/staff/progress"&&req.method==="POST"){
   const d=await jsonBody(req),email=normalEmail(d.email),subject=safeString(d.subject,40),date=safeString(d.session_date,10),summary=safeString(d.summary,700),next=safeString(d.next_step,500);
   if(!EMAIL.test(email)||!SUBJECTS.has(subject)||!/^20\d\d-\d\d-\d\d$/.test(date)||summary.length<3)return h.fail("Compte rendu incomplet",400,req);

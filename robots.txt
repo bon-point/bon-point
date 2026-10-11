@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bon-point.github.io/bon-point/sitemap.xml

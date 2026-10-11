@@ -14,11 +14,11 @@ const addDays=(s,n)=>{const [y,m,d]=localParts(s);const t=isoDate(y,m,d+n);retur
 const today=dateParts(new Date());
 const first=addDays(today,3); // Marge conservatrice supérieure à 48 h.
 const last=addDays(today,90);
-function schedule(s){
+function schedule(s,kind=document.getElementById('sessionType')?.value||'intro'){
 const day=dayOfWeek(s),result=[];
 let start=18*60,end=21*60;
 if(day===4){start=13*60+30;end=21*60}
-else if(day===0||day===6){start=8*60;end=18*60}
+else if(day===0||day===6){start=8*60;end=18*60-(kind==='course'?60:20)}
 for(let i=start;i<=end;i+=30)result.push(two(Math.floor(i/60))+':'+two(i%60));
 return result;
 }
@@ -51,6 +51,7 @@ hint.textContent='Choisissez une heure. Ce ne sont pas des créneaux confirmés,
 }
 document.getElementById('prevMonth').addEventListener('click',()=>{viewM--;if(viewM<1){viewM=12;viewY--}render()});
 document.getElementById('nextMonth').addEventListener('click',()=>{viewM++;if(viewM>12){viewM=1;viewY++}render()});
+document.getElementById('sessionType').addEventListener('change',()=>{if(selected)select(selected)});
 document.getElementById('customTime').addEventListener('input',e=>{const value=e.target.value;timeEl.value=value;chosen=value;slots.querySelectorAll('button').forEach(b=>{b.classList.remove('selected');b.setAttribute('aria-pressed','false')});hint.textContent='Horaire personnalisé proposé : '+value+'. Nous vérifierons sa compatibilité.'});
 window.BonpointSlots={schedule,dayOfWeek,canPick,addDays,selection:()=>({date:selected,time:chosen}),reset:()=>{selected='';chosen='';dateEl.value='';timeEl.value='';slots.replaceChildren();hint.textContent='Sélectionnez une date dans le calendrier.';render()}};
 render();

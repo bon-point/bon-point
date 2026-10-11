@@ -43,21 +43,21 @@ function parisToUTC(day,time){
  if([get("year"),get("month"),get("day")].join("-")!==day||get("hour")+":"+get("minute")!==time)return null;
  return new Date(exact).toISOString();
 }
-function acceptedSchedule(day,time){
+function acceptedSchedule(day,time,kind='intro'){
  const [hh,mm]=time.split(":").map(Number),clock=hh*60+mm;
  const n=new Date(day+"T12:00:00Z").getUTCDay();
- if(n===0||n===6)return clock>=8*60&&clock<=18*60;
+ if(n===0||n===6)return clock>=8*60&&clock+(kind==='course'?60:20)<=18*60;
  if(n===4)return clock>=13*60+30&&clock<=22*60;
  return clock>=18*60&&clock<=22*60;
 }
-function validSlot(date,time){const iso=parisToUTC(date,time);return iso&&Date.parse(iso)>=Date.now()+48*3600000&&Date.parse(iso)<Date.now()+91*86400000&&acceptedSchedule(date,time)?iso:null}
+function validSlot(date,time,kind='intro'){const iso=parisToUTC(date,time);return iso&&Date.parse(iso)>=Date.now()+48*3600000&&Date.parse(iso)<Date.now()+91*86400000&&acceptedSchedule(date,time,kind)?iso:null}
 async function booking(req,env,h){
  if(!enabledIntake(env))return h.fail("Les demandes automatiques sont désactivées. Utilisez l'e-mail.",503,req);
  if(!allowed(req))return h.fail("Origine invalide",403,req);
  const d=await jsonBody(req);
  const name=safeString(d.parent_name,90),email=normalEmail(d.email),grade=safeString(d.grade,30),subject=safeString(d.subject,40);
  const date=safeString(d.date,10),time=safeString(d.time,5),notes=safeString(d.notes,450),kind=safeString(d.session_type,12),offer=safeString(d.offer,25);
- const starts=validSlot(date,time);
+ const starts=validSlot(date,time,kind);
  if(d.parent_confirmed!==true||name.length<2||!EMAIL.test(email)||!GRADES.has(grade)||!SUBJECTS.has(subject)||!DURATION[kind]||kind==="course"&&!OFFERS.has(offer)||!starts)return h.fail("Créneau ou informations invalides (48 h minimum).",400,req);
  if(!await turnstile(d,env))return h.fail("Vérification anti-robot nécessaire",400,req);
  const hourly=await env.DB.prepare("SELECT count(*) AS n FROM booking_requests WHERE parent_email=? AND created_at>?").bind(email,future(-60)).first();

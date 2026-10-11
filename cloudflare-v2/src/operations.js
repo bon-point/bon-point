@@ -187,24 +187,27 @@ async function staffRoute(req,env,h,url){
  return h.fail("Action administrateur inconnue",404,req);
 }
 async function uploadReport(req,env,h){
- if(env.REPORT_UPLOADS_ENABLED!=="true"||!env.REPORTS)return h.fail("Dépôt de fichiers privés non disponible",503,req);
+ if(env.REPORT_UPLOADS_ENABLED!=="true"||!env.DB)return h.fail("Dépôt de fichiers privés non disponible",503,req);
  if(!req.headers.get("content-type")?.startsWith("multipart/form-data"))return h.fail("Un PDF est requis",400,req);
  if(Number(req.headers.get("content-length")||0)>5_600_000)return h.fail("Fichier trop volumineux",413,req);
  const form=await req.formData();
  const progressId=safeString(form.get("progress_id"),36),file=form.get("file");
- if(!/^[0-9a-f-]{36}$/i.test(progressId)||!file||typeof file.arrayBuffer!=="function"||file.size<8||file.size>5_242_880)return h.fail("Fichier PDF ou compte rendu invalide (5 Mo max)",400,req);
+ if(!/^[0-9a-f-]{36}$/i.test(progressId)||!file||typeof file.arrayBuffer!=="function"||file.size<8||file.size>700_000)return h.fail("Fichier PDF ou compte rendu invalide (700 Ko max)",400,req);
  const signature=new Uint8Array(await file.slice(0,5).arrayBuffer());
  if(String.fromCharCode(...signature)!=="%PDF-")return h.fail("Seuls les PDF sont acceptés",415,req);
  const progress=await env.DB.prepare("SELECT id,parent_email FROM progress_entries WHERE id=?").bind(progressId).first();
  if(!progress)return h.fail("Compte rendu introuvable",404,req);
  const id=crypto.randomUUID(),key="reports/"+id+".pdf",name=safeString(file.name,150).replace(/[\\/<>:"|?*]/g,"_")||"compte-rendu.pdf";
- await env.REPORTS.put(key,await file.arrayBuffer(),{httpMetadata:{contentType:"application/pdf"}});
- try{await env.DB.prepare("INSERT INTO session_files(id,progress_id,parent_email,file_name,content_type,size_bytes,r2_key,created_at) VALUES(?,?,?,?,'application/pdf',?,?,?)").bind(id,progressId,progress.parent_email,name,file.size,key,utcNow()).run()}
- catch(err){await env.REPORTS.delete(key);throw err}
+ const bytes=new Uint8Array(await file.arrayBuffer());let encoded="";
+ for(let i=0;i<bytes.length;i+=24576)encoded+=btoa(String.fromCharCode(...bytes.subarray(i,i+24576)));
+ await env.DB.batch([
+  env.DB.prepare("INSERT INTO session_files(id,progress_id,parent_email,file_name,content_type,size_bytes,r2_key,created_at) VALUES(?,?,?,?,'application/pdf',?,?,?)").bind(id,progressId,progress.parent_email,name,file.size,"d1:"+id,utcNow()),
+  env.DB.prepare("INSERT INTO session_file_blobs(file_id,content_base64) VALUES(?,?)").bind(id,encoded)
+ ]);
  return h.json({saved:true,id,name},201,req);
 }
 async function readReport(req,env,h,path){
- if(env.PARENT_PORTAL_ENABLED!=="true"||!env.REPORTS)return h.fail("Documents privés indisponibles",503,req);
+ if(env.PARENT_PORTAL_ENABLED!=="true"||!env.DB)return h.fail("Documents privés indisponibles",503,req);
  if(!allowed(req))return h.fail("Origine invalide",403,req);
  const auth=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");
  if(!/^[a-f0-9]{64}$/.test(auth))return h.fail("Accès non autorisé",401,req);
@@ -214,9 +217,12 @@ async function readReport(req,env,h,path){
  if(!/^[a-f0-9-]{36}$/.test(id))return h.fail("Fichier introuvable",404,req);
  const entry=await env.DB.prepare("SELECT r2_key,file_name FROM session_files WHERE id=? AND parent_email=?").bind(id,user.email).first();
  if(!entry)return h.fail("Fichier introuvable",404,req);
- const obj=await env.REPORTS.get(entry.r2_key);
- if(!obj)return h.fail("Fichier introuvable",404,req);
- return new Response(obj.body,{status:200,headers:{"content-type":"application/pdf","content-disposition":"attachment; filename=\"compte-rendu.pdf\"","cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer","access-control-allow-origin":ORIGIN,"vary":"Origin"}});
+ if(!entry.r2_key.startsWith("d1:"))return h.fail("Fichier indisponible",503,req);
+ const data=await env.DB.prepare("SELECT content_base64 FROM session_file_blobs WHERE file_id=?").bind(id).first();
+ if(!data)return h.fail("Fichier introuvable",404,req);
+ const raw=atob(data.content_base64),bytes=new Uint8Array(raw.length);
+ for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+ return new Response(bytes,{status:200,headers:{"content-type":"application/pdf","content-disposition":"attachment; filename=\"compte-rendu.pdf\"","cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer","access-control-allow-origin":ORIGIN,"vary":"Origin"}});
 }
 export async function operations(req,env,h){
  const path=new URL(req.url).pathname;

@@ -14,9 +14,10 @@ input,select{font-size:1rem;min-height:45px;max-width:100%}
 @media(max-width:740px){.cols{grid-template-columns:minmax(0,1fr)}.box{padding:24px 19px}}
 </style></head><body><header><div class="wrap"><a href="index.html">✓ bon point.</a></div></header><main class="wrap"><div class="cols"><div><p class="eyebrow">Votre accompagnement</p><h1>Choisir le bon programme, puis réserver sereinement.</h1><p>Le premier échange avec le parent est gratuit. Le paiement en ligne sera proposé après confirmation des créneaux et vérification des conditions de la prestation.</p><p><a href="index.html#offres">← Voir toutes les formules</a></p><div class="notice" id="notice"><strong>Paiement indisponible pour le moment.</strong> Après notre premier échange, un lien de commande nominatif pourra vous être communiqué. Aucune somme ne sera débitée depuis cette page tant que le service est désactivé.</div><p>Une réservation déjà confirmée sur l’ancien système ? Écrivez à <a href="mailto:soutien.bonpoint@gmail.com">soutien.bonpoint@gmail.com</a> afin de recevoir les informations de votre séance.</p></div><div class="box"><p class="eyebrow">Récapitulatif</p><h2 id="nom">Accompagnement Bon Point</h2><div class="price" id="prix">Sur demande</div><p id="details">Choisissez une formule depuis la page d'accueil.</p><ul><li>Accompagnement individuel en visio</li><li>Échange préalable avec le responsable légal</li><li>Aucun abonnement renouvelé automatiquement</li><li>Une confirmation écrite avant le démarrage</li></ul><div class="field" id="selectionField"><label for="offre">Votre formule indicative</label><select id="offre"></select></div>
 <div class="field" id="scheduleField" hidden><label for="schedule">Mode de règlement envisagé</label><select id="schedule">
+<option value="once">En une seule fois (montant total)</option>
 <option value="monthly">3 mensualités sans frais</option>
 <option value="quarterly">2 échéances trimestrielles sans frais</option>
-</select><p id="scheduleExplanation" style="font-size:.85rem"></p><p style="font-size:.8rem">Échéancier soumis à validation contractuelle. Aucun prélèvement n'est activé.</p></div>
+</select><p id="scheduleExplanation" style="font-size:.85rem"></p><p style="font-size:.8rem">Le règlement s’effectue uniquement après confirmation des créneaux et proposition nominative. Les échéanciers sont soumis à validation contractuelle. Aucun prélèvement n’est activé.</p></div>
 <div id="payBox" hidden>
 <p><strong>Le règlement est proposé seulement après validation écrite de votre planning.</strong></p>
 <div class="field"><label><input type="checkbox" id="parentConfirmed" style="width:auto"> Je confirme être parent ou responsable légal et accepter cette proposition nominative.</label></div>
@@ -41,11 +42,12 @@ if(!premium)return;
 const price=catalogue[id].priceCents;
 const first=Math.ceil(price/3),second=Math.floor((price-first)/2),third=price-first-second;
 const eur=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n/100);
-document.getElementById('scheduleExplanation').textContent=schedule.value==='monthly'?
+document.getElementById('scheduleExplanation').textContent=schedule.value==='once'?
+'Paiement unique de '+eur(price)+', sans échéancier ni frais de fractionnement.' : schedule.value==='monthly'?
 'Versements proposés : '+[first,second,third].map(eur).join(' puis ')+' à un mois d’intervalle.' :
 'Versements proposés : '+eur(price/2)+' puis '+eur(price-price/2)+' à trois mois d’intervalle.';
 }
-schedule.value=query.get('plan')==='quarterly'?'quarterly':'monthly';
+schedule.value=['once','monthly','quarterly'].includes(query.get('plan'))?query.get('plan'):'once';
 el.addEventListener('change',()=>{show();updateSchedule()});
 schedule.addEventListener('change',updateSchedule);show();updateSchedule();
 const payment=document.getElementById('pay'),status=document.getElementById('paymentMessage'),notice=document.getElementById('notice');
@@ -66,10 +68,10 @@ document.getElementById('nom').textContent=info.title || catalogue[info.offer].l
 document.getElementById('details').textContent=info.description || catalogue[info.offer].description;
 document.getElementById('selectionField').hidden=true;
 needsDiscord=info.method==='discord';discordRow.hidden=!needsDiscord;
-if(info.plan==='monthly'||info.plan==='quarterly'){schedule.value=info.plan;updateSchedule();schedule.disabled=true;}
+if(['once','monthly','quarterly'].includes(info.plan)){schedule.value=info.plan;updateSchedule();schedule.disabled=true;}
   notice.textContent=info.active&&info.status==='proposed'?'Proposition vérifiée. Vous pourrez régler après avoir confirmé les conditions.':'Paiement temporairement indisponible. Contactez Bon Point.';
   if(!(info.active&&info.status==='proposed'))return;
-if(info.plan==='monthly'||info.plan==='quarterly'){notice.textContent='Échéancier enregistré : les paiements fractionnés ne sont pas encore disponibles. Contactez Bonpoint pour une proposition écrite.';return;}
+if(info.plan==='monthly'||info.plan==='quarterly'){notice.textContent='Échéancier enregistré : les paiements fractionnés ne sont pas encore disponibles. Contactez Bon Point pour une proposition écrite.';return;}
   document.getElementById('payBox').hidden=false;
   payment.addEventListener('click',async()=>{
     payment.disabled=true;status.textContent='Ouverture de la page Stripe…';

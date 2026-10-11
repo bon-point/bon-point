@@ -3,9 +3,10 @@
  * Déploiement INACTIF par défaut : PAYMENTS_ENABLED=false.
  * Les créneaux sont confirmés hors ligne avec le parent avant toute proposition.
  */
+import {handleSite,cleanupSiteData} from './site-services.js';
 const BASE="https://bon-point.github.io/bon-point/";
 const ORIGIN="https://bon-point.github.io";
-const CORS={"access-control-allow-origin":ORIGIN,"access-control-allow-methods":"GET,POST,OPTIONS","access-control-allow-headers":"Content-Type","vary":"Origin"};
+const CORS={"access-control-allow-origin":ORIGIN,"access-control-allow-methods":"GET,POST,OPTIONS","access-control-allow-headers":"Content-Type, Authorization","vary":"Origin"};
 const RX_EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RX_MEET=/^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}\/?$/i;
 const levels=new Set(["6e","5e","4e","3e","seconde","premiere","terminale"]);
@@ -219,6 +220,8 @@ export default{
   const url=new URL(req.url);
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:req.headers.get("origin")===ORIGIN?CORS:{}});
   try{
+   const extra=await handleSite(req,env,{json,fail,adminAllowed,email,now,safe});
+   if(extra)return extra;
    if(req.method==="GET"&&url.pathname==="/health")return json({running:true,payment_enabled:!!enabled(env),stripe_mode:env.STRIPE_MODE||"not-set"},200,req);
    if(req.method==="GET"&&url.pathname==="/api/offers")return env.DB?publicOffers(req,env):fail("Non configuré",503,req);
    if(req.method==="GET"&&url.pathname==="/api/proposal")return env.DB?proposal(req,env,url):fail("Non configuré",503,req);
@@ -231,5 +234,5 @@ export default{
    return fail("Introuvable",404,req);
   }catch(err){console.error("Request error",err.message);return fail("Service temporairement indisponible",500,req)}
  },
- async scheduled(event,env,ctx){if(env.DB&&env.MAIL_API_KEY)await drainOutbox(env)}
+ async scheduled(event,env,ctx){if(env.DB)await cleanupSiteData(env);if(env.DB&&env.MAIL_API_KEY)await drainOutbox(env)}
 };

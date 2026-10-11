@@ -45,6 +45,13 @@ assert.ok(!page.includes('<div class="prelaunch-info"'),'Obsolete prelaunch bann
 assert.ok(!page.includes('Mon espace')&&!page.includes('espace.html'),'Old area must stay out of navigation and homepage');
 assert.ok(page.includes('class="hero-head-accent">Progresser</span>'),'Progresser must remain a single unbroken word');
 assert.ok(page.includes('class="payment-choices"'),'Premium payment plans must remain readable');
+assert.match(page,/<span>En une fois<\/span><strong>790 €<\/strong>/,'Brevet must show full one-time payment');
+assert.match(page,/<span>En une fois<\/span><strong>1 290 €<\/strong>/,'Bac must show full one-time payment');
+assert.match(page, /<option value="En une seule fois">En une seule fois<\/option>/,'Contact form needs one-time option');
+const checkoutPage=fs.readFileSync('checkout.html','utf8');
+assert.match(checkoutPage, /<option value="once">En une seule fois \(montant total\)<\/option>/,'Checkout needs once option');
+assert.match(checkoutPage, /schedule\.value=.*:'once'/,'Full payment should be the default');
+assert.match(worker, /payment_plan!=="once"/,'Only the locked one-time proposal can reach checkout');
 assert.ok(!page.includes('263,34 € +'),'Avoid long premium installment additions');
 assert.ok(!page.includes('matheo.png'),'Portrait must not be in homepage');
 console.log('OK Bonpoint visual regressions and legacy removal');

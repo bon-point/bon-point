@@ -21,6 +21,12 @@ jobs:
         run: node --input-type=module --check < cloudflare-v2/src/operations.js
       - name: Test scheduling and private services
         run: node scripts/test-booking.mjs
+      - name: Test Discord slash commands and signatures
+        run: node --test discord-bot/scripts/test-bot.mjs
+      - name: Check Discord Worker syntax
+        run: node --input-type=module --check < discord-bot/src/index.js
+      - name: Check Discord registration script syntax
+        run: node --check discord-bot/scripts/register-commands.mjs
       - name: Check shared site scripts
         run: node --check services.js && node --check calendrier.js
       - name: Check JS, internal links and price consistency

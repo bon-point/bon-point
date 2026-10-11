@@ -4,6 +4,7 @@
  * Les créneaux sont confirmés hors ligne avec le parent avant toute proposition.
  */
 import {handleSite,cleanupSiteData} from './site-services.js';
+import {operations,bookingReminders} from './operations.js';
 const BASE="https://bon-point.github.io/bon-point/";
 const ORIGIN="https://bon-point.github.io";
 const CORS={"access-control-allow-origin":ORIGIN,"access-control-allow-methods":"GET,POST,OPTIONS","access-control-allow-headers":"Content-Type, Authorization","vary":"Origin"};
@@ -24,7 +25,7 @@ async function requestJSON(req){
   if(Number(req.headers.get("content-length")||0)>10000)throw Error("Too large");
   return req.json();
 }
-function enabled(env){const mode=env.STRIPE_MODE;const validKey=mode==="test"?env.STRIPE_SECRET_KEY?.startsWith("sk_test_"):mode==="live"&&env.STRIPE_SECRET_KEY?.startsWith("sk_live_");return env.PAYMENTS_ENABLED==="true" && !!(validKey&&env.DB&&env.STRIPE_WEBHOOK_SECRET&&env.ADMIN_API_KEY&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
+function enabled(env){const mode=env.STRIPE_MODE;const validKey=mode==="test"?env.STRIPE_SECRET_KEY?.startsWith("sk_test_"):mode==="live"&&env.STRIPE_SECRET_KEY?.startsWith("sk_live_");return env.PAYMENTS_ENABLED==="true" && env.REQUIRE_CONFIRMED_BOOKING==="true" && !!(validKey&&env.DB&&env.STRIPE_WEBHOOK_SECRET&&env.ADMIN_API_KEY&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
 function adminAllowed(req,env){
  const candidate=req.headers.get("X-Admin-Key")||"",known=env.ADMIN_API_KEY||"";
  if(candidate.length<32||known.length!==candidate.length)return false;
@@ -105,6 +106,8 @@ async function checkout(req,env){
  if(!order||Date.parse(order.expires_at)<Date.now())return fail("Lien expiré",404,req);
  if(order.state!=="proposed")return fail("Commande déjà traitée ou en cours",409,req);
  if(order.payment_plan!=="once")return fail("Paiement échelonné non activé : devis et modalités à confirmer par Bonpoint",409,req);
+ const slot=await env.DB.prepare("SELECT starts_at_utc,status,parent_email,offer_id FROM booking_requests WHERE order_id=? AND session_type='course' LIMIT 1").bind(order.id).first();
+ if(!slot||slot.status!=="confirmed"||slot.parent_email!==order.parent_email||slot.offer_id!==order.offer_id||!slot.starts_at_utc||Date.parse(slot.starts_at_utc)<Date.now()+49*3600000)return fail("Créneau confirmé au moins 49 h avant le cours nécessaire avant paiement",409,req);
  if(order.method==="discord"&&d.discord_age_confirmed!==true)return fail("Discord nécessite la confirmation des conditions d'âge par le parent",400,req);
  const offer=await env.DB.prepare("SELECT title FROM offers WHERE id=?").bind(order.offer_id).first();
  const reserved=await env.DB.prepare("UPDATE orders SET state='creating' WHERE id=? AND state='proposed'").bind(order.id).run();
@@ -220,6 +223,8 @@ export default{
   const url=new URL(req.url);
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:req.headers.get("origin")===ORIGIN?CORS:{}});
   try{
+   const op=await operations(req,env,{json,fail,email,now,safe});
+   if(op)return op;
    const extra=await handleSite(req,env,{json,fail,adminAllowed,email,now,safe});
    if(extra)return extra;
    if(req.method==="GET"&&url.pathname==="/health")return json({running:true,payment_enabled:!!enabled(env),stripe_mode:env.STRIPE_MODE||"not-set"},200,req);
@@ -234,5 +239,5 @@ export default{
    return fail("Introuvable",404,req);
   }catch(err){console.error("Request error",err.message);return fail("Service temporairement indisponible",500,req)}
  },
- async scheduled(event,env,ctx){if(env.DB)await cleanupSiteData(env);if(env.DB&&env.MAIL_API_KEY)await drainOutbox(env)}
+ async scheduled(event,env,ctx){if(env.DB)await cleanupSiteData(env);if(env.DB)await bookingReminders(env,{email,safe});if(env.DB&&env.MAIL_API_KEY)await drainOutbox(env)}
 };

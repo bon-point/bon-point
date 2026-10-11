@@ -38,3 +38,13 @@ assert.match(worker,/gradesCollege.has\(grade\)/,'Missing school-level Meet enfo
 assert.match(worker,/discord_age_confirmed/,'Missing Discord minimum-age confirmation');
 assert.match(worker,/SEND_MAIL|MAIL_API_KEY/,'Missing mail config');
 console.log('OK baseline price catalog, no active payments, webhook checks, Meet/Discord');
+
+const page=fs.readFileSync('index.html','utf8');
+assert.ok(!page.includes('<div class="strap"'),'Top strap must remain removed');
+assert.ok(!page.includes('<div class="prelaunch-info"'),'Obsolete prelaunch banner must remain removed');
+assert.ok(!page.includes('Mon espace')&&!page.includes('espace.html'),'Old area must stay out of navigation and homepage');
+assert.ok(page.includes('class="hero-head-accent">Progresser</span>'),'Progresser must remain a single unbroken word');
+assert.ok(page.includes('class="payment-choices"'),'Premium payment plans must remain readable');
+assert.ok(!page.includes('263,34 € +'),'Avoid long premium installment additions');
+assert.ok(!page.includes('matheo.png'),'Portrait must not be in homepage');
+console.log('OK Bonpoint visual regressions and legacy removal');

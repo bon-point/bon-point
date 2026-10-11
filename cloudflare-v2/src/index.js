@@ -55,13 +55,15 @@ async function adminProposal(req,env){
  const parentEmail=String(d.email||"").trim().toLowerCase();
  const grade=String(d.grade||"").trim().toLowerCase();
  const method=d.method==="discord"?"discord":"meet";
+ const plan=d.plan==="monthly"||d.plan==="quarterly"?d.plan:"once";
+ if(plan!=="once"&&!["brevet","bac"].includes(String(d.offer||"")))return fail("Échelonnement réservé aux programmes Excellence",400,req);
  if(!offer||!RX_EMAIL.test(parentEmail)||parentEmail.length>180||!levels.has(grade))return fail("Offre, classe ou contact invalide",400,req);
  if(gradesCollege.has(grade)&&method!=="meet")return fail("Collège : Google Meet uniquement",400,req);
  const meetUrl=typeof d.meet_url==="string"?d.meet_url.trim():"";
  if((method==="meet"&&!RX_MEET.test(meetUrl))||(method==="discord"&&meetUrl&& !RX_MEET.test(meetUrl)))return fail("Lien Google Meet nécessaire pour les cours Meet",400,req);
  const access=token(),orderId=crypto.randomUUID();
- await env.DB.prepare("INSERT INTO orders(id,token_hash,offer_id,locked_price_cents,parent_email,grade,method,meet_url,expires_at,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,'proposed',?)")
- .bind(orderId,await digest(access),offer.id,offer.price_cents,parentEmail,grade,method,meetUrl||null,new Date(Date.now()+7*86400000).toISOString(),now()).run();
+ await env.DB.prepare("INSERT INTO orders(id,token_hash,offer_id,locked_price_cents,parent_email,grade,method,meet_url,expires_at,payment_plan,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,'proposed',?)")
+ .bind(orderId,await digest(access),offer.id,offer.price_cents,parentEmail,grade,method,meetUrl||null,new Date(Date.now()+7*86400000).toISOString(),plan,now()).run();
  return json({order_id:orderId,private_checkout_url:BASE+"checkout.html?token="+access},201,req);
 }
 async function proposal(req,env,url){
@@ -69,7 +71,7 @@ async function proposal(req,env,url){
  if(!/^[a-f0-9]{64}$/.test(access))return fail("Lien non valide",400,req);
  const row=await env.DB.prepare("SELECT o.*, f.title,f.description FROM orders o JOIN offers f ON o.offer_id=f.id WHERE o.token_hash=?").bind(await digest(access)).first();
  if(!row||Date.parse(row.expires_at)<Date.now())return fail("Proposition expirée",404,req);
- return json({offer:row.offer_id,title:row.title,description:row.description,amount:row.locked_price_cents,method:row.method,status:row.state,active:enabled(env)&&row.state==="proposed"},200,req);
+ return json({offer:row.offer_id,title:row.title,description:row.description,amount:row.locked_price_cents,method:row.method,plan:row.payment_plan,status:row.state,active:enabled(env)&&row.state==="proposed"&&row.payment_plan==="once"},200,req);
 }
 async function stripeCheckout(env,order,offer,privateToken){
  const body=new URLSearchParams({
@@ -101,6 +103,7 @@ async function checkout(req,env){
  const order=await env.DB.prepare("SELECT * FROM orders WHERE token_hash=?").bind(await digest(access)).first();
  if(!order||Date.parse(order.expires_at)<Date.now())return fail("Lien expiré",404,req);
  if(order.state!=="proposed")return fail("Commande déjà traitée ou en cours",409,req);
+ if(order.payment_plan!=="once")return fail("Paiement échelonné non activé : devis et modalités à confirmer par Bonpoint",409,req);
  if(order.method==="discord"&&d.discord_age_confirmed!==true)return fail("Discord nécessite la confirmation des conditions d'âge par le parent",400,req);
  const offer=await env.DB.prepare("SELECT title FROM offers WHERE id=?").bind(order.offer_id).first();
  const reserved=await env.DB.prepare("UPDATE orders SET state='creating' WHERE id=? AND state='proposed'").bind(order.id).run();

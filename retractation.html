@@ -12,7 +12,7 @@ form.addEventListener('submit',async function(e){
   try{
    const res=await fetch(url+'/api/withdrawal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v('nom'),email:v('email'),reference:v('reference')})});
    const j=await res.json();
-   if(res.ok&&j.received){state.textContent='Demande reçue sous la référence '+j.reference+'. Un accusé a été envoyé par e-mail.';form.reset();return}
+   if(res.ok&&j.received){state.textContent='Demande enregistrée sous la référence '+j.reference+'. Un accusé sera transmis par e-mail.';form.reset();return}
    state.textContent='Transmission automatique indisponible ('+(j.error||res.status)+'). Vous pouvez envoyer la demande par e-mail depuis votre messagerie.';
   }catch(error){state.textContent='Service indisponible. Vous pouvez envoyer la demande par e-mail.'}
  }

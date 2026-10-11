@@ -17,7 +17,7 @@ Les anciennes tentatives de Worker de cette branche ont été supprimées pour �
 
 ## Ce qui est réellement opérationnel
 Les fichiers sont enregistrés et les contrôles statiques Github Actions vérifient la structure et les montants initiaux.
-**Aucun service Cloudflare n'a été déployé** via ce chat. Aucune clé privée n'a été fournie. Aucun paiement de bout en bout, aucun envoi Brevo ni invitation Discord réelle n'a été testé.
+**Le nouveau Worker Cloudflare a été créé avec D1 et paiements désactivés. Aucun service de facturation réel n'a été activé** via ce chat. Aucune clé privée n'a été fournie. Aucun paiement de bout en bout, aucun envoi Brevo ni invitation Discord réelle n'a été testé.
 Le seul Stripe aperçu est un mauvais compte de test ; il doit être remplacé par le bon compte, avec les exigences Stripe applicables au titulaire.
 
 ## Avant fusion et encaissement

@@ -29,7 +29,7 @@ assert.equal(entries.length,5,'Expected five server pricing rows');
 const server=new Map(entries.map(match=>[match[1],Number(match[2])]));
 assert.deepEqual([...server.keys()].sort(),Object.keys(catalog).sort(),'Price catalogue keys differ');
 for(const [id,amount] of server.entries())assert.equal(catalog[id].priceCents,amount,'Price mismatch '+id);
-assert.match(fs.readFileSync('config-paiement.js','utf8'),/BONPOINT_CHECKOUT_API\s*=\s*""/,'Checkout must default to disabled');
+assert.match(fs.readFileSync('config-paiement.js','utf8'),/bon-point-v2\.soutien-bonpoint\.workers\.dev/,'Public API configured');
 assert.match(fs.readFileSync('cloudflare-v2/wrangler.toml','utf8'),/PAYMENTS_ENABLED = "false"/,'Worker must default to disabled');
 assert.match(worker,/verifyStripe\(/,'Missing webhook HMAC signature verification');
 assert.match(worker,/payment_status/,'Missing paid-state verification');

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const src=fs.readFileSync('cloudflare-v2/src/operations.js','utf8');
-const {schedulingPolicy}=await import('data:text/javascript;base64,'+Buffer.from(src).toString('base64'));
+const {schedulingPolicy}=await import('../cloudflare-v2/src/operations.js');
 const {parisToUTC,acceptedSchedule,validSlot}=schedulingPolicy;
 
 assert.equal(parisToUTC('2026-10-15','13:30'),'2026-10-15T11:30:00.000Z','Paris summer time');

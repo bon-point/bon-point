@@ -21,6 +21,8 @@ jobs:
         run: node --input-type=module --check < cloudflare-v2/src/operations.js
       - name: Verify private admin readiness audit safety
         run: node --test cloudflare-v2/scripts/test-admin-readiness.mjs
+      - name: Test isolated private parent accounts and lesson PDFs
+        run: node --test cloudflare-v2/scripts/test-parent-portal.mjs
       - name: Test administrator authentication and second factor
         run: node --test cloudflare-v2/scripts/test-admin.mjs
       - name: Test Brevo transactional delivery safety

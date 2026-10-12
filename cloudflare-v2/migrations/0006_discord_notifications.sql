@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS discord_notifications (
  state TEXT NOT NULL DEFAULT 'pending' CHECK(state IN ('pending','sending','delivered','failed')),
  attempts INTEGER NOT NULL DEFAULT 0,
  created_at TEXT NOT NULL,
+ claimed_at TEXT,
  sent_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_discord_notifications_queue ON discord_notifications(state,created_at);

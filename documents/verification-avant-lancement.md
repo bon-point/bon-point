@@ -22,7 +22,7 @@ Mise à jour : 12 octobre 2026. Ce document est une liste de vérification, pas 
 - [ ] **Numéro de téléphone professionnel** pour les coordonnées publiées ; décider d'un contact adéquat sans mettre une donnée privée non souhaitée en ligne.
 - [ ] Coordonnées complètes et à jour de l'hébergeur du site.
 - [ ] Compléter les CGV : modalités précises du contrat, réservation, exécution, prix, reports, rétractation, remboursement, médiateur de la consommation et lien vers le formulaire adapté. Pour les contrats à distance conclus en ligne, vérifier aussi la fonctionnalité de rétractation en ligne applicable depuis le 19/06/2026 (voir `retractation.html`).
-- [ ] Contrat effectif avec un **médiateur de la consommation** compétent, puis informations sur le médiateur dans les CGV.
+- [ ] Contrat effectif avec un **médiateur de la consommation** compétent, puis informations sur le médiateur dans les CGV. Une [présélection fondée sur la liste officielle](mediateur-consommation-a-valider.md) est prête ; aucun organisme n'est encore engagé.
 - [x] Dossier de démonstration du parcours réservation supprimé de Cloudflare D1 après les tests du 12/10/2026 (0 réservation restante).
 - [ ] Vérifier la conformité RGPD de l'espace parents, les outils tiers et les durées de conservation avant ouverture aux familles.
   Source : https://entreprendre.service-public.gouv.fr/vosdroits/F31228

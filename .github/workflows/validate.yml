@@ -19,6 +19,8 @@ jobs:
         run: node --input-type=module --check < cloudflare-v2/src/site-services.js
       - name: Check calendar and administration Worker syntax
         run: node --input-type=module --check < cloudflare-v2/src/operations.js
+      - name: Test Brevo transactional delivery safety
+        run: node --test cloudflare-v2/scripts/test-mail-smoke.mjs
       - name: Test scheduling and private services
         run: node scripts/test-booking.mjs
       - name: Test Discord slash commands and signatures

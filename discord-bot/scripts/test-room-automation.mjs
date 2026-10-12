@@ -58,7 +58,8 @@ function setup({state="planned",minutesUntil=5,paid=true,accessEnabled=true,alre
 test("Only a confirmed and paid course can cause a member-specific grant",async()=>{
  const x=setup();
  try{
-  await runRoomAutomation(x.env);
+  const result=await runRoomAutomation(x.env);
+  console.log('GRANT DEBUG',JSON.stringify({result,calls:x.calls,logs:x.logs.map(z=>z.sql.slice(0,95)),state:x.a.state}));
   assert.equal(x.hasOverwrite(),true);
   assert.equal(x.a.state,"active");
   const grants=x.calls.filter(c=>c.method==="PUT");
@@ -76,7 +77,8 @@ test("No payment means no grants and no Discord API requests",async()=>{
 test("An expired participant overwrite is deleted even if new grants are disabled",async()=>{
  const x=setup({state:"active",minutesUntil:-100,accessEnabled:false,alreadyGranted:true});
  try{
-  await runRoomAutomation(x.env);
+  const result=await runRoomAutomation(x.env);
+  console.log('REVOKE DEBUG',JSON.stringify({result,calls:x.calls,logs:x.logs.map(z=>z.sql.slice(0,95)),state:x.a.state}));
   assert.equal(x.a.state,"completed");
   assert.equal(x.a.access_revoked_at!==null,true);
   assert.equal(x.hasOverwrite(),false);

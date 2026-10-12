@@ -26,7 +26,7 @@ export async function runMailSmokeTest(env,sendEmail){
   ).bind(KEY).run();
   return {status:"accepted"};
  }catch(error){
-  const code=/Mail delivery failed (\\d{3})/.exec(String(error?.message||""))?.[1];
+  const code=/Mail delivery failed (\d{3})/.exec(String(error?.message||""))?.[1];
   await env.DB.prepare(
    "UPDATE mail_delivery_checks SET state='failed',error_code=?,finished_at=CURRENT_TIMESTAMP WHERE test_key=? AND state='sending'"
   ).bind(code?"http-"+code:"request-failed",KEY).run();

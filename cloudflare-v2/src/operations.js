@@ -158,7 +158,9 @@ async function staffRoute(req,env,h,url){
   const name=safeString(d.parent_name,90),email=normalEmail(d.email),grade=safeString(d.grade,30),subject=safeString(d.subject,40),
         date=safeString(d.date,10),time=safeString(d.time,5),kind=safeString(d.session_type,12),offer=safeString(d.offer,25);
   const start=validSlot(date,time,kind);
-  if(d.parent_request_received!==true||name.length<2||!EMAIL.test(email)||!GRADES.has(grade)||!SUBJECTS.has(subject)||
+  const demo=d.test_mode===true;
+  const authorizedDemo=demo&&email===normalEmail(env.OWNER_EMAIL||env.ADMIN_LOGIN_EMAIL)&&name.startsWith("DÉMO —");
+  if((!demo&&d.parent_request_received!==true)||(demo&&!authorizedDemo)||name.length<2||!EMAIL.test(email)||!GRADES.has(grade)||!SUBJECTS.has(subject)||
      !DURATION[kind]||kind==="course"&&!OFFERS.has(offer)||!start)
     return h.fail("Demande invalide : vérifiez l'accord du parent, le créneau et les 48 heures de préavis.",400,req);
   const existing=await env.DB.prepare("SELECT id FROM booking_requests WHERE parent_email=? AND starts_at_utc=? AND status!='declined' LIMIT 1").bind(email,start).first();
@@ -167,8 +169,8 @@ async function staffRoute(req,env,h,url){
   if(!freeFromConflicts(start,kind,confirmed.results||[]))return h.fail("Ce créneau est déjà occupé.",409,req);
   const id=crypto.randomUUID();
   await env.DB.prepare("INSERT INTO booking_requests(id,parent_email,parent_name,grade,subject,requested_date,period,notes,status,created_at,time_local,starts_at_utc,session_type,offer_id,reminder_due_at) VALUES(?,?,?,?,?,?,?,?, 'requested',?,?,?,?,?,?)")
-   .bind(id,email,name,grade,subject,date,time,'Demande enregistrée manuellement par l’administrateur',utcNow(),time,start,kind,kind==="course"?offer:null,new Date(Date.parse(start)-(48*60+30)*60000).toISOString()).run();
-  return h.json({created:true,reference:id,status:"requested",confirmed:false},201,req);
+   .bind(id,email,name,grade,subject,date,time,demo?'DÉMONSTRATION — aucun client réel ni paiement':'Demande reçue et enregistrée manuellement par l’administrateur',utcNow(),time,start,kind,kind==="course"?offer:null,new Date(Date.parse(start)-(48*60+30)*60000).toISOString()).run();
+  return h.json({created:true,reference:id,status:"requested",confirmed:false,test_mode:demo},201,req);
  }
  if(path==="/api/staff/bookings"&&req.method==="GET"){
   const v=await env.DB.prepare("SELECT b.id,b.parent_email,b.parent_name,b.grade,b.subject,b.requested_date,b.time_local,b.starts_at_utc,b.session_type,b.offer_id,b.status,b.order_id,b.reminder_sent_at,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='confirmation_parent') AS confirmation_parent_status,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='declined_parent') AS declined_parent_status,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='reminder_parent') AS reminder_parent_status,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='reminder_owner') AS reminder_owner_status,(SELECT kind FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.state='cancelled' AND j.last_error='brevo-delivery-error' LIMIT 1) AS failed_mail_kind FROM booking_requests b ORDER BY b.created_at DESC LIMIT 100").all();

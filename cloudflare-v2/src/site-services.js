@@ -128,8 +128,8 @@ async function parentDashboard(req,env,h){
  const account=await authenticated(req,env);if(!account)return h.fail("Session expirée ou invalide",401,req);
  const mail=account.email;
  const [sessions,bookings,orders,invoices]=await env.DB.batch([
-  env.DB.prepare("SELECT id,session_date,subject,summary,next_step FROM progress_entries WHERE parent_email=? ORDER BY session_date DESC LIMIT 50").bind(mail),
-  env.DB.prepare("SELECT requested_date,subject,period,status FROM booking_requests WHERE parent_email=? ORDER BY created_at DESC LIMIT 30").bind(mail),
+  env.DB.prepare("SELECT id,session_date,subject,summary,next_step,strengths,homework,next_objective FROM progress_entries WHERE parent_email=? ORDER BY session_date DESC,created_at DESC LIMIT 50").bind(mail),
+  env.DB.prepare("SELECT requested_date,time_local,starts_at_utc,subject,period,status,session_type FROM booking_requests WHERE parent_email=? ORDER BY created_at DESC LIMIT 30").bind(mail),
   env.DB.prepare("SELECT o.id,f.title,o.locked_price_cents,o.payment_plan,o.state,o.created_at FROM orders o JOIN offers f ON f.id=o.offer_id WHERE lower(o.parent_email)=? AND o.state IN ('proposed','paid') ORDER BY o.created_at DESC LIMIT 30").bind(mail),
   env.DB.prepare("SELECT invoice_number,total_cents,issued_on,status FROM invoices WHERE parent_email=? ORDER BY issued_on DESC LIMIT 30").bind(mail)
  ]);

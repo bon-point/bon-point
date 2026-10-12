@@ -188,6 +188,7 @@ async function staffRoute(req,env,h,url){
   if(!["confirmed","declined"].includes(status))return h.fail("Statut invalide",400,req);
   const item=await env.DB.prepare("SELECT * FROM booking_requests WHERE id=?").bind(id).first();
   if(!item)return h.fail("Demande introuvable",404,req);
+  if(item.status==="declined"&&status==="confirmed")return h.fail("Une demande refusée ne peut pas être réouverte. Enregistrez une nouvelle proposition pour avertir correctement le parent.",409,req);
   if(status==="confirmed"){
    if(!item.starts_at_utc||Date.parse(item.starts_at_utc)<Date.now()+50*3600000)return h.fail("Au moins 50 h nécessaires pour confirmer et assurer le rappel J-2.",409,req);
    const confirmed=await env.DB.prepare("SELECT starts_at_utc,session_type FROM booking_requests WHERE id!=? AND status='confirmed' AND requested_date=? LIMIT 150").bind(id,item.requested_date).all();

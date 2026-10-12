@@ -25,6 +25,16 @@ LIMIT 3;
 
 Lorsque l'envoi a été effectué, remettre `MAIL_SMOKE_TEST_ENABLED=false` et le cron normal du site `*/5 * * * *`.
 
+## Résultat de la validation
+
+Le 12 octobre 2026 à 12:10:30 UTC, la table `mail_delivery_checks` a enregistré `state='accepted'` pour `brevo-connectivity-2026-10-12`, sans code d'erreur. **Brevo a accepté l'envoi transactionnel depuis le Worker Cloudflare.** La réception finale par Gmail reste à confirmer par le propriétaire du compte.
+
+Après validation :
+- `MAIL_SMOKE_TEST_ENABLED=false` (désactivé).
+- Cron `*/5 * * * *` (rythme normal rétabli).
+- `MAIL_API_KEY` reste un secret Cloudflare, confirmé par lecture de la configuration après restauration.
+- `PAYMENTS_ENABLED=false` inchangé.
+
 ## Suite
 
 1. Vérifier que le test est accepté par Brevo et reçu dans la boîte (éventuellement dossier spam).

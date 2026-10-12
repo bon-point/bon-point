@@ -135,7 +135,7 @@ async function auditFixedRooms(env){
   const second=await fetchStage("voice-2",API+"/channels/"+ids[1]);
   const roles=await fetchStage("guild-roles",API+"/guilds/"+env.DISCORD_GUILD_ID+"/roles");
   // Only previously recorded active allocations can explain member-specific overwrites.
-  const active=await env.DB.prepare("SELECT room_id,participant_discord_id FROM discord_room_allocations WHERE state=\'active\' AND access_granted_at IS NOT NULL AND access_revoked_at IS NULL").all();
+  const active=await env.DB.prepare("SELECT room_id,participant_discord_id FROM discord_room_allocations WHERE state IN ('planned','active') AND grant_attempted_at IS NOT NULL AND access_revoked_at IS NULL").all();
   const membersForRoom=id=>new Set((active.results||[]).filter(a=>a.room_id===id).map(a=>a.participant_discord_id));
   if(first.id!==ids[0]||second.id!==ids[1]||first.type!==2||second.type!==2||
      first.guild_id!==env.DISCORD_GUILD_ID||second.guild_id!==env.DISCORD_GUILD_ID)reason="wrong-channel-or-guild";

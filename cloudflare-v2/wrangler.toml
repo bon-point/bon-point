@@ -12,6 +12,7 @@ ADMIN_PANEL_ENABLED = "false"
 REPORT_UPLOADS_ENABLED = "false"
 PARENT_SELF_SERVICE_CODES = "false"
 REQUIRE_CONFIRMED_BOOKING = "true"
+DISCORD_BOOKING_LINKS_ENABLED = "false"
 
 [triggers]
 crons = ["*/5 * * * *"]

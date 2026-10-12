@@ -76,7 +76,7 @@ function prepareMock(){
    }
   };
   return query;
- },async batch(stmts){const results=[];for(const s of stmts)results.push(await s.run());return results}},
+ },async batch(stmts){const results=[];for(const s of stmts)results.push(s.sql.trim().startsWith("SELECT")?await s.all():await s.run());return results}},
  PARENT_PORTAL_ENABLED:"true",PARENT_AUTH_SECRET:secret,MAIL_API_KEY:"test-placeholder",MAIL_SENDER:"bonpoint@example.invalid"};
  async function issue(email,code){
   issued++;logins.set(email,{email,code_hash:await hash(email+":"+code+":"+secret),sent_at:new Date().toISOString(),expires_at:new Date(Date.now()+600000).toISOString(),attempts:0});

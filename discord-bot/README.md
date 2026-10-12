@@ -1,10 +1,19 @@
 # Bon Point — Bot Discord sans hébergement permanent
 
+## Configuration des deux salles (12 octobre 2026)
+
+Deux salons vocaux existants ont été configurés, sans création de salons :
+
+- Salle 1 : `1558922846896529418`
+- Salle 2 : `1558922881386418276`
+
+`DISCORD_ROOM_AUDIT_ENABLED=true` active seulement les contrôles de confidentialité **en lecture seule**. `DISCORD_ROOM_ACCESS_ENABLED=false` interdit toute automatisation de permission des participants. L'attribution de la salle libre et les protections contre chevauchement sont préparées, mais la liaison à une réservation nominative et les autorisations temporaires restent à faire avant activation. Voir [DEUX-SALLES.md](DEUX-SALLES.md).
+
 ## État confirmé au 11 octobre 2026
 
 Les quatre commandes `/aide`, `/site`, `/reserver`, `/support` ont été enregistrées avec succès auprès de Discord pour le serveur `1536096215996043286`. La table privée D1 `discord_bot_state` contient `command_schema = four-public-commands-v1`, horodaté `2026-10-11 20:30:46 UTC`. Le token du bot demeure en secret Cloudflare ; le registre d'installation ne contient aucun secret. Le déclencheur planifié a été ramené à `*/5 * * * *` après l'installation. La configuration `DISCORD_AUTO_REGISTER=true` est conservée : elle est idempotente et n'effectue plus d'écriture quand le schéma déjà enregistré correspond.
 
-Les notifications vers Discord sont **encore désactivées** : il faut récupérer l'identifiant du salon privé `#réservations-à-traiter`, confirmer ses permissions, fixer `DISCORD_SYNC_FROM` à une date actuelle pour éviter la reprise d'anciens dossiers, puis activer `DISCORD_NOTIFICATIONS_ENABLED` après tests.
+Les notifications administratives Discord ont été activées et un message de test a été envoyé avec succès dans `#réservations-à-traiter` (salon `1558922955394650304`). **L'envoi automatique des demandes du site dépend toujours de l'activation séparée du formulaire sécurisé de réservation.**
 
 Le nouveau bot utilise des **interactions HTTP sécurisées (Ed25519)** sur **Cloudflare Workers**. Il n'a pas besoin d'être connecté au Gateway ni d'une machine en ligne 24 h/24 : il peut apparaître « hors ligne » dans la liste des membres, même lorsque ses commandes fonctionnent.
 
@@ -33,7 +42,7 @@ Un `GET /health` permet de vérifier l'état de la configuration sans divulguer 
 - Clé publique Ed25519 : présente dans `wrangler.toml` et dans le Worker Cloudflare.
 - Endpoint à coller dans Discord Developer Portal, section **General Information → Interactions Endpoint URL** : `https://bon-point-discord.soutien-bonpoint.workers.dev/interactions`.
 
-La configuration des identifiants publics a été enregistrée et contrôlée dans Cloudflare. **Discord n'a pas encore validé l'URL et aucun token privé n'a été fourni à ce nouveau Worker.** L'enregistrement automatique reste désactivé ; il faudra activer `DISCORD_AUTO_REGISTER=true` après avoir enregistré `DISCORD_BOT_TOKEN` directement dans les secrets Cloudflare. Ne pas régénérer le token de l'ancienne application tant que `bon-point-auto` peut encore l'utiliser.
+Discord a validé l'URL, le token privé est enregistré directement dans les secrets Cloudflare (jamais dans GitHub), et les quatre commandes ont été enregistrées. `DISCORD_AUTO_REGISTER=true` maintient l'enregistrement après mise à jour ; ne réinitialisez pas le token tant que l'ancien système peut encore l'utiliser.
 
 ### Configuration Discord Developer Portal
 

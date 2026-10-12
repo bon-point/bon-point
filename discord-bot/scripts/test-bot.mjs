@@ -137,7 +137,7 @@ test("Signed /lier uses verified Discord identity and one-time code without expo
    },
    async all(){return {results:[]}},
    async run(){return {meta:{changes:1}}}
-  }}}}},
+  }}}},
   async batch(batch){statements=batch.length;inserted++;return [{meta:{changes:1}},{meta:{changes:1}}]}
  };
  const r=await interaction({type:2,guild_id:env.DISCORD_GUILD_ID,member:{user:{id:"1558922955394650304",bot:false}},data:{name:"lier",options:[{name:"code",type:3,value:code}]}},

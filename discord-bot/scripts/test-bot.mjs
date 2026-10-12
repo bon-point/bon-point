@@ -124,32 +124,59 @@ test("No Discord permission API can execute from a public request",async()=>{
  assert.equal(res.status,404);
 });
 
-test("Signed /lier uses verified Discord identity and one-time code without exposing it",async()=>{
- const code="0123456789ABCDEF0123";
- let inserted=0,statements=0;
+function mockedLinkDB(paymentState){
  const future=new Date(Date.now()+90*60000).toISOString();
+ const counters={writes:0,statements:0};
  const db={
-  prepare(sql){return {bind(...args){return {
-   async first(){
-    if(sql.includes("discord_booking_link_codes c JOIN booking_requests b"))return {booking_id:"4aeb0e82-2774-4e14-9310-e599385d2ab7",expires_at:new Date(Date.now()+600000).toISOString(),used_at:null,status:"confirmed",session_type:"course",payment_state:"paid",starts_at_utc:future};
-    if(sql.includes("discord_room_audits"))return {status:"verified",room_ids:"1558922846896529418,1558922881386418276"};
-    return null;
-   },
-   async all(){return {results:[]}},
-   async run(){return {meta:{changes:1}}}
-  }}}},
-  async batch(batch){statements=batch.length;inserted++;return [{meta:{changes:1}},{meta:{changes:1}}]}
+  prepare(sql){
+   const handler={
+    bind(){return handler},
+    async first(){
+     if(sql.includes("discord_booking_link_codes c JOIN booking_requests b"))return {
+      booking_id:"4aeb0e82-2774-4e14-9310-e599385d2ab7",
+      expires_at:new Date(Date.now()+600000).toISOString(),
+      used_at:null,status:"confirmed",session_type:"course",
+      payment_state:paymentState,starts_at_utc:future
+     };
+     if(sql.includes("discord_room_audits"))return {
+      status:"verified",room_ids:"1558922846896529418,1558922881386418276"
+     };
+     return null;
+    },
+    async all(){return {results:[]}},
+    async run(){return {meta:{changes:1}}}
+   };
+   return handler;
+  },
+  async batch(items){
+   counters.writes++;counters.statements=items.length;
+   return [{meta:{changes:1}},{meta:{changes:1}}];
+  }
  };
- const r=await interaction({type:2,guild_id:env.DISCORD_GUILD_ID,member:{user:{id:"1558922955394650304",bot:false}},data:{name:"lier",options:[{name:"code",type:3,value:code}]}},
-  {DB:db,DISCORD_ROOM_LINK_ENABLED:"true",DISCORD_ROOM_1_ID:"1558922846896529418",DISCORD_ROOM_2_ID:"1558922881386418276"});
- const obj=await r.json();assert.equal(obj.type,4);assert.equal(obj.data.flags,64);
- assert.match(obj.data.content,/associé au rendez-vous/);
- assert.equal(obj.data.content.includes(code),false);
- assert.equal(inserted,1);assert.equal(statements,2);
+ return {db,counters};
+}
+test("Signed /lier associates exactly the authenticated member without disclosing the code",async()=>{
+ const code="0123456789ABCDEF0123";
+ const {db,counters}=mockedLinkDB("paid");
+ const r=await interaction({
+  type:2,guild_id:env.DISCORD_GUILD_ID,
+  member:{user:{id:"1558922955394650304",bot:false}},
+  data:{name:"lier",options:[{name:"code",type:3,value:code}]}
+ },{DB:db,DISCORD_ROOM_LINK_ENABLED:"true",DISCORD_ROOM_1_ID:"1558922846896529418",DISCORD_ROOM_2_ID:"1558922881386418276"});
+ const result=await r.json();
+ assert.equal(result.type,4);assert.equal(result.data.flags,64);
+ assert.match(result.data.content,/associé au rendez-vous/);
+ assert.equal(result.data.content.includes(code),false);
+ assert.equal(counters.writes,1);assert.equal(counters.statements,2);
 });
-test("An unpaid course cannot be linked to a Discord account",async()=>{
- let writes=0;
- const db={prepare(sql){return {bind(){return {async first(){return {booking_id:"4aeb0e82-2774-4e14-9310-e599385d2ab7",expires_at:new Date(Date.now()+600000).toISOString(),used_at:null,status:"confirmed",session_type:"course",payment_state:"awaiting_payment",starts_at_utc:new Date(Date.now()+3600000).toISOString()}}}}}},async batch(){writes++}};
- const r=await interaction({type:2,guild_id:env.DISCORD_GUILD_ID,member:{user:{id:"1558922955394650304"}},data:{name:"lier",options:[{name:"code",value:"0123456789ABCDEF0123"}]}},{DB:db,DISCORD_ROOM_LINK_ENABLED:"true"});
- const x=await r.json();assert.match(x.data.content,/invalide ou expiré/);assert.equal(writes,0);
+test("Unpaid Discord sessions cannot be linked to a user",async()=>{
+ const {db,counters}=mockedLinkDB("awaiting_payment");
+ const r=await interaction({
+  type:2,guild_id:env.DISCORD_GUILD_ID,
+  member:{user:{id:"1558922955394650304"}},
+  data:{name:"lier",options:[{name:"code",value:"0123456789ABCDEF0123"}]}
+ },{DB:db,DISCORD_ROOM_LINK_ENABLED:"true"});
+ const result=await r.json();
+ assert.match(result.data.content,/invalide ou expiré/);
+ assert.equal(counters.writes,0);
 });

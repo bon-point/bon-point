@@ -7,7 +7,7 @@ Deux salons vocaux existants ont été configurés, sans création de salons :
 - Salle 1 : `1558922846896529418`
 - Salle 2 : `1558922881386418276`
 
-`DISCORD_ROOM_AUDIT_ENABLED=true` active seulement les contrôles de confidentialité **en lecture seule**. `DISCORD_ROOM_ACCESS_ENABLED=false` interdit toute automatisation de permission des participants. L'attribution de la salle libre et les protections contre chevauchement sont préparées, mais la liaison à une réservation nominative et les autorisations temporaires restent à faire avant activation. Voir [DEUX-SALLES.md](DEUX-SALLES.md).
+`DISCORD_ROOM_AUDIT_ENABLED=true` maintient les contrôles de confidentialité. `DISCORD_ROOM_ACCESS_ENABLED=true` et `DISCORD_ROOM_LINK_ENABLED=true` sont configurés sur le bot, mais `DISCORD_BOOKING_LINKS_ENABLED=false` sur le Worker du site maintient la liaison nominative des réservations aux salles désactivée. Aucune ouverture publique de salon n'a été effectuée. Voir [DEUX-SALLES.md](DEUX-SALLES.md).
 
 ## État confirmé au 11 octobre 2026
 
@@ -101,3 +101,11 @@ Le vieux Worker **`bon-point-auto`** conserve un **webhook Discord** et un **web
 `Professeur`, `Parent`, `Élève autorisé` et `Bonpoint Bot` (automatique si installé). L'administrateur doit limiter les accès aux salons privés à l'avance. Les rôles Discord ne remplacent pas le contrôle d'accès du site Bon Point.
 
 Les élèves ne remplissant pas les conditions d'âge de Discord doivent utiliser une alternative (Google Meet, par exemple).
+
+## Vérifications du 12 octobre 2026
+
+- Notification technique transmise et reçue dans le salon administrateur privé, avec statut D1 `delivered`.
+- Alertes prévues pour demandes, confirmations, refus et annulations, même sans horaire de départ. Dans ce cas, le message indique « horaire à confirmer ».
+- Une file dédupliquée traite les événements nouveaux et récupère après 15 minutes les notifications restées `sending`, dans la limite de six tentatives. En cas de panne entre la publication et l'écriture en base, un doublon est possible.
+- Le schéma D1 de création comporte désormais la colonne `discord_notifications.claimed_at`, également ajoutée sur la base existante. Ne pas rejouer les migrations de la production sans vérification de l'état du schéma et des sauvegardes.
+- Les notifications ne comprennent aucun nom ni adresse e-mail de famille.

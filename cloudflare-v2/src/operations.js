@@ -1,3 +1,4 @@
+import {staffDiscordAction} from "./discord-link-admin.js";
 /** Bon Point : calendrier et espace administrateur, inactifs sans prérequis. */
 const ORIGIN="https://bon-point.github.io",DURATION={intro:20,course:60};
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -130,6 +131,8 @@ async function staffRoute(req,env,h,url){
  if(!allowed(req))return h.fail("Origine refusée",403,req);
  const staff=await session(req,env);if(!staff)return h.fail("Connexion administrateur requise",401,req);
  const path=url.pathname;
+ const discord=await staffDiscordAction(req,env,h,path);
+ if(discord)return discord;
  if(path==="/api/staff/logout"&&req.method==="POST"){
   const raw=req.headers.get("authorization").replace(/^Bearer\s+/i,"");
   await env.DB.prepare("DELETE FROM admin_sessions WHERE token_hash=?").bind(await sha(raw)).run();

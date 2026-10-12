@@ -121,7 +121,7 @@ async function auditFixedRooms(env){
   const fetchStage=async(stage,url)=>{
    try{return await readDiscordJson(url,env.DISCORD_BOT_TOKEN)}
    catch(e){
-    const code=/Discord read-only audit HTTP (\\d{3})/.exec(String(e.message||""))?.[1];
+    const code=/Discord read-only audit HTTP (\d{3})/.exec(String(e.message||""))?.[1];
     throw Error(stage+":"+(code||"failed"));
    }
   };

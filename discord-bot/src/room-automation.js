@@ -22,7 +22,7 @@ export function validRoomIds(env){
 export function roomReadyForGrant(allocation,booking,now=Date.now()){
  const start=Date.parse(allocation.starts_at_utc),end=Date.parse(allocation.ends_at_utc);
  if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return false;
- if(!["planned","active"].includes(allocation.state)||allocation.access_revoked_at||allocation.revoke_requested_at)return false;
+ if(!["planned","active"].includes(allocation.state)||allocation.access_granted_at||allocation.access_revoked_at||allocation.revoke_requested_at)return false;
  if(booking.booking_status!=="confirmed")return false;
  if(booking.session_type!=="intro"&&(booking.session_type!=="course"||booking.payment_state!=="paid"))return false;
  return now>=start-10*MS_MIN&&now<end;
@@ -101,44 +101,48 @@ async function grant(env,a,b){
  if(existing==="ours"&&!a.grant_attempted_at)throw Error("member-permission-preexists");
  if(existing==="none"){
   await api(env,"/guilds/"+env.DISCORD_GUILD_ID+"/members/"+a.participant_discord_id);
-  await env.DB.prepare("UPDATE discord_room_allocations SET grant_attempted_at=COALESCE(grant_attempted_at,?) WHERE booking_id=?").bind(today(),a.booking_id).run();
+  const intent=await env.DB.prepare("UPDATE discord_room_allocations SET grant_attempted_at=COALESCE(grant_attempted_at,?) WHERE booking_id=? AND state IN ('planned','active') AND access_revoked_at IS NULL AND revoke_requested_at IS NULL").bind(today(),a.booking_id).run();
+  if(Number(intent.meta?.changes||0)!==1)throw Error("booking-revoked");
   await api(env,"/channels/"+a.room_id+"/permissions/"+a.participant_discord_id,{
    method:"PUT",body:JSON.stringify({type:1,allow:MEMBER_ALLOW,deny:"0"})
   });
  }
  // Recheck the booking (it could have been declined/refunded in the meantime).
- const current=await env.DB.prepare("SELECT b.status AS booking_status,b.session_type,o.state AS payment_state FROM booking_requests b LEFT JOIN orders o ON b.order_id=o.id WHERE b.id=?").bind(a.booking_id).first();
- if(!roomReadyForGrant(a,current||{})){
+ const current=await env.DB.prepare("SELECT a.state AS access_state,a.revoke_requested_at,a.access_revoked_at,b.status AS booking_status,b.session_type,o.state AS payment_state FROM discord_room_allocations a JOIN booking_requests b ON b.id=a.booking_id LEFT JOIN orders o ON b.order_id=o.id WHERE a.booking_id=?").bind(a.booking_id).first();
+ const canStillGrant=current && roomReadyForGrant({...a,state:current.access_state,revoke_requested_at:current.revoke_requested_at,access_revoked_at:current.access_revoked_at},current);
+ if(!canStillGrant){
   await revoke(env,{...a,access_granted_at:today()},"cancelled");
   return;
  }
- await env.DB.prepare("UPDATE discord_room_allocations SET state='active',access_granted_at=COALESCE(access_granted_at,?),last_access_error=NULL WHERE booking_id=? AND access_revoked_at IS NULL")
+ const recorded=await env.DB.prepare("UPDATE discord_room_allocations SET state='active',access_granted_at=COALESCE(access_granted_at,?),last_access_error=NULL WHERE booking_id=? AND state IN ('planned','active') AND access_revoked_at IS NULL AND revoke_requested_at IS NULL")
  .bind(today(),a.booking_id).run();
+ if(Number(recorded.meta?.changes||0)!==1)await revoke(env,{...a,access_granted_at:today()},"cancelled");
 }
 export async function runRoomAutomation(env){
- if(env.DISCORD_ROOM_ACCESS_ENABLED!=="true"||!env.DB||!env.DISCORD_BOT_TOKEN||validRoomIds(env).length!==2||!snowflake.test(env.DISCORD_GUILD_ID||""))return {enabled:false};
+ if(!env.DB||!env.DISCORD_BOT_TOKEN||validRoomIds(env).length!==2||!snowflake.test(env.DISCORD_GUILD_ID||""))return {enabled:false};
+ const grantEnabled=env.DISCORD_ROOM_ACCESS_ENABLED==="true";
  const rows=await dbRows(env.DB,`SELECT a.*,b.status AS booking_status,b.session_type,o.state AS payment_state
  FROM discord_room_allocations a JOIN booking_requests b ON a.booking_id=b.id
  LEFT JOIN orders o ON b.order_id=o.id
- WHERE a.state IN ('planned','active') ORDER BY a.starts_at_utc LIMIT 80`);
+ WHERE a.state IN ('planned','active') OR (a.state='cancelled' AND a.grant_attempted_at IS NOT NULL AND a.access_revoked_at IS NULL) ORDER BY a.starts_at_utc LIMIT 80`);
  const now=Date.now();
  for(const a of rows){
-  const complete=shouldRevoke(a,a,now);
+  const complete=shouldRevoke(a,a,now)||(!grantEnabled&&(!!a.access_granted_at||!!a.grant_attempted_at)&&!a.access_revoked_at);
   const overdue=!a.access_granted_at&&!a.grant_attempted_at&&(a.revoke_requested_at||a.booking_status!=="confirmed"||
     a.session_type==="course"&&a.payment_state!=="paid"||now>=Date.parse(a.ends_at_utc));
-  if(!complete&&!overdue&&!roomReadyForGrant(a,a,now))continue;
+  if(!complete&&!overdue&&!(grantEnabled&&roomReadyForGrant(a,a,now)))continue;
   if(!await lease(env,a.booking_id))continue;
   try{
    if(complete)await revoke(env,a,now>=Date.parse(a.ends_at_utc)+5*MS_MIN?"ended":"cancelled");
    else if(overdue)await env.DB.prepare("UPDATE discord_room_allocations SET state='cancelled' WHERE booking_id=? AND state='planned' AND access_granted_at IS NULL").bind(a.booking_id).run();
-   else await grant(env,a,a);
+   else if(grantEnabled)await grant(env,a,a);
   }catch(e){
    const code=/^(discord-http-\d{3}|room-[a-z-]+|member-permission-preexists|permission-changed)$/.test(String(e.message||""))?e.message:"unexpected-error";
    await markError(env,a,code);
   }finally{await freeLease(env,a.booking_id)}
  }
  await env.DB.prepare("DELETE FROM discord_booking_link_codes WHERE expires_at<? AND (used_at IS NOT NULL OR expires_at<?)").bind(today(),new Date(Date.now()-86400000).toISOString()).run();
- await env.DB.prepare("DELETE FROM discord_room_allocations WHERE state IN ('completed','cancelled') AND ends_at_utc<? AND access_granted_at IS NULL").bind(new Date(Date.now()-90*86400000).toISOString()).run();
+ await env.DB.prepare("DELETE FROM discord_room_allocations WHERE state IN ('completed','cancelled') AND ends_at_utc<? AND access_revoked_at IS NOT NULL").bind(new Date(Date.now()-90*86400000).toISOString()).run();
  return {enabled:true,processed:rows.length};
 }
 export async function linkDiscordInteraction(interaction,env,chooseFixedRoom){

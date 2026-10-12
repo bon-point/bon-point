@@ -76,8 +76,8 @@ test('Création → confirmation → calendrier occupé → e-mails → rappels 
   assert.equal((await processBookingMail(x.env,x.h)).sent,2);
   assert.equal(x.mails.length,2);
   assert.equal((await processBookingMail(x.env,x.h)).sent,0);
-  const conflict=await x.call('/api/staff/bookings/manual',x.booking(OTHER,'14:30'));
-  assert.equal(conflict.status,409);
+  const nextFree=await x.call('/api/staff/bookings/manual',x.booking(OTHER,'14:30'));
+  assert.equal(nextFree.status,201,'A 20-minute meeting plus 10-minute buffer ends exactly at 14:30');
   assert.equal((await x.call('/api/staff/bookings/manual',x.booking(OTHER,'15:00'))).status,201);
   // Simulate the J-2 wake-up (the session still occurs more than 48 hours later).
   x.db.prepare('UPDATE booking_requests SET reminder_due_at=? WHERE id=?')

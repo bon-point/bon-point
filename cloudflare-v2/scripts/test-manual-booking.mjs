@@ -46,7 +46,7 @@ test("Only authenticated administrator can record a requested appointment",async
  assert.equal(a.written.length,1);
  assert.match(a.written[0].sql,/INSERT INTO booking_requests/);
  assert.equal(a.written[0].args[1],"parent.demo@example.invalid");
- assert.equal(a.written[0].args[9],"intro");
+ assert.equal(a.written[0].args[11],"intro");
  assert.equal(a.written[0].args.length,14);
  const wrongOrigin=await operations(a.request(a.data,"https://attacker.example"),a.env,a.h);
  assert.equal(wrongOrigin.status,403);

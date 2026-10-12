@@ -35,6 +35,10 @@ Après validation :
 - `MAIL_API_KEY` reste un secret Cloudflare, confirmé par lecture de la configuration après restauration.
 - `PAYMENTS_ENABLED=false` inchangé.
 
+## Administration (12 octobre 2026)
+
+La présence des secrets `ADMIN_LOGIN_PASSWORD` et `ADMIN_AUTH_SECRET` a été vérifiée dans Cloudflare sans consulter leurs valeurs. Les tests automatiques des protections de connexion (e-mail, mot de passe, OTP, session et origine) ont réussi. Le commutateur `ADMIN_PANEL_ENABLED=true` a été enregistré puis confirmé par une nouvelle lecture de la configuration. `PAYMENTS_ENABLED=false`, `SITE_INTAKE_ENABLED=false` et `PARENT_PORTAL_ENABLED=false` restent inchangés. La connexion de l'administrateur doit être essayée manuellement sur [admin.html](https://bon-point.github.io/bon-point/admin.html) ; la longueur réelle des secrets n'est pas accessible via la lecture Cloudflare, et le Worker refuse la connexion si les minimums de 24 et 32 caractères ne sont pas respectés.
+
 ## Suite
 
 1. Vérifier que le test est accepté par Brevo et reçu dans la boîte (éventuellement dossier spam).

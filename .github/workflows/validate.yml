@@ -29,6 +29,8 @@ jobs:
         run: node --test cloudflare-v2/scripts/test-mail-smoke.mjs
       - name: Check atomic booking slot migrations
         run: python3 scripts/test-booking-db.py
+      - name: Test Brevo booking email queue and retry behavior
+        run: node --test cloudflare-v2/scripts/test-booking-mail.mjs
       - name: Test availability privacy and J-2 notifications
         run: node --test cloudflare-v2/scripts/test-calendar-availability.mjs
       - name: Check notification and availability modules

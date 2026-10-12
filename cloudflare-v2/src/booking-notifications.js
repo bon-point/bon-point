@@ -23,8 +23,8 @@ function mailPayload(job,escape){
  const ref='<p>Référence : '+reference+'.</p>';
  const contact='<p>Pour toute question ou demande de report, contactez <a href="mailto:soutien.bonpoint@gmail.com">soutien.bonpoint@gmail.com</a>.</p>';
  if(job.kind==='declined_parent')return {
-  to:job.parent_email,subject:'Bon Point — Proposition de rendez-vous non retenue',
-  html:'<p>Bonjour,</p><p>Le créneau demandé ne peut malheureusement pas être retenu.</p>'+details+ref+'<p>Vous pouvez proposer une autre date.</p>'+contact
+  to:job.parent_email,subject:'Bon Point — Rendez-vous annulé ou non retenu',
+  html:'<p>Bonjour,</p><p>Le rendez-vous suivant ne pourra pas avoir lieu à la date et à l’heure indiquées.</p>'+details+ref+'<p>Si vous aviez reçu une confirmation pour ce créneau, elle est désormais annulée. Contactez Bon Point pour proposer une nouvelle date.</p>'+contact
  };
  if(job.kind==='confirmation_parent'){
   const paid=job.session_type==='course';

@@ -120,7 +120,7 @@ async function auditFixedRooms(env){
  const ids=fixedRoomIds(env);
  if(env.DISCORD_ROOM_AUDIT_ENABLED!=="true"||!env.DB||!env.DISCORD_BOT_TOKEN||!snowflake.test(env.DISCORD_GUILD_ID||"")||ids.length!==2)return;
  const state=await env.DB.prepare("SELECT room_ids,status,checked_at FROM discord_room_audits WHERE name='fixed_pair'").first();
- if(state?.room_ids===ids.join(",")&&state.status==="verified"&&Date.now()-Date.parse(state.checked_at)<86400000)return;
+ if(state?.room_ids===ids.join(",")&&state.status==="verified"&&Date.now()-Date.parse(state.checked_at)<4*60_000)return;
  let status="blocked",reason="unknown",categoryId=null;
  try{
   // Identify the denied endpoint precisely without storing any Discord content.

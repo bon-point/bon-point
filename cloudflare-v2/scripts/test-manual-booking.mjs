@@ -64,3 +64,22 @@ test("Cannot create a booking without recorded parent request or within closed h
  assert.equal(noOffer.status,400);
  assert.equal(a.written.length,0);
 });
+
+test("Demo bookings must use only Bon Point's own email address",async()=>{
+ const a=fixture();
+ const fake={...a.data,parent_request_received:false,test_mode:true,parent_name:"DÉMO — Bon Point",email:adminEmail};
+ const allowed=await operations(a.request(fake),a.env,a.h);
+ assert.equal(allowed.status,201);
+ assert.equal((await allowed.json()).test_mode,true);
+ assert.equal(a.written.length,1);
+ assert.equal(a.written[0].args[1],adminEmail);
+ assert.match(a.written[0].args[7],/DÉMONSTRATION/);
+ const second=fixture();
+ const refused=await operations(second.request({...fake,email:"parent@example.invalid"}),second.env,second.h);
+ assert.equal(refused.status,400);
+ assert.equal(second.written.length,0);
+ const third=fixture();
+ const noFlag=await operations(third.request({...fake,test_mode:false}),third.env,third.h);
+ assert.equal(noFlag.status,400);
+ assert.equal(third.written.length,0);
+});

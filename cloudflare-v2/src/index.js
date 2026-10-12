@@ -6,6 +6,7 @@
 import {handleSite,cleanupSiteData} from './site-services.js';
 import {operations,bookingReminders} from './operations.js';
 import {runMailSmokeTest} from './mail-smoke-test.js';
+import {auditAdminReadiness} from './admin-readiness-audit.js';
 const BASE="https://bon-point.github.io/bon-point/";
 const ORIGIN="https://bon-point.github.io";
 const CORS={"access-control-allow-origin":ORIGIN,"access-control-allow-methods":"GET,POST,OPTIONS","access-control-allow-headers":"Content-Type, Authorization","vary":"Origin"};
@@ -241,5 +242,5 @@ export default{
    return fail("Introuvable",404,req);
   }catch(err){console.error("Request error",err.message);return fail("Service temporairement indisponible",500,req)}
  },
- async scheduled(event,env,ctx){if(env.MAIL_SMOKE_TEST_ENABLED==='true'&&env.DB)ctx.waitUntil(runMailSmokeTest(env,email));if(env.DB)await cleanupSiteData(env);if(env.DB)await bookingReminders(env,{email,safe});if(env.DB&&env.MAIL_API_KEY)await drainOutbox(env)}
+ async scheduled(event,env,ctx){if(env.ADMIN_READINESS_AUDIT_ENABLED==='true'&&env.DB)ctx.waitUntil(auditAdminReadiness(env));if(env.MAIL_SMOKE_TEST_ENABLED==='true'&&env.DB)ctx.waitUntil(runMailSmokeTest(env,email));if(env.DB)await cleanupSiteData(env);if(env.DB)await bookingReminders(env,{email,safe});if(env.DB&&env.MAIL_API_KEY)await drainOutbox(env)}
 };

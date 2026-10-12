@@ -22,13 +22,26 @@
 - En cas d'erreur API Discord, garder la réservation et envoyer une alerte administrative ; **ne jamais ouvrir le salon à @everyone**.
 - Tenir un journal d'attribution et de révocation pour contrôler les accès, sans dévoiler les données des familles en salon public.
 
-## À fournir pour poursuivre l'intégration
+## Configuration enregistrée le 12 octobre 2026
 
-- ID Discord du salon `Salle de cours privée`.
-- ID Discord du salon `Salle de cours privée 2`.
+| Salle existante | Identifiant Discord |
+|---|---|
+| Salle de cours privée | `1558922846896529418` |
+| Salle de cours privée 2 | `1558922881386418276` |
 
-Ces ID sont des identifiants publics de salon, **pas des tokens**. Dans Discord avec le mode développeur activé : clic droit sur un salon → Copier l'identifiant du salon.
+Les deux identifiants sont présents dans `discord-bot/wrangler.toml` et dans les variables du Worker Cloudflare `bon-point-discord`.
 
-## État
+**Verrouillages actuels :**
+- `DISCORD_ROOM_AUDIT_ENABLED=true` : le bot peut vérifier en lecture seule que les deux salons sont vocaux, appartiennent au même serveur et à une même catégorie privée, et que les permissions ne rendent pas les salons publics.
+- `DISCORD_ROOM_ACCESS_ENABLED=false` : **aucun droit Discord n'est ajouté, supprimé ni modifié automatiquement**. Le bot continue de gérer les quatre commandes et les notifications administratives.
+- Le planning des deux salons peut être choisi à l'aide de `chooseFixedRoom` (dans `src/index.js`). Il privilégie la Salle 1, bascule sur la Salle 2 si nécessaire et renvoie « aucune salle » si les deux sont prises. Il impose une marge de 10 minutes entre deux cours.
+- La migration `cloudflare-v2/migrations/0008_discord_fixed_voice_rooms.sql` crée un stockage de planification vide et des triggers D1 qui rejettent atomiquement les chevauchements. Aucune donnée de participant n'a été créée.
 
-Les quatre commandes Discord et les notifications dans le salon administratif sont installées. **L'automatisation des deux salons n'est pas encore activée** : la configuration attend les deux ID et les tests de permissions. L'ancien système `bon-point-auto` et ses webhooks n'ont pas été modifiés.
+**À finaliser avant de donner l'accès à un élève :**
+1. Vérifier le résultat du contrôle Discord `discord_room_audits` (statut `verified`, sinon corriger les seules permissions nécessaires).
+2. Confirmer l'éligibilité Discord des participants et recueillir leur accord / l'accord du responsable légal lorsque nécessaire ; définir comment associer leur identité Discord à la réservation.
+3. Tester dans un environnement sûr les autorisations temporaires d'un seul membre, la révocation, et les chevauchements, sans jamais accorder `View Channel` à `@everyone`.
+4. Relier l'attribution au statut réel `confirmed` et, lorsque nécessaire, au paiement `paid` vérifié côté serveur. Si les deux salles sont prises, conserver la réservation sans donner d'accès.
+5. Activer les permissions temporaires seulement après un examen des droits du bot. L'ancien Worker `bon-point-auto` reste inchangé.
+
+Le simple enregistrement des identifiants **ne constitue pas une automatisation opérationnelle des accès aux élèves**.

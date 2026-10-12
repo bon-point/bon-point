@@ -59,7 +59,8 @@ console.log('OK Bonpoint visual regressions and legacy removal');
 const services=fs.readFileSync('cloudflare-v2/src/site-services.js','utf8');
 const vars=fs.readFileSync('cloudflare-v2/wrangler.toml','utf8');
 assert.match(vars,/SITE_INTAKE_ENABLED = "false"/,'No public intake before review');
-assert.match(vars,/PARENT_PORTAL_ENABLED = "false"/,'No parent login before review');
+assert.match(vars,/PARENT_PORTAL_ENABLED = "true"/,'Private parent portal must be enabled in the deployment config');
+assert.match(vars,/PARENT_SELF_SERVICE_CODES = "false"/,'Parents cannot send themselves unsolicited login codes');
 assert.match(worker,/handleSite\(/,'Worker services must be routed');
 assert.match(worker,/cleanupSiteData\(/,'Sensitive records cleanup must be scheduled');
 assert.match(services,/verifyHuman\(/,'Intake must verify Turnstile on server');
@@ -85,5 +86,7 @@ assert.match(operations,/ADMIN_LOGIN_PASSWORD\?\.length>=24/,'Admin login requir
 assert.match(operations,/ADMIN_AUTH_SECRET\?\.length>=32/,'Admin login requires a sufficiently long secret');
 assert.match(fs.readFileSync('cloudflare-v2/wrangler.toml','utf8'),/PAYMENTS_ENABLED = "false"/,'Activating admin must not enable payments');
 assert.match(fs.readFileSync('cloudflare-v2/wrangler.toml','utf8'),/SITE_INTAKE_ENABLED = "false"/,'Activating admin must not enable public intake');
-assert.match(fs.readFileSync('cloudflare-v2/wrangler.toml','utf8'),/REPORT_UPLOADS_ENABLED = "false"/,'No PDF upload before review');
+assert.match(fs.readFileSync('cloudflare-v2/wrangler.toml','utf8'),/REPORT_UPLOADS_ENABLED = "true"/,'Private PDF uploads must be explicitly enabled');
+assert.match(operations,/REPORT_UPLOADS_ENABLED/,'PDF upload must be feature-gated');
+assert.match(operations,/session_files WHERE id=\? AND parent_email=\?/,'Parent PDF must be restricted to the owner');
 console.log('OK gated private services, parent data boundaries and new pages');

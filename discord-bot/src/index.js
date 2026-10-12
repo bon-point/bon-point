@@ -3,6 +3,7 @@
  * Slash commands: /aide, /site, /reserver, /support.
  * No Gateway process, no public student records, no payment collection.
  */
+import {linkDiscordInteraction,runRoomAutomation,MEMBER_ALLOW} from "./room-automation.js";
 const HOME="https://bon-point.github.io/bon-point/";
 const BOOKING="https://bon-point.github.io/bon-point/reserver.html";
 const EMAIL="soutien.bonpoint@gmail.com";
@@ -31,7 +32,7 @@ function link(label,url){return {type:2,style:5,label,url}}
 function buttons(...items){return [{type:1,components:items.map(([label,url])=>link(label,url))}]}
 function reply(name){
  switch(name){
-  case "aide":return ephemeral("**Bon Point — Commandes du serveur**\n• `/site` : découvrir nos formules de soutien scolaire.\n• `/reserver` : proposer une date et une heure.\n• `/support` : contacter Bon Point.\n\nLes réservations, paiements et dossiers pédagogiques se gèrent sur le site, jamais dans un salon public.",buttons(["Site Bon Point",HOME],["Réserver un cours",BOOKING]));
+  case "aide":return ephemeral("**Bon Point — Commandes du serveur**\n• `/site` : découvrir nos formules de soutien scolaire.\n• `/reserver` : proposer une date et une heure.\n• `/support` : contacter Bon Point.\n• `/lier` : associer un cours confirmé avec un code temporaire transmis au responsable légal.\n\nLes réservations, paiements et dossiers pédagogiques se gèrent sur le site, jamais dans un salon public.",buttons(["Site Bon Point",HOME],["Réserver un cours",BOOKING]));
   case "site":return ephemeral("**Bon Point** · Cours particuliers en mathématiques et physique-chimie, pour le collège et le lycée. Découvrez les offres et le fonctionnement sur notre site.",buttons(["Ouvrir le site",HOME]));
   case "reserver":return ephemeral("**Proposer un créneau**\nChoisissez une date et une heure dans le calendrier Bon Point. Un créneau devient réservé uniquement après confirmation écrite. Aucune donnée scolaire personnelle n'est à envoyer ici.",buttons(["Ouvrir le calendrier",BOOKING]));
   case "support":return ephemeral("**Besoin d'aide ?**\nContactez Bon Point par e-mail : **"+EMAIL+"**. Pour une question de réservation, précisez seulement votre référence dans l'e-mail. Ne publiez jamais de coordonnées, factures ou données scolaires dans un salon public.",buttons(["Consulter le site",HOME]));
@@ -42,9 +43,10 @@ const COMMANDS=[
  {name:"aide",description:"Découvrir les commandes et le fonctionnement de Bon Point",type:1},
  {name:"site",description:"Obtenir le lien du site officiel Bon Point",type:1},
  {name:"reserver",description:"Ouvrir le calendrier de réservation des cours",type:1},
- {name:"support",description:"Savoir comment contacter Bon Point",type:1}
+ {name:"support",description:"Savoir comment contacter Bon Point",type:1},
+ {name:"lier",description:"Associer votre compte Discord à un cours confirmé",type:1,options:[{type:3,name:"code",description:"Code unique du responsable légal (20 caractères)",required:true,min_length:20,max_length:20}]}
 ];
-const COMMAND_SCHEMA="four-public-commands-v1";
+const COMMAND_SCHEMA="five-commands-private-link-v2";
 function registrationReady(env){
  return env.DISCORD_AUTO_REGISTER==="true"&&env.DB&&configuredKey(env)&&/^\d{17,22}$/.test(env.DISCORD_GUILD_ID||"")&&/^\d{17,22}$/.test(env.DISCORD_APPLICATION_ID||"")&&env.DISCORD_BOT_TOKEN;
 }
@@ -95,11 +97,15 @@ function deniesPublicView(channel,guildId){
  const all=(channel.permission_overwrites||[]).find(o=>o.id===guildId && Number(o.type)===0);
  return !!all && (BigInt(all.deny||"0")&ROOM_VIEW)!==0n;
 }
-function hasUnexpectedRoleAccess(channel,guildRoles,guildId){
+function hasUnexpectedRoleAccess(channel,guildRoles,guildId,allowedMemberIds=new Set()){
  for(const entry of channel.permission_overwrites||[]){
   if((BigInt(entry.allow||"0")&ROOM_VIEW)===0n)continue;
   if(entry.id===guildId)return true;
-  if(Number(entry.type)===1)return true; // Manually authorized member: investigate before automatic control.
+  if(Number(entry.type)===1){
+   const ours=allowedMemberIds.has(String(entry.id)) && BigInt(entry.allow||"0")===BigInt(MEMBER_ALLOW) && BigInt(entry.deny||"0")===0n;
+   if(!ours)return true;
+   continue;
+  }
   const role=guildRoles.find(x=>x.id===entry.id);
   if(!role||!["Administrateur","Professeur","Bonpoint"].includes(role.name))return true;
  }
@@ -128,6 +134,9 @@ async function auditFixedRooms(env){
   const first=await fetchStage("voice-1",API+"/channels/"+ids[0]);
   const second=await fetchStage("voice-2",API+"/channels/"+ids[1]);
   const roles=await fetchStage("guild-roles",API+"/guilds/"+env.DISCORD_GUILD_ID+"/roles");
+  // Only previously recorded active allocations can explain member-specific overwrites.
+  const active=await env.DB.prepare("SELECT room_id,participant_discord_id FROM discord_room_allocations WHERE state=\'active\' AND access_granted_at IS NOT NULL AND access_revoked_at IS NULL").all();
+  const membersForRoom=id=>new Set((active.results||[]).filter(a=>a.room_id===id).map(a=>a.participant_discord_id));
   if(first.id!==ids[0]||second.id!==ids[1]||first.type!==2||second.type!==2||
      first.guild_id!==env.DISCORD_GUILD_ID||second.guild_id!==env.DISCORD_GUILD_ID)reason="wrong-channel-or-guild";
   else if(!first.parent_id||first.parent_id!==second.parent_id)reason="different-categories";
@@ -138,7 +147,7 @@ async function auditFixedRooms(env){
    else if(!deniesPublicView(parent,env.DISCORD_GUILD_ID)||
            !deniesPublicView(first,env.DISCORD_GUILD_ID)||
            !deniesPublicView(second,env.DISCORD_GUILD_ID))reason="public-view-not-explicitly-denied";
-   else if(!Array.isArray(roles)||[parent,first,second].some(c=>hasUnexpectedRoleAccess(c,roles,env.DISCORD_GUILD_ID)))reason="unapproved-visibility-overwrite";
+   else if(!Array.isArray(roles)||hasUnexpectedRoleAccess(parent,roles,env.DISCORD_GUILD_ID)||hasUnexpectedRoleAccess(first,roles,env.DISCORD_GUILD_ID,membersForRoom(first.id))||hasUnexpectedRoleAccess(second,roles,env.DISCORD_GUILD_ID,membersForRoom(second.id)))reason="unapproved-visibility-overwrite";
    else{status="verified";reason="private-voice-pair-read-only"}
   }
  }catch(e){
@@ -209,12 +218,17 @@ export default {
   if(interaction.type===1)return json({type:1});
   if(interaction.type!==2)return ephemeral("Interaction non prise en charge.");
   if(!/^\d{17,22}$/.test(env.DISCORD_GUILD_ID||"")||interaction.guild_id!==env.DISCORD_GUILD_ID)return ephemeral("Cette commande est réservée au serveur Bonpoint.");
+  if(interaction.data?.name==="lier"){
+   try{return json(await linkDiscordInteraction(interaction,env,chooseFixedRoom))}
+   catch(e){console.warn("Discord linking request failed",String(e.message||"").slice(0,80));return ephemeral("La liaison est momentanément indisponible. Contactez Bon Point.")}
+  }
   return reply(interaction.data?.name);
  },
  async scheduled(_event,env,ctx){
   ctx.waitUntil((async()=>{
    await registerGuildCommands(env);
    await auditFixedRooms(env);
+   await runRoomAutomation(env);
    if(!enabled(env))return;
    await enqueue(env);
    await sendQueued(env);

@@ -136,7 +136,9 @@ async function auditFixedRooms(env){
    else{status="verified";reason="private-voice-pair-read-only"}
   }
  }catch(e){
-  reason="discord-read-error";console.warn("Bonpoint voice room audit:",String(e.message||e).slice(0,120));
+  const code=/Discord read-only audit HTTP (\\d{3})/.exec(String(e.message||""))?.[1];
+  reason=code?"discord-http-"+code:"discord-read-error";
+  console.warn("Bonpoint voice room audit:",reason);
  }
  await env.DB.prepare("INSERT INTO discord_room_audits(name,room_ids,status,reason,category_id,checked_at) VALUES('fixed_pair',?,?,?,?,datetime('now')) ON CONFLICT(name) DO UPDATE SET room_ids=excluded.room_ids,status=excluded.status,reason=excluded.reason,category_id=excluded.category_id,checked_at=excluded.checked_at")
  .bind(ids.join(","),status,reason,categoryId).run();

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Modèle de facture à compléter — Bon Point</title>
+<style>
+:root{color-scheme:light;--ink:#142235;--secondary:#59697b;--accent:#bc5542}
+*{box-sizing:border-box}body{margin:0;background:#f5f2ed;color:var(--ink);font:15px/1.55 Arial,sans-serif}
+.page{max-width:850px;background:white;margin:35px auto;padding:52px;box-shadow:0 10px 40px #23314219}
+.top{display:flex;justify-content:space-between;align-items:start;gap:24px;border-bottom:2px solid #192739;padding-bottom:30px}
+.brand{font-size:31px;font-weight:800;letter-spacing:-1.5px}.brand .accent{color:var(--accent)}
+h1{margin:0;font:600 27px Georgia,serif;letter-spacing:-.4px}.muted{color:var(--secondary)}
+.draft{margin:28px 0;padding:14px 18px;background:#fff1e8;border-left:4px solid var(--accent)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:36px 0}h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;margin:0 0 9px}
+p{margin:5px 0}.placeholder{color:#9c472b;background:#fff3ed;padding:1px 4px}
+table{width:100%;border-collapse:collapse;margin-top:22px}th,td{padding:13px;text-align:left;border-bottom:1px solid #d6dbdf;vertical-align:top}th{background:#eef2f4;font-size:12px;text-transform:uppercase}td:last-child,th:last-child{text-align:right}
+.totals{display:flex;justify-content:flex-end;margin-top:20px}.totals>div{min-width:270px;border-top:2px solid var(--ink);padding-top:12px;display:flex;justify-content:space-between;font-size:20px}
+.footer{margin-top:42px;padding-top:18px;border-top:1px solid #d6dbdf;font-size:13px;color:var(--secondary)}
+@media(max-width:600px){.page{margin:0;padding:26px 18px}.top,.grid{display:block}.top>*+*{margin-top:15px}.grid>div+div{margin-top:20px}}
+@media print{@page{size:A4;margin:16mm}body{background:#fff}.page{margin:0;padding:0;box-shadow:none}.draft{border:2px solid var(--accent)}}
+</style>
+</head>
+<body>
+<main class="page">
+<div class="top">
+  <div><div class="brand">✓ bon <span class="accent">point.</span></div><p class="muted">Soutien scolaire en mathématiques et physique-chimie</p></div>
+  <div><h1>FACTURE — MODÈLE</h1><p>N° <span class="placeholder">[NUMÉRO UNIQUE À ATTRIBUER]</span></p><p>Date d'émission : <span class="placeholder">[JJ/MM/AAAA]</span></p><p>Date de prestation / acompte : <span class="placeholder">[JJ/MM/AAAA]</span></p></div>
+</div>
+<div class="draft"><strong>DOCUMENT DE TRAVAIL — PAS UNE FACTURE ÉMISE.</strong> À compléter et valider avant toute utilisation. Aucun paiement n'est associé à ce modèle.</div>
+<div class="grid">
+<div><h2>Prestataire</h2>
+<p><strong>Bon Point</strong></p>
+<p>RONDEL--RAPON Mathéo Isaac — Entrepreneur individuel (EI)</p>
+<p>SIREN : 131 360 802</p>
+<p>SIRET : <span class="placeholder">[À CONFIRMER]</span></p>
+<p>Adresse de domiciliation : <span class="placeholder">[À COMPLÉTER]</span></p>
+<p>Contact : soutien.bonpoint@gmail.com</p></div>
+<div><h2>Client / responsable légal</h2>
+<p><span class="placeholder">[Nom et prénom du client]</span></p>
+<p><span class="placeholder">[Adresse de facturation, selon les obligations applicables]</span></p>
+<p><span class="placeholder">[Référence de réservation ou commande si elle existe]</span></p></div>
+</div>
+<h2>Détail des prestations</h2>
+<table><thead><tr><th>Prestation</th><th>Quantité</th><th>Prix unitaire</th><th>Montant</th></tr></thead>
+<tbody><tr><td>Cours particulier de <span class="placeholder">[Matière et formule]</span><br><span class="muted">Séance du [date] ou acompte identifié</span></td><td>1</td><td><span class="placeholder">[€]</span></td><td><span class="placeholder">[€]</span></td></tr></tbody></table>
+<div class="totals"><div><strong>Total à régler</strong><strong><span class="placeholder">[€]</span></strong></div></div>
+<div class="footer">
+<p><strong>Traitement de la TVA :</strong> <span class="placeholder">[Mention à choisir après vérification du régime : exonération de cours particuliers sous conditions (CGI art. 261, 4-4°-b), franchise en base ou TVA applicable. Ne pas combiner.]</span></p>
+<p><strong>Règlement :</strong> <span class="placeholder">[moyen, date, échéance ; acompte ou solde le cas échéant]</span></p>
+<p><strong>Facture :</strong> le numéro doit appartenir à une séquence chronologique et continue, sans réutilisation. Ne générer un document définitif qu'après vérification des éléments légaux, contractuels et fiscaux.</p>
+</div>
+</main>
+</body>
+</html>

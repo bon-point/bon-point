@@ -21,9 +21,10 @@ Mise à jour : 12 octobre 2026. Ce document est une liste de vérification, pas 
 - [ ] **Adresse de domiciliation professionnelle**, même lorsqu'elle correspond au domicile personnel : exigence légale sur le site et factures. Les possibilités de domiciliation et de protection du domicile doivent être examinées avant toute publication.
 - [ ] **Numéro de téléphone professionnel** pour les coordonnées publiées ; décider d'un contact adéquat sans mettre une donnée privée non souhaitée en ligne.
 - [ ] Coordonnées complètes et à jour de l'hébergeur du site.
-- [ ] Compléter les CGV : modalités précises du contrat, réservation, exécution, prix, reports, rétractation, remboursement, médiateur de la consommation et lien vers le formulaire adapté.
+- [ ] Compléter les CGV : modalités précises du contrat, réservation, exécution, prix, reports, rétractation, remboursement, médiateur de la consommation et lien vers le formulaire adapté. Pour les contrats à distance conclus en ligne, vérifier aussi la fonctionnalité de rétractation en ligne applicable depuis le 19/06/2026 (voir `retractation.html`).
 - [ ] Contrat effectif avec un **médiateur de la consommation** compétent, puis informations sur le médiateur dans les CGV.
-- [ ] Vérifier la conformité RGPD de l'espace parents et des outils tiers et traiter le dossier de démonstration avant ouverture aux familles.
+- [x] Dossier de démonstration du parcours réservation supprimé de Cloudflare D1 après les tests du 12/10/2026 (0 réservation restante).
+- [ ] Vérifier la conformité RGPD de l'espace parents, les outils tiers et les durées de conservation avant ouverture aux familles.
   Source : https://entreprendre.service-public.gouv.fr/vosdroits/F31228
 
 ## TVA et facturation
@@ -38,9 +39,12 @@ Mise à jour : 12 octobre 2026. Ce document est une liste de vérification, pas 
 - [x] Console d'administration à double facteur activée, comptes parents privés et PDF protégés.
 - [x] Calendrier de proposition déjà en place : jeudi dès 13 h 30, soirs de semaine dès 18 h, samedi/dimanche 8 h–18 h. Horaires indicatifs, pas de disponibilité temps réel.
 - [x] Notifications Brevo validées et bot Discord privé pour les deux salles préparé.
-- [ ] Revoir les plages de fin de journée et les durées de séances, ainsi que les tests complets d'annulation et de confirmation.
+- [x] Parcours de démonstration du 12/10/2026 vérifié : création en administration, notifications Discord de demande/confirmation/refus, envois Brevo et réceptions Gmail ; dossier de test supprimé après vérification. Voir `documents/verification-reservations-2026-10-12.md`.
+- [ ] Valider les plages de fin de journée, les durées de séances et le calendrier réel avec l'exploitant.
 - [ ] Vérifier paiements en conditions de test et protection contre toute double facturation, puis décision distincte de mise en production.
 - [x] **`PAYMENTS_ENABLED=false`** et **`SITE_INTAKE_ENABLED=false`** à maintenir jusqu'à validation finale ; ne pas activer Stripe réel par anticipation.
+- [x] Protection anti-robot Turnstile créée et clés enregistrées en secrets Cloudflare (domaine `bon-point.github.io`).
+- [ ] Test complet d'une demande depuis un navigateur public avec Turnstile : **non réalisé**, ne pas le confondre avec la création manuelle dans l'administration.
 
 ## À fournir avant une mise en conformité définitive
 1. Le numéro **SIRET** du principal établissement ou un avis Sirene après publication.

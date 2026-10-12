@@ -16,7 +16,8 @@ if(!looksLikeId(appId)||!looksLikeId(guildId)||!botToken){
   {name:"aide",description:"Découvrir les commandes et le fonctionnement de Bon Point"},
   {name:"site",description:"Obtenir le lien du site officiel Bon Point"},
   {name:"reserver",description:"Ouvrir le calendrier de réservation des cours"},
-  {name:"support",description:"Savoir comment contacter l'équipe Bon Point"}
+  {name:"support",description:"Savoir comment contacter l'équipe Bon Point"},
+  {name:"lier",description:"Associer votre compte Discord à un cours confirmé",options:[{type:3,name:"code",description:"Code reçu du responsable légal (20 caractères)",required:true,min_length:20,max_length:20}]}
  ];
  const url=`https://discord.com/api/v10/applications/${appId}/guilds/${guildId}/commands`;
  let count=0;

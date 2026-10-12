@@ -66,6 +66,82 @@ async function registerGuildCommands(env){
  await env.DB.prepare("INSERT INTO discord_bot_state(name,value,updated_at) VALUES('command_schema',?,datetime('now')) ON CONFLICT(name) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at").bind(COMMAND_SCHEMA).run();
  console.log("Bon Point Discord commands registered in configured guild");
 }
+
+// Fixed-room mode: only the two explicitly authorized voice-channel IDs.
+// Read-only safety audit. NEVER change Discord permissions in this module.
+const ROOM_VIEW=1024n;
+const snowflake=/^\d{17,22}$/;
+export function fixedRoomIds(env){
+ const one=String(env.DISCORD_ROOM_1_ID||""),two=String(env.DISCORD_ROOM_2_ID||"");
+ return snowflake.test(one)&&snowflake.test(two)&&one!==two?[one,two]:[];
+}
+export function chooseFixedRoom({startsAt,endsAt,booked=[],roomIds,bufferMinutes=10}){
+ if(!Array.isArray(roomIds)||roomIds.length!==2||roomIds[0]===roomIds[1]||!roomIds.every(x=>snowflake.test(x)))return null;
+ const start=Date.parse(startsAt),end=Date.parse(endsAt);
+ if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start||end-start>6*3600000||!Number.isInteger(bufferMinutes)||bufferMinutes<0||bufferMinutes>30)return null;
+ for(const id of roomIds){
+  const conflict=booked.some(r=>{
+   if(r.room_id!==id||!["planned","active"].includes(r.state))return false;
+   const otherStart=Date.parse(r.starts_at_utc),otherEnd=Date.parse(r.ends_at_utc);
+   if(!Number.isFinite(otherStart)||!Number.isFinite(otherEnd))return true;
+   const margin=bufferMinutes*60000;
+   return start<otherEnd+margin && end+margin>otherStart;
+  });
+  if(!conflict)return id;
+ }
+ return null; // Two concurrent rooms fully booked: never open another.
+}
+function deniesPublicView(channel,guildId){
+ const all=(channel.permission_overwrites||[]).find(o=>o.id===guildId && Number(o.type)===0);
+ return !!all && (BigInt(all.deny||"0")&ROOM_VIEW)!==0n;
+}
+function hasUnexpectedRoleAccess(channel,guildRoles,guildId){
+ for(const entry of channel.permission_overwrites||[]){
+  if((BigInt(entry.allow||"0")&ROOM_VIEW)===0n)continue;
+  if(entry.id===guildId)return true;
+  if(Number(entry.type)===1)return true; // Manually authorized member: investigate before automatic control.
+  const role=guildRoles.find(x=>x.id===entry.id);
+  if(!role||!["Administrateur","Professeur","Bonpoint"].includes(role.name))return true;
+ }
+ return false;
+}
+async function readDiscordJson(url,token){
+ const r=await fetch(url,{headers:{"Authorization":"Bot "+token}});
+ if(!r.ok)throw Error("Discord read-only audit HTTP "+r.status);
+ return r.json();
+}
+async function auditFixedRooms(env){
+ const ids=fixedRoomIds(env);
+ if(env.DISCORD_ROOM_AUDIT_ENABLED!=="true"||!env.DB||!env.DISCORD_BOT_TOKEN||!snowflake.test(env.DISCORD_GUILD_ID||"")||ids.length!==2)return;
+ const state=await env.DB.prepare("SELECT room_ids,status,checked_at FROM discord_room_audits WHERE name='fixed_pair'").first();
+ if(state?.room_ids===ids.join(",")&&state.status==="verified"&&Date.now()-Date.parse(state.checked_at)<86400000)return;
+ let status="blocked",reason="unknown",categoryId=null;
+ try{
+  const [first,second,roles]=await Promise.all([
+   readDiscordJson(API+"/channels/"+ids[0],env.DISCORD_BOT_TOKEN),
+   readDiscordJson(API+"/channels/"+ids[1],env.DISCORD_BOT_TOKEN),
+   readDiscordJson(API+"/guilds/"+env.DISCORD_GUILD_ID+"/roles",env.DISCORD_BOT_TOKEN)
+  ]);
+  if(first.id!==ids[0]||second.id!==ids[1]||first.type!==2||second.type!==2||
+     first.guild_id!==env.DISCORD_GUILD_ID||second.guild_id!==env.DISCORD_GUILD_ID)reason="wrong-channel-or-guild";
+  else if(!first.parent_id||first.parent_id!==second.parent_id)reason="different-categories";
+  else{
+   const parent=await readDiscordJson(API+"/channels/"+first.parent_id,env.DISCORD_BOT_TOKEN);
+   categoryId=first.parent_id;
+   if(parent.guild_id!==env.DISCORD_GUILD_ID||parent.type!==4)reason="not-same-category";
+   else if(!deniesPublicView(parent,env.DISCORD_GUILD_ID)||
+           !deniesPublicView(first,env.DISCORD_GUILD_ID)||
+           !deniesPublicView(second,env.DISCORD_GUILD_ID))reason="public-view-not-explicitly-denied";
+   else if(!Array.isArray(roles)||[parent,first,second].some(c=>hasUnexpectedRoleAccess(c,roles,env.DISCORD_GUILD_ID)))reason="unapproved-visibility-overwrite";
+   else{status="verified";reason="private-voice-pair-read-only"}
+  }
+ }catch(e){
+  reason="discord-read-error";console.warn("Bonpoint voice room audit:",String(e.message||e).slice(0,120));
+ }
+ await env.DB.prepare("INSERT INTO discord_room_audits(name,room_ids,status,reason,category_id,checked_at) VALUES('fixed_pair',?,?,?,?,datetime('now')) ON CONFLICT(name) DO UPDATE SET room_ids=excluded.room_ids,status=excluded.status,reason=excluded.reason,category_id=excluded.category_id,checked_at=excluded.checked_at")
+ .bind(ids.join(","),status,reason,categoryId).run();
+}
+
 function safeDate(d){return /^20\d{2}-\d{2}-\d{2}$/.test(d||"")?d.split("-").reverse().join("/"):"date à confirmer"}
 function safeTime(t){return /^([01]\d|2[0-3]):[0-5]\d$/.test(t||"")?t:"horaire à confirmer"}
 function enabled(env){return env.DISCORD_NOTIFICATIONS_ENABLED==="true"&&env.DB&&env.DISCORD_BOT_TOKEN&&/^\d{17,22}$/.test(env.DISCORD_ADMIN_CHANNEL_ID||"")}
@@ -130,6 +206,7 @@ export default {
  async scheduled(_event,env,ctx){
   ctx.waitUntil((async()=>{
    await registerGuildCommands(env);
+   await auditFixedRooms(env);
    if(!enabled(env))return;
    await enqueue(env);
    await sendQueued(env);

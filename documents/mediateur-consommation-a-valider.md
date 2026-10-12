@@ -7,6 +7,16 @@
 La liste tenue par la CECMC (DGCCRF) comporte une catégorie **Soutien scolaire** et une catégorie **Enseignement à distance** :  
 https://www.economie.gouv.fr/mediation-conso/vous-etes-un-professionnel/choisir-un-mediateur-de-la-consommation/mediateurs-references
 
+## Option économique identifiée le 12 octobre 2026
+
+**Société de la Médiation Professionnelle (SMP)** : figure sur la liste CECMC dans la catégorie « Soutien scolaire ». Grille tarifaire publiée : **30 € TTC pour 3 ans** si le chiffre d'affaires annuel auprès des particuliers est inférieur à **60 000 €**. Des frais distincts peuvent s'appliquer si une médiation est effectivement engagée : **150 € HT** (simple), **350 € HT** (complexe). **Aucune adhésion effectuée ; il faut obtenir et relire la convention et vérifier la compétence exacte avant signature.**
+
+Sources :
+- Liste CECMC : https://www.economie.gouv.fr/mediation-conso/vous-etes-un-professionnel/choisir-un-mediateur-de-la-consommation/mediateurs-references
+- Grille SMP : https://www.mediateur-consommation-smp.fr/grille-tarifaire/
+
+Il existe aussi la possibilité d'un médiateur inclus dans une adhésion à une fédération ; comparer le coût total de l'adhésion et les frais en cas de litige. Aucun organisme gratuit pour Bon Point n'a été vérifié.
+
 Trois organismes **présents dans la catégorie Soutien scolaire** à examiner :
 - **Centre de Médiation de la Consommation des Conciliateurs de justice (CM2C)** ;
 - **Médiation Solution** ;

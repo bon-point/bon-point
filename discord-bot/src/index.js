@@ -136,7 +136,7 @@ async function auditFixedRooms(env){
    else{status="verified";reason="private-voice-pair-read-only"}
   }
  }catch(e){
-  const code=/Discord read-only audit HTTP (\\d{3})/.exec(String(e.message||""))?.[1];
+  const code=/Discord read-only audit HTTP (\d{3})/.exec(String(e.message||""))?.[1];
   reason=code?"discord-http-"+code:"discord-read-error";
   console.warn("Bonpoint voice room audit:",reason);
  }

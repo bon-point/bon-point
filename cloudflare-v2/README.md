@@ -8,10 +8,10 @@
 PAYMENTS_ENABLED = "false"
 STRIPE_MODE = "test"
 SITE_INTAKE_ENABLED = "false"
-PARENT_PORTAL_ENABLED = "false"
+PARENT_PORTAL_ENABLED = "true"
 ```
 
-Aucun paiement réel, collecte automatique des demandes ni connexion privée parents n'est ouvert. L'API publique du catalogue reste consultable, mais le paiement est refusé tant que les prérequis et la configuration ne sont pas validés. Le déclencheur planifié v2 est `*/5 * * * *` pour le nettoyage des sessions expirées et les éventuelles notifications différées.
+Aucun paiement réel ni collecte automatique des demandes n'est ouvert. Le portail parents est configuré, sous réserve des secrets nécessaires et des contrôles individuels d'accès. L'API publique du catalogue reste consultable, mais le paiement est refusé tant que les prérequis et la configuration ne sont pas validés. Le déclencheur planifié v2 est `*/5 * * * *` pour le nettoyage des sessions expirées et les éventuelles notifications différées.
 
 ## Architecture et fonctionnalités
 
@@ -36,3 +36,12 @@ L'immatriculation et les informations fiscales, les mentions légales/CGV, le m�
 Ensuite seulement, tester les services avec de fausses données : e-mail de l'expéditeur Brevo, API admin privée, secret de code parent, Turnstile serveur, activation séparée des deux drapeaux. Ajouter des limitations de débit et contrôle d'accès administrateur. Les parents doivent obtenir une session individuelle vérifiée, et les factures doivent être effectivement émises et communiquées par un canal sûr.
 
 **Discord n'est pas refondu par ce changement** : les anciens salons, commandes et webhooks ne sont pas touchés. Aucun identifiant privé ou secret ne doit être ajouté au dépôt GitHub public.
+
+## Turnstile et réservations — préparation du 12 octobre 2026
+
+- Widget Turnstile « Bon Point — formulaire de réservation » créé en mode `managed`, limité à `bon-point.github.io`.
+- `TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET` enregistrés en secrets Cloudflare du Worker `bon-point-v2`, sans publication de leur contenu.
+- Le calendrier `reserver.html` charge le widget quand `/api/site/status` indique la réception des demandes active. Le serveur exige ensuite une validation Turnstile avec l'hôte attendu.
+- `SITE_INTAKE_ENABLED=false` et `PAYMENTS_ENABLED=false` sont conservés jusqu'à validation des mentions légales, des conditions contractuelles et du parcours complet sur un navigateur réel.
+- Brevo possède un expéditeur actif, mais ce contrôle ne constitue pas encore un test d'un e-mail client envoyé par le Worker.
+- Attention : des modifications du schéma D1, notamment `discord_notifications.claimed_at`, ont été appliquées directement en production. Vérifier registre, schéma et sauvegarde avant toute commande Wrangler de migrations.

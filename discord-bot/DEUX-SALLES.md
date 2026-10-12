@@ -31,17 +31,38 @@
 
 Les deux identifiants sont présents dans `discord-bot/wrangler.toml` et dans les variables du Worker Cloudflare `bon-point-discord`.
 
-**Verrouillages actuels :**
-- `DISCORD_ROOM_AUDIT_ENABLED=true` : le bot peut vérifier en lecture seule que les deux salons sont vocaux, appartiennent au même serveur et à une même catégorie privée, et que les permissions ne rendent pas les salons publics.
-- `DISCORD_ROOM_ACCESS_ENABLED=false` : **aucun droit Discord n'est ajouté, supprimé ni modifié automatiquement**. Le bot continue de gérer les quatre commandes et les notifications administratives.
-- Le planning des deux salons peut être choisi à l'aide de `chooseFixedRoom` (dans `src/index.js`). Il privilégie la Salle 1, bascule sur la Salle 2 si nécessaire et renvoie « aucune salle » si les deux sont prises. Il impose une marge de 10 minutes entre deux cours.
-- La migration `cloudflare-v2/migrations/0008_discord_fixed_voice_rooms.sql` crée un stockage de planification vide et des triggers D1 qui rejettent atomiquement les chevauchements. Aucune donnée de participant n'a été créée.
+## Automatisation déployée le 12 octobre 2026
 
-**À finaliser avant de donner l'accès à un élève :**
-1. Vérifier le résultat du contrôle Discord `discord_room_audits` (statut `verified`, sinon corriger les seules permissions nécessaires).
-2. Confirmer l'éligibilité Discord des participants et recueillir leur accord / l'accord du responsable légal lorsque nécessaire ; définir comment associer leur identité Discord à la réservation.
-3. Tester dans un environnement sûr les autorisations temporaires d'un seul membre, la révocation, et les chevauchements, sans jamais accorder `View Channel` à `@everyone`.
-4. Relier l'attribution au statut réel `confirmed` et, lorsque nécessaire, au paiement `paid` vérifié côté serveur. Si les deux salles sont prises, conserver la réservation sans donner d'accès.
-5. Activer les permissions temporaires seulement après un examen des droits du bot. L'ancien Worker `bon-point-auto` reste inchangé.
+Le Worker `bon-point-discord` contient maintenant :
+- `/lier code` : identifie le participant à partir de son compte Discord réel (interaction signée) et d'un code confidentiel à usage unique reçu par son responsable légal ;
+- le choix de **Salle 1** en priorité, sinon de **Salle 2** ; les conflits sont rejetés dans la base D1 grâce à des triggers atomiques (marge de 10 minutes) ;
+- une permission individuelle Discord `View Channel + Connect + Speak` créée **environ 10 minutes avant la séance**, uniquement pour le membre associé, et révoquée après le cours (avec une marge de 5 minutes) ;
+- le contrôle du statut `confirmed` de la réservation et du statut Stripe réellement `paid` pour les cours payants. Le premier échange gratuit n'exige pas de paiement ;
+- une révocation lors d'une annulation ou si la prestation cesse d'être éligible, et un mécanisme de reprise après interruption du Worker ;
+- une révocation toujours exécutée lorsque `DISCORD_ROOM_ACCESS_ENABLED=false` en arrêt d'urgence, sans permettre de nouvelles ouvertures ;
+- un contrôle de la confidentialité des deux salons environ toutes les cinq minutes, et l'arrêt des nouvelles ouvertures si les permissions publiques ou manuelles semblent anormales ;
+- des alertes anonymisées vers `#réservations-à-traiter` en cas d'erreur Discord, sans données personnelles ni identifiant complet du participant.
 
-Le simple enregistrement des identifiants **ne constitue pas une automatisation opérationnelle des accès aux élèves**.
+Les indicateurs `DISCORD_ROOM_ACCESS_ENABLED=true` et `DISCORD_ROOM_LINK_ENABLED=true` ont été activés sur le Worker après tests automatiques. **Aucun accès réel n'a été accordé** : à la mise en service, la base ne contenait aucune réservation confirmée, aucun code parental ni aucune attribution.
+
+### Activation de la chaîne complète avec les familles
+
+L'enregistrement automatique des demandes, les paiements Stripe réels et l'accès à la console administrateur Bon Point sont encore **désactivés séparément**. Les nouvelles commandes et la configuration des salles ne remplacent pas ces prérequis.
+
+Pour chaque cours :
+1. Le parent propose un créneau ; l'administrateur le confirme. Une séance payante doit avoir son paiement vérifié par webhook Stripe.
+2. Depuis `admin.html → Accès Discord`, l'administrateur renseigne la référence de réservation et confirme **avoir obtenu l'accord du responsable légal** ainsi que l'éligibilité d'âge Discord du participant.
+3. Le serveur génère un code aléatoire de 20 caractères, conservé sous forme hachée dans D1, et l'envoie **uniquement à l'e-mail du parent**. Il expire après 20 minutes.
+4. Le participant autorisé entre `/lier` puis son code dans le serveur Bon Point ; la commande répond en privé. Discord fournit l'identité du membre dans son interaction signée.
+5. L'attribution est enregistrée, et l'ouverture et la fermeture du salon se font automatiquement lorsque la séance devient éligible.
+6. La console permet aussi de demander une révocation. **Si une requête de suppression Discord échoue, l'administrateur reçoit une alerte et doit vérifier ou retirer l'autorisation manuellement.** La révocation d'une permission ne garantit pas que Discord déconnecte aussitôt un membre déjà présent dans l'audio.
+
+Pour utiliser la console, il faudra configurer et tester les secrets d'authentification de l'administrateur, le fournisseur d'e-mail Brevo, les informations légales et les engagements RGPD, puis activer `ADMIN_PANEL_ENABLED=true` et `DISCORD_BOOKING_LINKS_ENABLED=true` sur le Worker **bon-point-v2**. Aucun secret ne doit figurer sur GitHub ni être partagé dans le chat.
+
+Pour des élèves sous l'âge minimal Discord applicable, choisir **Google Meet**. Ne pas donner aux rôles `Parent` et `Élève autorisé` l'accès permanent à la catégorie de cours.
+
+### Arrêt d'urgence
+
+Dans le Worker `bon-point-discord`, mettre `DISCORD_ROOM_ACCESS_ENABLED=false` pour **arrêter les nouveaux accès**, tout en laissant au bot la possibilité de retirer les autorisations existantes. En cas de panne Discord, contrôler les permissions des deux salons manuellement. Ne pas débrancher le token si des autorisations temporaires restent ouvertes.
+
+Les migrations 0009 et 0010 sont déjà appliquées sur la base D1 ; elles ne doivent pas être rejouées à l'aveugle. L'ancien Worker `bon-point-auto`, ses commandes et ses webhooks n'ont pas été modifiés.

@@ -67,7 +67,7 @@ async function markComplete(env,id,kind){
  }
 }
 async function markFailure(env,job,err){
- const next=job.attempts+1>=5?'failed':'queued';
+ const next=job.attempts+1>=5?'cancelled':'queued';
  const retry=new Date(Date.now()+Math.min(90,5*2**job.attempts)*MIN).toISOString();
  await env.DB.prepare("UPDATE booking_mail_jobs SET state=?,next_attempt_at=?,last_error=? WHERE booking_id=? AND kind=? AND state='sending'")
   .bind(next,retry,'brevo-delivery-error',job.booking_id,job.kind).run();

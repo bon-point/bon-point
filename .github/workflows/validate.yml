@@ -31,6 +31,8 @@ jobs:
         run: python3 scripts/test-booking-db.py
       - name: Test Brevo booking email queue and retry behavior
         run: node --test cloudflare-v2/scripts/test-booking-mail.mjs
+      - name: Test full booking life cycle without actual email delivery
+        run: node --test cloudflare-v2/scripts/test-booking-e2e.mjs
       - name: Test manual intake through protected admin only
         run: node --test cloudflare-v2/scripts/test-manual-booking.mjs
       - name: Test availability privacy and J-2 notifications

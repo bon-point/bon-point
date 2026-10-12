@@ -64,11 +64,11 @@ export async function staffDiscordAction(req,env,h,path){
  if(path==="/api/staff/discord/revoke"&&req.method==="POST"){
   const d=await requestJson(req),id=String(d.booking_id||"").trim();
   if(!idRx.test(id)||d.confirm_revoke!==true)return h.fail("Référence et confirmation requises",400,req);
-  const allocation=await env.DB.prepare("SELECT booking_id,state,access_granted_at,access_revoked_at FROM discord_room_allocations WHERE booking_id=?").bind(id).first();
+  const allocation=await env.DB.prepare("SELECT booking_id,state,grant_attempted_at,access_granted_at,access_revoked_at FROM discord_room_allocations WHERE booking_id=?").bind(id).first();
   await env.DB.prepare("DELETE FROM discord_booking_link_codes WHERE booking_id=?").bind(id).run();
   if(!allocation)return h.json({revocation_requested:true,linked:false},200,req);
   if(allocation.access_revoked_at)return h.json({revocation_requested:true,already_revoked:true},200,req);
-  if(!allocation.access_granted_at){
+  if(!allocation.access_granted_at&&!allocation.grant_attempted_at){
    await env.DB.prepare("UPDATE discord_room_allocations SET state='cancelled',revoke_requested_at=?,access_revoked_at=? WHERE booking_id=? AND access_granted_at IS NULL").bind(now(),now(),id).run();
    return h.json({revocation_requested:true,access_not_opened:true},200,req);
   }

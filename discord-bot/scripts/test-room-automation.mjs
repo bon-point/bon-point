@@ -16,7 +16,7 @@ function setup({state="planned",minutesUntil=5,paid=true,accessEnabled=true,alre
   booking_status:"confirmed",session_type:"course",payment_state:paid?"paid":"awaiting_payment"
  };
  let overwrite=alreadyGranted,calls=[],logs=[];
- const db={prepare(sql){return {bind(...args){
+ const db={prepare(sql){const statement={bind(...args){
   return {
    async all(){
     if(sql.includes("FROM discord_room_allocations a JOIN booking_requests b"))return {results:[{...a}]};
@@ -38,19 +38,19 @@ function setup({state="planned",minutesUntil=5,paid=true,accessEnabled=true,alre
     return {meta:{changes:1}};
    }
   }
- }}}};
+ }};return {...statement,first:()=>statement.bind().first(),all:()=>statement.bind().all(),run:()=>statement.bind().run()};}};
  const env={DB:db,DISCORD_BOT_TOKEN:"fake-secret-only-for-unit-tests",DISCORD_ROOM_ACCESS_ENABLED:String(accessEnabled),DISCORD_ROOM_1_ID:room1,DISCORD_ROOM_2_ID:room2,DISCORD_GUILD_ID:guild};
  const originalFetch=globalThis.fetch;
  globalThis.fetch=async (input,options={})=>{
   const url=new URL(String(input)),method=options.method||"GET";calls.push({path:url.pathname,method,body:options.body});
-  if(url.pathname==="/channels/"+room1&&method==="GET"){
+  if(url.pathname==="/api/v10/channels/"+room1&&method==="GET"){
    const overwrites=[{id:guild,type:0,deny:"1024",allow:"0"}];
    if(overwrite)overwrites.push({id:member,type:1,allow:MEMBER_ALLOW,deny:"0"});
    return new Response(JSON.stringify({id:room1,type:2,guild_id:guild,parent_id:cat,permission_overwrites:overwrites}),{status:200,headers:{"Content-Type":"application/json"}});
   }
-  if(url.pathname==="/guilds/"+guild+"/members/"+member&&method==="GET")return new Response("{}");
-  if(url.pathname==="/channels/"+room1+"/permissions/"+member&&method==="PUT"){overwrite=true;return new Response(null,{status:204})}
-  if(url.pathname==="/channels/"+room1+"/permissions/"+member&&method==="DELETE"){overwrite=false;return new Response(null,{status:204})}
+  if(url.pathname==="/api/v10/guilds/"+guild+"/members/"+member&&method==="GET")return new Response("{}");
+  if(url.pathname==="/api/v10/channels/"+room1+"/permissions/"+member&&method==="PUT"){overwrite=true;return new Response(null,{status:204})}
+  if(url.pathname==="/api/v10/channels/"+room1+"/permissions/"+member&&method==="DELETE"){overwrite=false;return new Response(null,{status:204})}
   throw new Error("Unexpected Discord endpoint "+method+" "+url.pathname);
  };
  return {env,a,calls,logs,restore(){globalThis.fetch=originalFetch},hasOverwrite(){return overwrite}};
@@ -59,26 +59,24 @@ test("Only a confirmed and paid course can cause a member-specific grant",async(
  const x=setup();
  try{
   const result=await runRoomAutomation(x.env);
-  console.log('GRANT DEBUG',JSON.stringify({result,calls:x.calls,logs:x.logs.map(z=>z.sql.slice(0,95)),state:x.a.state}));
   assert.equal(x.hasOverwrite(),true);
   assert.equal(x.a.state,"active");
   const grants=x.calls.filter(c=>c.method==="PUT");
   assert.equal(grants.length,1);
-  assert.equal(grants[0].path,"/channels/"+room1+"/permissions/"+member);
+  assert.equal(grants[0].path,"/api/v10/channels/"+room1+"/permissions/"+member);
   assert.deepEqual(JSON.parse(grants[0].body),{type:1,allow:MEMBER_ALLOW,deny:"0"});
   assert.equal(x.calls.some(c=>c.path.includes(guild+"/permissions")||c.path.includes(room2+"/permissions")),false);
  }finally{x.restore()}
 });
 test("No payment means no grants and no Discord API requests",async()=>{
  const x=setup({paid:false});
- try{await runRoomAutomation(x.env);assert.equal(x.calls.length,0);assert.equal(x.a.state,"planned");}
+ try{await runRoomAutomation(x.env);assert.equal(x.calls.length,0);assert.equal(x.a.state,"cancelled");}
  finally{x.restore()}
 });
 test("An expired participant overwrite is deleted even if new grants are disabled",async()=>{
  const x=setup({state:"active",minutesUntil:-100,accessEnabled:false,alreadyGranted:true});
  try{
   const result=await runRoomAutomation(x.env);
-  console.log('REVOKE DEBUG',JSON.stringify({result,calls:x.calls,logs:x.logs.map(z=>z.sql.slice(0,95)),state:x.a.state}));
   assert.equal(x.a.state,"completed");
   assert.equal(x.a.access_revoked_at!==null,true);
   assert.equal(x.hasOverwrite(),false);

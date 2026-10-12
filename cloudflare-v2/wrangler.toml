@@ -7,6 +7,7 @@ workers_dev = true
 PAYMENTS_ENABLED = "false"
 STRIPE_MODE = "test"
 SITE_INTAKE_ENABLED = "false"
+SLOT_PREVIEW_ENABLED = "true"
 PARENT_PORTAL_ENABLED = "true"
 ADMIN_PANEL_ENABLED = "true"
 REPORT_UPLOADS_ENABLED = "true"

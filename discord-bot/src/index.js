@@ -117,16 +117,22 @@ async function auditFixedRooms(env){
  if(state?.room_ids===ids.join(",")&&state.status==="verified"&&Date.now()-Date.parse(state.checked_at)<86400000)return;
  let status="blocked",reason="unknown",categoryId=null;
  try{
-  const [first,second,roles]=await Promise.all([
-   readDiscordJson(API+"/channels/"+ids[0],env.DISCORD_BOT_TOKEN),
-   readDiscordJson(API+"/channels/"+ids[1],env.DISCORD_BOT_TOKEN),
-   readDiscordJson(API+"/guilds/"+env.DISCORD_GUILD_ID+"/roles",env.DISCORD_BOT_TOKEN)
-  ]);
+  // Identify the denied endpoint precisely without storing any Discord content.
+  const fetchStage=async(stage,url)=>{
+   try{return await readDiscordJson(url,env.DISCORD_BOT_TOKEN)}
+   catch(e){
+    const code=/Discord read-only audit HTTP (\\d{3})/.exec(String(e.message||""))?.[1];
+    throw Error(stage+":"+(code||"failed"));
+   }
+  };
+  const first=await fetchStage("voice-1",API+"/channels/"+ids[0]);
+  const second=await fetchStage("voice-2",API+"/channels/"+ids[1]);
+  const roles=await fetchStage("guild-roles",API+"/guilds/"+env.DISCORD_GUILD_ID+"/roles");
   if(first.id!==ids[0]||second.id!==ids[1]||first.type!==2||second.type!==2||
      first.guild_id!==env.DISCORD_GUILD_ID||second.guild_id!==env.DISCORD_GUILD_ID)reason="wrong-channel-or-guild";
   else if(!first.parent_id||first.parent_id!==second.parent_id)reason="different-categories";
   else{
-   const parent=await readDiscordJson(API+"/channels/"+first.parent_id,env.DISCORD_BOT_TOKEN);
+   const parent=await fetchStage("category",API+"/channels/"+first.parent_id);
    categoryId=first.parent_id;
    if(parent.guild_id!==env.DISCORD_GUILD_ID||parent.type!==4)reason="not-same-category";
    else if(!deniesPublicView(parent,env.DISCORD_GUILD_ID)||
@@ -136,8 +142,8 @@ async function auditFixedRooms(env){
    else{status="verified";reason="private-voice-pair-read-only"}
   }
  }catch(e){
-  const code=/Discord read-only audit HTTP (\d{3})/.exec(String(e.message||""))?.[1];
-  reason=code?"discord-http-"+code:"discord-read-error";
+  const detail=/^(voice-1|voice-2|guild-roles|category):(403|404|429|failed|5\d\d|4\d\d)$/.exec(String(e.message||""));
+  reason=detail?"discord-"+detail[1]+"-"+detail[2]:"discord-read-error";
   console.warn("Bonpoint voice room audit:",reason);
  }
  await env.DB.prepare("INSERT INTO discord_room_audits(name,room_ids,status,reason,category_id,checked_at) VALUES('fixed_pair',?,?,?,?,datetime('now')) ON CONFLICT(name) DO UPDATE SET room_ids=excluded.room_ids,status=excluded.status,reason=excluded.reason,category_id=excluded.category_id,checked_at=excluded.checked_at")

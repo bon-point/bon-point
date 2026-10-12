@@ -4,7 +4,8 @@ import {generateKeyPairSync,sign} from "node:crypto";
 import fs from "node:fs";
 
 const js=fs.readFileSync("discord-bot/src/index.js","utf8");
-const {default:worker,chooseFixedRoom,fixedRoomIds}=await import("data:text/javascript;base64,"+Buffer.from(js).toString("base64"));
+const {default:worker,chooseFixedRoom,fixedRoomIds}=await import("../src/index.js");
+const {roomReadyForGrant,shouldRevoke,validRoomIds,privateVoice,MEMBER_ALLOW,linkDiscordInteraction}=await import("../src/room-automation.js");
 const {privateKey,publicKey}=generateKeyPairSync("ed25519");
 const pubHex=publicKey.export({format:"der",type:"spki"}).subarray(-32).toString("hex");
 const env={DISCORD_PUBLIC_KEY:pubHex,DISCORD_GUILD_ID:"123456789012345678",DISCORD_NOTIFICATIONS_ENABLED:"false"};
@@ -83,4 +84,42 @@ test("Read-only audit does not grant public or private Discord access",()=>{
  assert.match(js,/discord_room_audits/);
  assert.doesNotMatch(js,/\/channels\/[^\n]+\/permissions/);
  assert.doesNotMatch(js,/method:\s*["'](?:PATCH|PUT|DELETE)["'][^\n]*permissions/);
+});
+
+test("Discord /lier cannot be used before secure enrollment activation",async()=>{
+ const r=await interaction({type:2,guild_id:env.DISCORD_GUILD_ID,member:{user:{id:"123456789012345678"}},data:{name:"lier",options:[{name:"code",value:"0123456789ABCDEF0123"}]}});
+ assert.equal(r.status,200);const x=await r.json();
+ assert.equal(x.type,4);assert.equal(x.data.flags,64);assert.match(x.data.content,/pas encore disponible/);
+});
+test("Room admission requires a confirmed and if payable paid booking",()=>{
+ const future=Date.now()+5*60000;
+ const a={state:"planned",starts_at_utc:new Date(future).toISOString(),ends_at_utc:new Date(future+3600000).toISOString()};
+ assert.equal(roomReadyForGrant(a,{booking_status:"confirmed",session_type:"intro"}),true);
+ assert.equal(roomReadyForGrant(a,{booking_status:"confirmed",session_type:"course",payment_state:"paid"}),true);
+ assert.equal(roomReadyForGrant(a,{booking_status:"confirmed",session_type:"course",payment_state:"awaiting_payment"}),false);
+ assert.equal(roomReadyForGrant(a,{booking_status:"declined",session_type:"intro"}),false);
+ assert.equal(roomReadyForGrant({...a,revoke_requested_at:new Date().toISOString()},{booking_status:"confirmed",session_type:"intro"}),false);
+ assert.equal(roomReadyForGrant({...a,starts_at_utc:new Date(future+3600000).toISOString()},{booking_status:"confirmed",session_type:"intro"}),false);
+});
+test("Access is revoked after end or cancellation, including interrupted grants",()=>{
+ const start=Date.now()-90*60000,end=Date.now()-15*60000;
+ const a={state:"active",starts_at_utc:new Date(start).toISOString(),ends_at_utc:new Date(end).toISOString(),access_granted_at:new Date(start).toISOString()};
+ assert.equal(shouldRevoke(a,{booking_status:"confirmed",session_type:"course",payment_state:"paid"}),true);
+ assert.equal(shouldRevoke({...a,access_revoked_at:new Date().toISOString()},{booking_status:"confirmed",session_type:"course",payment_state:"paid"}),false);
+ assert.equal(shouldRevoke({...a,access_granted_at:null,grant_attempted_at:new Date(start).toISOString()},{booking_status:"confirmed",session_type:"intro"}),true);
+ assert.equal(shouldRevoke({...a,ends_at_utc:new Date(Date.now()+600000).toISOString()},{booking_status:"declined",session_type:"intro"}),true);
+});
+test("Only two configured voice rooms with explicit private overwrites are eligible",()=>{
+ const one="1558922846896529418",two="1558922881386418276",guild="1536096215996043286",parent="1536096215996043287";
+ assert.deepEqual(validRoomIds({DISCORD_ROOM_1_ID:one,DISCORD_ROOM_2_ID:two}),[one,two]);
+ assert.deepEqual(validRoomIds({DISCORD_ROOM_1_ID:one,DISCORD_ROOM_2_ID:one}),[]);
+ const channel={id:one,type:2,guild_id:guild,parent_id:parent,permission_overwrites:[{id:guild,type:0,allow:"0",deny:"1024"}]};
+ assert.equal(privateVoice(channel,guild,parent),true);
+ assert.equal(privateVoice({...channel,permission_overwrites:[]},guild,parent),false);
+ assert.equal(privateVoice({...channel,type:0},guild,parent),false);
+ assert.equal(MEMBER_ALLOW,String(1024+1048576+2097152));
+});
+test("No Discord permission API can execute from a public request",async()=>{
+ const res=await worker.fetch(new Request("https://example.com/voice/1558922846896529418",{method:"POST"}),env);
+ assert.equal(res.status,404);
 });

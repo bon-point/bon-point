@@ -24,6 +24,21 @@ Trois organismes **présents dans la catégorie Soutien scolaire** à examiner :
 
 Cette liste ne préjuge pas de leur acceptation du dossier, de leur tarif ou de leurs conditions contractuelles. Demander une offre adaptée à l'activité individuelle de soutien scolaire (cours de mathématiques et de physique-chimie, notamment à distance).
 
+## Piste à 0 € de frais de médiation affichés : CGM06 (à clarifier)
+
+Le **CGM06** annonce sur son propre site une **adhésion gratuite à un dispositif de médiation**, et mentionne explicitement les catégories **O02 Enseignement à distance** et **O03 Soutien scolaire**. Son service pourrait donc intéresser Bon Point.
+
+- Offre de médiation annoncée gratuite : https://www.cgm06.com/dispositif-de-mediation-a-la-consommation/
+- **Réserve importante** : ses adhésions générales à l'association sont facturées (210 €/an en offre Libre, 150 €/an en offre Auto-entrepreneur, 120 € la première année pour les primo-déclarants). Vérifier par écrit si le dispositif de médiation peut être obtenu **sans aucune adhésion payante au CGM06** : https://www.cgm06.com/adhesion/adherer/
+- Demander quelle **entité de médiation référencée CECMC** intervient réellement ; contrôler qu'elle est référencée pour le soutien scolaire **et** l'enseignement à distance. Le CGM06 est un intermédiaire/organisme de gestion, pas un médiateur à publier dans les CGV sans contrat.
+- Demander aussi les **frais de dossier et de traitement en cas de litige**, le renouvellement et les coûts éventuels de sortie.
+- Demander s'ils acceptent des entreprises individuelles hors des Alpes-Maritimes.
+- Tant qu'aucune convention valable n'est signée, **ne pas publier de nom de médiateur dans les CGV ni activer les ventes**.
+
+**À ce jour : aucune option 0 € de coût total sur toute la durée du contrat n'a été vérifiée pour Bon Point.** L'administration explique que les frais de la procédure de médiation (lorsqu'elle est engagée) sont à la charge du professionnel.
+
+Références : https://www.economie.gouv.fr/mediation-conso/vous-etes-un-professionnel/choisir-un-mediateur-de-la-consommation/ ; https://entreprendre.service-public.gouv.fr/vosdroits/F33338
+
 ## Avant inscription dans les CGV
 
 1. Vérifier auprès de l'organisme son référencement CECMC actuel et sa compétence sur **le soutien scolaire** et **l'enseignement à distance**.

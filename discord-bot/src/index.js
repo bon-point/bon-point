@@ -162,30 +162,37 @@ async function auditFixedRooms(env){
 function safeDate(d){return /^20\d{2}-\d{2}-\d{2}$/.test(d||"")?d.split("-").reverse().join("/"):"date à confirmer"}
 function safeTime(t){return /^([01]\d|2[0-3]):[0-5]\d$/.test(t||"")?t:"horaire à confirmer"}
 function enabled(env){return env.DISCORD_NOTIFICATIONS_ENABLED==="true"&&env.DB&&env.DISCORD_BOT_TOKEN&&/^\d{17,22}$/.test(env.DISCORD_ADMIN_CHANNEL_ID||"")}
+function formatWhen(b){return safeDate(b.requested_date)+(b.time_local?" à "+safeTime(b.time_local):" · horaire à confirmer")}
 function validStart(s){return typeof s==="string"&&s.length>0}
 async function enqueue(env){
  const from=env.DISCORD_SYNC_FROM||"9999-12-31T00:00:00.000Z";
- const requested=await env.DB.prepare("SELECT id,requested_date,time_local,session_type FROM booking_requests WHERE created_at>=? AND starts_at_utc IS NOT NULL ORDER BY created_at DESC LIMIT 80").bind(from).all();
+ const requested=await env.DB.prepare("SELECT b.id,b.requested_date,b.time_local,b.session_type FROM booking_requests b WHERE b.created_at>=? AND NOT EXISTS (SELECT 1 FROM discord_notifications n WHERE n.event_key='request:' || b.id) ORDER BY b.created_at ASC LIMIT 80").bind(from).all();
  for(const b of requested.results||[]){
   const type=b.session_type==="intro"?"premier échange":"cours";
-  const detail="🔔 **Proposition de rendez-vous** · "+safeDate(b.requested_date)+" à "+safeTime(b.time_local)+" · "+type+".\nRéférence interne : `"+b.id.slice(0,8)+"`. À examiner dans l'administration Bon Point.";
+  const detail="🔔 **Proposition de rendez-vous** · "+formatWhen(b)+" · "+type+".\nRéférence interne : `"+b.id.slice(0,8)+"`. À examiner dans l'administration Bon Point.";
   await env.DB.prepare("INSERT OR IGNORE INTO discord_notifications(event_key,category,message,state,attempts,created_at) VALUES(?, 'booking_requested', ?, 'pending', 0, datetime('now'))").bind("request:"+b.id,detail).run();
  }
- const confirmed=await env.DB.prepare("SELECT id,requested_date,time_local,session_type FROM booking_requests WHERE created_at>=? AND status='confirmed' AND starts_at_utc IS NOT NULL ORDER BY created_at DESC LIMIT 80").bind(from).all();
+ const confirmed=await env.DB.prepare("SELECT b.id,b.requested_date,b.time_local,b.session_type FROM booking_requests b WHERE b.created_at>=? AND b.status='confirmed' AND NOT EXISTS (SELECT 1 FROM discord_notifications n WHERE n.event_key='confirmed:' || b.id) ORDER BY b.created_at ASC LIMIT 80").bind(from).all();
  for(const b of confirmed.results||[]){
-  const detail="✅ **Rendez-vous confirmé** · "+safeDate(b.requested_date)+" à "+safeTime(b.time_local)+". Référence `"+b.id.slice(0,8)+"`.";
+  const detail="✅ **Rendez-vous confirmé** · "+formatWhen(b)+". Référence `"+b.id.slice(0,8)+"`.";
   await env.DB.prepare("INSERT OR IGNORE INTO discord_notifications(event_key,category,message,state,attempts,created_at) VALUES(?, 'booking_confirmed', ?, 'pending', 0, datetime('now'))").bind("confirmed:"+b.id,detail).run();
  }
- const paid=await env.DB.prepare("SELECT o.id,b.requested_date,b.time_local FROM orders o JOIN booking_requests b ON b.order_id=o.id WHERE o.created_at>=? AND o.state='paid' AND b.status='confirmed' ORDER BY o.created_at DESC LIMIT 80").bind(from).all();
+ const declined=await env.DB.prepare("SELECT b.id,b.requested_date,b.time_local FROM booking_requests b WHERE b.created_at>=? AND b.status='declined' AND NOT EXISTS (SELECT 1 FROM discord_notifications n WHERE n.event_key='declined:' || b.id) ORDER BY b.created_at ASC LIMIT 80").bind(from).all();
+ for(const b of declined.results||[]){
+  const detail="❌ **Demande refusée ou rendez-vous annulé** · "+formatWhen(b)+". Référence "+b.id.slice(0,8)+". À consulter dans l’administration Bon Point.";
+  await env.DB.prepare("INSERT OR IGNORE INTO discord_notifications(event_key,category,message,state,attempts,created_at) VALUES(?, 'booking_declined', ?, 'pending', 0, datetime('now'))").bind("declined:"+b.id,detail).run();
+ }
+ const paid=await env.DB.prepare("SELECT o.id,b.requested_date,b.time_local FROM orders o JOIN booking_requests b ON b.order_id=o.id WHERE o.created_at>=? AND o.state='paid' AND b.status='confirmed' AND NOT EXISTS (SELECT 1 FROM discord_notifications n WHERE n.event_key='paid:' || o.id) ORDER BY o.created_at ASC LIMIT 80").bind(from).all();
  for(const b of paid.results||[]){
-  const detail="💳 **Paiement confirmé par Stripe** pour un rendez-vous prévu le "+safeDate(b.requested_date)+" à "+safeTime(b.time_local)+". Référence de commande `"+b.id.slice(0,8)+"`.";
+  const detail="💳 **Paiement confirmé par Stripe** pour un rendez-vous prévu le "+formatWhen(b)+". Référence de commande `"+b.id.slice(0,8)+"`.";
   await env.DB.prepare("INSERT OR IGNORE INTO discord_notifications(event_key,category,message,state,attempts,created_at) VALUES(?, 'payment_confirmed', ?, 'pending', 0, datetime('now'))").bind("paid:"+b.id,detail).run();
  }
 }
 async function sendQueued(env){
- const pending=await env.DB.prepare("SELECT event_key,category,message,attempts FROM discord_notifications WHERE state='pending' AND attempts<6 ORDER BY created_at LIMIT 12").all();
+ await env.DB.prepare("UPDATE discord_notifications SET state='failed' WHERE state='sending' AND attempts>=6 AND COALESCE(claimed_at,created_at)<datetime('now','-15 minutes')").run();
+ const pending=await env.DB.prepare("SELECT event_key,category,message,attempts FROM discord_notifications WHERE attempts<6 AND (state='pending' OR (state='sending' AND COALESCE(claimed_at,created_at)<datetime('now','-15 minutes'))) ORDER BY created_at LIMIT 12").all();
  for(const event of pending.results||[]){
-  const locked=await env.DB.prepare("UPDATE discord_notifications SET state='sending',attempts=attempts+1 WHERE event_key=? AND state='pending'").bind(event.event_key).run();
+  const locked=await env.DB.prepare("UPDATE discord_notifications SET state='sending',attempts=attempts+1,claimed_at=datetime('now') WHERE event_key=? AND attempts<6 AND (state='pending' OR (state='sending' AND COALESCE(claimed_at,created_at)<datetime('now','-15 minutes')))").bind(event.event_key).run();
   if(Number(locked.meta?.changes||0)!==1)continue;
   try{
    const response=await fetch(API+"/channels/"+env.DISCORD_ADMIN_CHANNEL_ID+"/messages",{
@@ -196,14 +203,14 @@ async function sendQueued(env){
    if(!response.ok){
     const errorText=await response.text();
     console.warn("Discord notification HTTP error",response.status,errorText.slice(0,100));
-    await env.DB.prepare("UPDATE discord_notifications SET state=CASE WHEN attempts>=6 THEN 'failed' ELSE 'pending' END WHERE event_key=?").bind(event.event_key).run();
+    await env.DB.prepare("UPDATE discord_notifications SET state=CASE WHEN attempts>=6 THEN 'failed' ELSE 'pending' END,claimed_at=NULL WHERE event_key=?").bind(event.event_key).run();
     if(response.status===429)break;
    }else{
-    await env.DB.prepare("UPDATE discord_notifications SET state='delivered',sent_at=datetime('now') WHERE event_key=?").bind(event.event_key).run();
+    await env.DB.prepare("UPDATE discord_notifications SET state='delivered',sent_at=datetime('now'),claimed_at=NULL WHERE event_key=?").bind(event.event_key).run();
    }
   }catch(err){
    console.error("Discord notification failed",String(err).slice(0,160));
-   await env.DB.prepare("UPDATE discord_notifications SET state=CASE WHEN attempts>=6 THEN 'failed' ELSE 'pending' END WHERE event_key=?").bind(event.event_key).run();
+   await env.DB.prepare("UPDATE discord_notifications SET state=CASE WHEN attempts>=6 THEN 'failed' ELSE 'pending' END,claimed_at=NULL WHERE event_key=?").bind(event.event_key).run();
   }
  }
 }

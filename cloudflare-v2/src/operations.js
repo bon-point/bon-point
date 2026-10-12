@@ -120,6 +120,8 @@ async function issueParentCode(req,env,h){
  const d=await jsonBody(req),email=normalEmail(d.email);
  const parent=await env.DB.prepare("SELECT email FROM parent_accounts WHERE email=? AND active=1").bind(email).first();
  if(!parent)return h.fail("Compte parent inconnu",404,req);
+ const previous=await env.DB.prepare("SELECT sent_at FROM parent_login_codes WHERE email=?").bind(email).first();
+ if(previous&&Date.now()-Date.parse(previous.sent_at)<90_000)return h.fail("Un code vient déjà d’être envoyé. Attendez 90 secondes.",429,req);
  const code=String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,"0");
  const hashed=await sha(email+":"+code+":"+env.PARENT_AUTH_SECRET);
  await env.DB.prepare("INSERT INTO parent_login_codes(email,code_hash,sent_at,expires_at,attempts) VALUES(?,?,?,?,0) ON CONFLICT(email) DO UPDATE SET code_hash=excluded.code_hash,sent_at=excluded.sent_at,expires_at=excluded.expires_at,attempts=0").bind(email,hashed,utcNow(),future(10)).run();
@@ -156,6 +158,14 @@ async function staffRoute(req,env,h,url){
   await env.DB.prepare("UPDATE booking_requests SET status=? WHERE id=?").bind(status,id).run();
   return h.json({updated:true,status},200,req);
  }
+ if(path==="/api/staff/parents"&&req.method==="GET"){
+  const rows=await env.DB.prepare("SELECT a.email,a.display_name,a.active,a.created_at,(SELECT COUNT(*) FROM progress_entries p WHERE p.parent_email=a.email) AS lessons FROM parent_accounts a ORDER BY a.created_at DESC LIMIT 100").all();
+  return h.json({parents:rows.results},200,req);
+ }
+ if(path==="/api/staff/progress"&&req.method==="GET"){
+  const rows=await env.DB.prepare("SELECT id,parent_email,session_date,subject,summary,next_step,strengths,homework,next_objective,created_at FROM progress_entries ORDER BY session_date DESC,created_at DESC LIMIT 100").all();
+  return h.json({lessons:rows.results},200,req);
+ }
  if(path==="/api/staff/parents"&&req.method==="POST"){
   const d=await jsonBody(req),email=normalEmail(d.email),displayName=safeString(d.display_name,90);
   if(!EMAIL.test(email)||displayName.length<2||typeof d.active!=="boolean")return h.fail("Compte invalide",400,req);
@@ -188,12 +198,12 @@ async function staffRoute(req,env,h,url){
  }
 
  if(path==="/api/staff/progress"&&req.method==="POST"){
-  const d=await jsonBody(req),email=normalEmail(d.email),subject=safeString(d.subject,40),date=safeString(d.session_date,10),summary=safeString(d.summary,700),next=safeString(d.next_step,500);
+  const d=await jsonBody(req),email=normalEmail(d.email),subject=safeString(d.subject,40),date=safeString(d.session_date,10),summary=safeString(d.summary,700),next=safeString(d.next_step,500),strengths=safeString(d.strengths,450),homework=safeString(d.homework,500),nextObjective=safeString(d.next_objective,350);
   if(!EMAIL.test(email)||!SUBJECTS.has(subject)||!/^20\d\d-\d\d-\d\d$/.test(date)||summary.length<3)return h.fail("Compte rendu incomplet",400,req);
   const p=await env.DB.prepare("SELECT email FROM parent_accounts WHERE email=? AND active=1").bind(email).first();
   if(!p)return h.fail("Compte parent non activé",404,req);
   const id=crypto.randomUUID();
-  await env.DB.prepare("INSERT INTO progress_entries(id,parent_email,session_date,subject,summary,next_step,created_at) VALUES(?,?,?,?,?,?,?)").bind(id,email,date,subject,summary,next,utcNow()).run();
+  await env.DB.prepare("INSERT INTO progress_entries(id,parent_email,session_date,subject,summary,next_step,strengths,homework,next_objective,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)").bind(id,email,date,subject,summary,next,strengths,homework,nextObjective,utcNow()).run();
   return h.json({saved:true,id},201,req);
  }
  if(path==="/api/staff/reports"&&req.method==="POST")return uploadReport(req,env,h);

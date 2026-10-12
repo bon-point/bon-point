@@ -154,8 +154,16 @@ async function staffRoute(req,env,h,url){
   return h.json({ok:true},200,req);
  }
  if(path==="/api/staff/bookings"&&req.method==="GET"){
-  const v=await env.DB.prepare("SELECT id,parent_email,parent_name,grade,subject,requested_date,time_local,starts_at_utc,session_type,offer_id,status,order_id,reminder_sent_at FROM booking_requests ORDER BY created_at DESC LIMIT 100").all();
+  const v=await env.DB.prepare("SELECT b.id,b.parent_email,b.parent_name,b.grade,b.subject,b.requested_date,b.time_local,b.starts_at_utc,b.session_type,b.offer_id,b.status,b.order_id,b.reminder_sent_at,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='confirmation_parent') AS confirmation_parent_status,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='declined_parent') AS declined_parent_status,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='reminder_parent') AS reminder_parent_status,(SELECT state FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.kind='reminder_owner') AS reminder_owner_status,(SELECT kind FROM booking_mail_jobs j WHERE j.booking_id=b.id AND j.state='cancelled' AND j.last_error='brevo-delivery-error' LIMIT 1) AS failed_mail_kind FROM booking_requests b ORDER BY b.created_at DESC LIMIT 100").all();
   return h.json({bookings:v.results},200,req);
+ }
+ const retryMail=path.match(/^\/api\/staff\/bookings\/([a-f0-9-]{36})\/retry-mail$/);
+ if(retryMail&&req.method==="POST"){
+  const d=await jsonBody(req),kind=safeString(d.kind,35);
+  if(!["confirmation_parent","confirmation_owner","declined_parent","reminder_parent","reminder_owner"].includes(kind))return h.fail("Type d'e-mail invalide",400,req);
+  const changed=await env.DB.prepare("UPDATE booking_mail_jobs SET state='queued',attempts=0,claimed_at=NULL,next_attempt_at=?,last_error=NULL WHERE booking_id=? AND kind=? AND state='cancelled' AND last_error='brevo-delivery-error'").bind(utcNow(),retryMail[1],kind).run();
+  if(Number(changed.meta?.changes||0)!==1)return h.fail("Aucun e-mail en échec à renvoyer.",409,req);
+  return h.json({queued:true,kind},200,req);
  }
  const bookingMatch=path.match(/^\/api\/staff\/bookings\/([a-f0-9-]{36})$/);
  if(bookingMatch&&req.method==="POST"){

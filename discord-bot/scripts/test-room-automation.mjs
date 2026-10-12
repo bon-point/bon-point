@@ -38,7 +38,7 @@ function setup({state="planned",minutesUntil=5,paid=true,accessEnabled=true,alre
     return {meta:{changes:1}};
    }
   }
- }}};
+ }}}};
  const env={DB:db,DISCORD_BOT_TOKEN:"fake-secret-only-for-unit-tests",DISCORD_ROOM_ACCESS_ENABLED:String(accessEnabled),DISCORD_ROOM_1_ID:room1,DISCORD_ROOM_2_ID:room2,DISCORD_GUILD_ID:guild};
  const originalFetch=globalThis.fetch;
  globalThis.fetch=async (input,options={})=>{

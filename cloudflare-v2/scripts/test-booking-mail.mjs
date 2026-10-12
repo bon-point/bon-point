@@ -28,7 +28,9 @@ function setup(kinds=['confirmation_parent','confirmation_owner'],kind="intro"){
    async run(){
     if(sql.startsWith('INSERT OR IGNORE INTO booking_mail_jobs'))return {meta:{changes:0}};
     const [arg,id,k]=this.params;
-    const r=state.rows.find(r=>r.booking_id===id&&r.kind===k);
+    const target=sql.includes('SET state=?,next_attempt_at=?')?[this.params[3],this.params[4]]:
+      sql.includes("SET state='cancelled'")?[this.params[0],this.params[1]]:[id,k];
+    const r=state.rows.find(r=>r.booking_id===target[0]&&r.kind===target[1]);
     if(sql.includes("SET state='sending',attempts=attempts+1")){
      if(!r||r.state!=='queued')return {meta:{changes:0}};
      r.state='sending';r.claimed_at=arg;r.attempts++;return {meta:{changes:1}};

@@ -16,7 +16,9 @@
 <div class="field"><label for="manualTime">Heure de Paris *</label><input id="manualTime" type="time" step="1800" required></div>
 <div class="field"><label for="manualKind">Type de rendez-vous *</label><select id="manualKind"><option value="intro">Premier échange (20 min)</option><option value="course">Cours / programme (60 min)</option></select></div>
 <div class="field" id="manualOfferGroup" hidden><label for="manualOffer">Formule du cours *</label><select id="manualOffer"><option value="">Sélectionner</option><option value="seance">Séance ciblée</option><option value="progression">Progression</option><option value="ambition">Ambition</option><option value="brevet">Brevet Excellence</option><option value="bac">Bac Excellence</option></select></div>
-<label class="check wide"><input type="checkbox" id="manualParentConsent" required> Je confirme que ce rendez-vous a bien été demandé par le parent ou responsable légal.</label>
+<label class="check wide"><input type="checkbox" id="manualDemo"> Mode démonstration (aucun client réel : tous les e-mails vont uniquement à Bon Point).</label>
+<p id="manualDemoNote" class="notice wide" hidden>Les données seront clairement marquées « DÉMO ». Après confirmation, Brevo peut t'envoyer deux e-mails de test (version parent et version administrateur). Aucun paiement ne sera demandé. Tu pourras annuler ce créneau après vérification.</p>
+<label class="check wide" id="manualConsentLabel"><input type="checkbox" id="manualParentConsent" required> Je confirme que ce rendez-vous a bien été demandé par le parent ou responsable légal.</label>
 <div class="wide"><button class="btn" type="submit">Enregistrer cette demande</button></div>
 </form></details></div>
 <div class="panel" id="parentsView" hidden><h2>Créer ou modifier un accès parent</h2><form id="parentForm" class="mini-form"><div class="field"><label for="parentEmail">E-mail du responsable légal</label><input id="parentEmail" type="email" required></div><div class="field"><label for="parentName">Nom affiché</label><input id="parentName" maxlength="90" required></div><label class="check wide"><input id="parentActive" type="checkbox" checked> Activer le compte parent</label><div class="wide"><button class="btn" type="submit">Enregistrer le compte</button></div></form><div class="actions" style="margin-top:14px"><button class="btn secondary" type="button" id="reloadParents">Actualiser les comptes parents</button></div><div id="parentsList" aria-live="polite"></div><hr style="border:0;border-top:1px solid #ddd;margin:25px 0"><h3>Générer et envoyer un code temporaire</h3><p class="quiet">Le code est créé sur le serveur puis envoyé directement à l'adresse du parent. Il est valable 10 minutes et ne s'affiche jamais dans cette console.</p><form id="parentCodeForm" class="actions"><div class="field" style="flex:1;min-width:210px"><label for="codeEmail">E-mail du parent</label><input id="codeEmail" type="email" required></div><button class="btn" type="submit">Envoyer un nouveau code</button></form></div>
@@ -135,6 +137,31 @@ function updateManualOffer(){
  if(!course)byId('manualOffer').value='';
 }
 byId('manualKind').addEventListener('change',updateManualOffer);updateManualOffer();
+function syncManualDemo(){
+ const demo=byId('manualDemo').checked;
+ byId('manualDemoNote').hidden=!demo;
+ byId('manualConsentLabel').hidden=demo;
+ byId('manualParentConsent').required=!demo;
+ if(demo){
+  byId('manualParentConsent').checked=false;
+  byId('manualName').value='DÉMO — Bon Point';
+  byId('manualEmail').value='soutien.bonpoint@gmail.com';
+  byId('manualGrade').value='Terminale';
+  byId('manualSubject').value='Mathématiques';
+  byId('manualKind').value='intro';
+  byId('manualTime').value='14:00';
+  const date=new Date();date.setUTCDate(date.getUTCDate()+7);
+  while(date.getUTCDay()!==4)date.setUTCDate(date.getUTCDate()+1);
+  byId('manualDate').value=date.toISOString().slice(0,10);
+ }else if(byId('manualName').value.startsWith('DÉMO —')){
+  byId('manualName').value='';
+  byId('manualEmail').value='';
+ }
+ byId('manualName').readOnly=demo;
+ byId('manualEmail').readOnly=demo;
+ updateManualOffer();
+}
+byId('manualDemo').addEventListener('change',syncManualDemo);syncManualDemo();
 byId('manualBookingForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if(!e.currentTarget.reportValidity())return;
@@ -142,12 +169,12 @@ byId('manualBookingForm').addEventListener('submit',async e=>{
   parent_name:byId('manualName').value.trim(),email:byId('manualEmail').value.trim(),grade:byId('manualGrade').value,
   subject:byId('manualSubject').value,date:byId('manualDate').value,time:byId('manualTime').value,
   session_type:byId('manualKind').value,offer:byId('manualOffer').value,
-  parent_request_received:byId('manualParentConsent').checked
+  parent_request_received:byId('manualParentConsent').checked,test_mode:byId('manualDemo').checked
  };
  try{
   await call('/api/staff/bookings/manual','POST',data);
-  tell(status,'Demande enregistrée. Il reste à confirmer le créneau dans le tableau ; aucun paiement n’a été effectué.',false);
-  e.currentTarget.reset();updateManualOffer();await listBookings();
+  tell(status,data.test_mode?'Démo enregistrée ! Confirme le créneau dans le tableau pour déclencher les e-mails de test. Aucun paiement.':'Demande enregistrée. Il reste à confirmer le créneau dans le tableau ; aucun paiement n’a été effectué.',false);
+  e.currentTarget.reset();syncManualDemo();await listBookings();
  }catch(err){failed(err)}
 });
 byId('reloadBookings').addEventListener('click',listBookings);byId('reloadOrders').addEventListener('click',listOrders);

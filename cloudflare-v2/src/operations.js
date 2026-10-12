@@ -59,7 +59,7 @@ async function previewSlots(req,env,h,url){
  if(!allowed(req))return h.fail("Origine invalide",403,req);
  if(env.SLOT_PREVIEW_ENABLED!=="true"||!env.DB)return h.fail("Disponibilités non activées",503,req);
  const date=safeString(url.searchParams.get("date"),10),kind=safeString(url.searchParams.get("session_type"),10);
- if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(date)||!DURATION[kind])return h.fail("Date ou type de cours invalide",400,req);
+ if(!/^20\d{2}-\d{2}-\d{2}$/.test(date)||!DURATION[kind])return h.fail("Date ou type de cours invalide",400,req);
  const booked=await env.DB.prepare("SELECT starts_at_utc,session_type FROM booking_requests WHERE status='confirmed' AND requested_date=? AND starts_at_utc IS NOT NULL LIMIT 150").bind(date).all();
  return h.json({date,session_type:kind,live_booking_enabled:env.SITE_INTAKE_ENABLED==="true",slots:slotPreview(date,kind,booked.results||[],parisToUTC,validSlot),note:"Créneaux indicatifs, soumis à confirmation manuelle. Aucun cours n’est réservé avant validation."},200,req);
 }

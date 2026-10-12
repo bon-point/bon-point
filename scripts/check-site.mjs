@@ -74,7 +74,7 @@ assert.ok(!fs.existsSync('ressources.html'),'Temporary resources library should 
 assert.ok(!page.includes('href="ressources.html"'),'No broken library link on homepage');
 assert.match(fs.readFileSync('admin.html','utf8'),/api\/staff\/verify/,'Admin 2FA required');
 assert.match(fs.readFileSync('admin.html','utf8'),/data-view="progress"/,'Progress administration required');
-assert.match(fs.readFileSync('parents.html','utf8'),/Télécharger le récapitulatif PDF/,'Parent private PDF download required');
+assert.match(fs.readFileSync('parents.html','utf8'),/Télécharger le document PDF/,'Parent private PDF download required');
 assert.match(services,/PARENT_SELF_SERVICE_CODES/,'Parent OTP issuance must be admin controlled');
 const operations=fs.readFileSync('cloudflare-v2/src/operations.js','utf8');
 assert.match(operations,/ADMIN_PANEL_ENABLED/,'Administration should be feature gated');

@@ -28,7 +28,7 @@ export function roomReadyForGrant(allocation,booking,now=Date.now()){
  return now>=start-10*MS_MIN&&now<end;
 }
 export function shouldRevoke(allocation,booking,now=Date.now()){
- if(!allocation.access_granted_at||allocation.access_revoked_at)return false;
+ if((!allocation.access_granted_at&&!allocation.grant_attempted_at)||allocation.access_revoked_at)return false;
  const end=Date.parse(allocation.ends_at_utc);
  return !!allocation.revoke_requested_at||booking.booking_status!=="confirmed"||
    (booking.session_type==="course"&&booking.payment_state!=="paid")||
@@ -98,8 +98,10 @@ async function grant(env,a,b){
  if(existing==="other")throw Error("member-permission-preexists");
  // Resume after PUT succeeded but D1 update failed, but ONLY if it matches
  // the exact known 3 voice bits and no deny.
+ if(existing==="ours"&&!a.grant_attempted_at)throw Error("member-permission-preexists");
  if(existing==="none"){
   await api(env,"/guilds/"+env.DISCORD_GUILD_ID+"/members/"+a.participant_discord_id);
+  await env.DB.prepare("UPDATE discord_room_allocations SET grant_attempted_at=COALESCE(grant_attempted_at,?) WHERE booking_id=?").bind(today(),a.booking_id).run();
   await api(env,"/channels/"+a.room_id+"/permissions/"+a.participant_discord_id,{
    method:"PUT",body:JSON.stringify({type:1,allow:MEMBER_ALLOW,deny:"0"})
   });
@@ -122,7 +124,7 @@ export async function runRoomAutomation(env){
  const now=Date.now();
  for(const a of rows){
   const complete=shouldRevoke(a,a,now);
-  const overdue=!a.access_granted_at&&(a.revoke_requested_at||a.booking_status!=="confirmed"||
+  const overdue=!a.access_granted_at&&!a.grant_attempted_at&&(a.revoke_requested_at||a.booking_status!=="confirmed"||
     a.session_type==="course"&&a.payment_state!=="paid"||now>=Date.parse(a.ends_at_utc));
   if(!complete&&!overdue&&!roomReadyForGrant(a,a,now))continue;
   if(!await lease(env,a.booking_id))continue;
@@ -172,8 +174,8 @@ export async function linkDiscordInteraction(interaction,env,chooseFixedRoom){
     AND b.status='confirmed' AND b.id=?
     AND b.starts_at_utc>? AND (b.session_type='intro' OR (b.session_type='course' AND o.state='paid'))`)
     .bind(roomId,memberId,end,now,codeHash,now,info.booking_id,new Date(Date.now()+15*MS_MIN).toISOString()),
-   env.DB.prepare("UPDATE discord_booking_link_codes SET used_at=? WHERE booking_id=? AND code_hash=? AND used_at IS NULL")
-     .bind(now,info.booking_id,codeHash)
+   env.DB.prepare("UPDATE discord_booking_link_codes SET used_at=? WHERE booking_id=? AND code_hash=? AND used_at IS NULL AND expires_at>?")
+     .bind(now,info.booking_id,codeHash,now)
   ]);
   if(Number(results[0]?.meta?.changes||0)!==1)return message("Ce code n'est plus valide. Contactez Bon Point.");
  }catch(e){

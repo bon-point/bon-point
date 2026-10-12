@@ -1,4 +1,6 @@
 import {staffDiscordAction} from "./discord-link-admin.js";
+import {freeFromConflicts,slotPreview} from "./booking-availability.js";
+import {processBookingMail} from "./booking-notifications.js";
 /** Bon Point : calendrier et espace administrateur, inactifs sans prérequis. */
 const ORIGIN="https://bon-point.github.io",DURATION={intro:20,course:60};
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,10 +50,19 @@ function acceptedSchedule(day,time,kind='intro'){
  const [hh,mm]=time.split(":").map(Number),clock=hh*60+mm;
  const n=new Date(day+"T12:00:00Z").getUTCDay();
  if(n===0||n===6)return clock>=8*60&&clock+(kind==='course'?60:20)<=18*60;
- if(n===4)return clock>=13*60+30&&clock<=22*60;
- return clock>=18*60&&clock<=22*60;
+ const minutes=kind==='course'?60:20;
+ if(n===4)return clock>=13*60+30&&clock+minutes<=22*60;
+ return clock>=18*60&&clock+minutes<=22*60;
 }
 function validSlot(date,time,kind='intro'){const iso=parisToUTC(date,time);return iso&&Date.parse(iso)>=Date.now()+48*3600000&&Date.parse(iso)<Date.now()+91*86400000&&acceptedSchedule(date,time,kind)?iso:null}
+async function previewSlots(req,env,h,url){
+ if(!allowed(req))return h.fail("Origine invalide",403,req);
+ if(env.SLOT_PREVIEW_ENABLED!=="true"||!env.DB)return h.fail("Disponibilités non activées",503,req);
+ const date=safeString(url.searchParams.get("date"),10),kind=safeString(url.searchParams.get("session_type"),10);
+ if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(date)||!DURATION[kind])return h.fail("Date ou type de cours invalide",400,req);
+ const booked=await env.DB.prepare("SELECT starts_at_utc,session_type FROM booking_requests WHERE status='confirmed' AND requested_date=? AND starts_at_utc IS NOT NULL LIMIT 150").bind(date).all();
+ return h.json({date,session_type:kind,live_booking_enabled:env.SITE_INTAKE_ENABLED==="true",slots:slotPreview(date,kind,booked.results||[],parisToUTC,validSlot),note:"Créneaux indicatifs, soumis à confirmation manuelle. Aucun cours n’est réservé avant validation."},200,req);
+}
 async function booking(req,env,h){
  if(!enabledIntake(env))return h.fail("Les demandes automatiques sont désactivées. Utilisez l'e-mail.",503,req);
  if(!allowed(req))return h.fail("Origine invalide",403,req);
@@ -61,6 +72,8 @@ async function booking(req,env,h){
  const starts=validSlot(date,time,kind);
  if(d.parent_confirmed!==true||name.length<2||!EMAIL.test(email)||!GRADES.has(grade)||!SUBJECTS.has(subject)||!DURATION[kind]||kind==="course"&&!OFFERS.has(offer)||!starts)return h.fail("Créneau ou informations invalides (48 h minimum).",400,req);
  if(!await turnstile(d,env))return h.fail("Vérification anti-robot nécessaire",400,req);
+ const confirmed=await env.DB.prepare("SELECT starts_at_utc,session_type FROM booking_requests WHERE status='confirmed' AND requested_date=? AND starts_at_utc IS NOT NULL LIMIT 150").bind(date).all();
+ if(!freeFromConflicts(starts,kind,confirmed.results||[]))return h.fail("Ce créneau vient d’être réservé. Choisissez une autre heure.",409,req);
  const hourly=await env.DB.prepare("SELECT count(*) AS n FROM booking_requests WHERE parent_email=? AND created_at>?").bind(email,future(-60)).first();
  if(Number(hourly?.n||0)>=3)return h.fail("Trop de demandes récentes.",429,req);
  const id=crypto.randomUUID();
@@ -152,11 +165,22 @@ async function staffRoute(req,env,h,url){
   if(!item)return h.fail("Demande introuvable",404,req);
   if(status==="confirmed"){
    if(!item.starts_at_utc||Date.parse(item.starts_at_utc)<Date.now()+50*3600000)return h.fail("Au moins 50 h nécessaires pour confirmer et assurer le rappel J-2.",409,req);
-   const nearby=await env.DB.prepare("SELECT id FROM booking_requests WHERE id!=? AND status='confirmed' AND starts_at_utc>? AND starts_at_utc<? LIMIT 1").bind(id,new Date(Date.parse(item.starts_at_utc)-60*60000).toISOString(),new Date(Date.parse(item.starts_at_utc)+60*60000).toISOString()).first();
-   if(nearby)return h.fail("Conflit avec un cours confirmé.",409,req);
+   const confirmed=await env.DB.prepare("SELECT starts_at_utc,session_type FROM booking_requests WHERE id!=? AND status='confirmed' AND requested_date=? LIMIT 150").bind(id,item.requested_date).all();
+   if(!freeFromConflicts(item.starts_at_utc,item.session_type,confirmed.results||[]))return h.fail("Ce créneau est déjà occupé.",409,req);
   }
-  await env.DB.prepare("UPDATE booking_requests SET status=? WHERE id=?").bind(status,id).run();
-  return h.json({updated:true,status},200,req);
+  if(item.status==="confirmed"&&status==="declined"){
+   const paid=await env.DB.prepare("SELECT state FROM orders WHERE id=?").bind(item.order_id||"").first();
+   if(paid?.state==="paid")return h.fail("Réservation payée : contactez d'abord le parent pour organiser le report ou le remboursement.",409,req);
+  }
+  if(item.status===status)return h.json({updated:true,status,unchanged:true},200,req);
+  try{
+   const changed=await env.DB.prepare("UPDATE booking_requests SET status=? WHERE id=? AND status=?").bind(status,id,item.status).run();
+   if(Number(changed.meta?.changes||0)!==1)return h.fail("La demande a changé entre-temps. Actualisez la page.",409,req);
+  }catch(e){
+   if(String(e.message||"").includes("booking-slot-conflict"))return h.fail("Créneau confirmé entre-temps. Choisissez un autre horaire.",409,req);
+   throw e;
+  }
+  return h.json({updated:true,status,notification:"queued"},200,req);
  }
  if(path==="/api/staff/parents"&&req.method==="GET"){
   const rows=await env.DB.prepare("SELECT a.email,a.display_name,a.active,a.created_at,(SELECT COUNT(*) FROM progress_entries p WHERE p.parent_email=a.email) AS lessons FROM parent_accounts a ORDER BY a.created_at DESC LIMIT 100").all();
@@ -263,6 +287,7 @@ async function readReport(req,env,h,path){
 export const schedulingPolicy=Object.freeze({parisToUTC,acceptedSchedule,validSlot});
 export async function operations(req,env,h){
  const path=new URL(req.url).pathname;
+ if(path==="/api/site/slots"&&req.method==="GET")return previewSlots(req,env,h,new URL(req.url));
  if(path==="/api/site/bookings"&&req.method==="POST")return booking(req,env,h);
  if(path==="/api/staff/login"&&req.method==="POST")return staffLogin(req,env,h);
  if(path==="/api/staff/verify"&&req.method==="POST")return staffVerify(req,env,h);
@@ -282,12 +307,5 @@ export async function bookingReminders(env,h){
    await env.DB.prepare("UPDATE booking_requests SET paid_notice_sent_at=? WHERE id=? AND paid_notice_sent_at IS NULL").bind(utcNow(),b.id).run();
   }catch(e){console.error("Paid notification failure",e.message)}
  }
- const v=await env.DB.prepare("SELECT b.*,o.state AS payment_state FROM booking_requests b LEFT JOIN orders o ON o.id=b.order_id WHERE b.status='confirmed' AND b.reminder_sent_at IS NULL AND b.reminder_due_at<=? AND b.starts_at_utc>? AND (b.session_type='intro' OR (b.session_type='course' AND o.state='paid')) ORDER BY b.starts_at_utc LIMIT 10").bind(utcNow(),utcNow()).all();
- for(const b of v.results){
-  const msg="<p>Rappel de séance : "+h.safe(b.requested_date)+" à "+h.safe(b.time_local)+" (heure de Paris).</p><p>Référence "+h.safe(b.id)+" ; classe "+h.safe(b.grade)+" ; matière "+h.safe(b.subject)+".</p>";
-  try{await h.email(env,env.OWNER_EMAIL||env.MAIL_SENDER,"Bon Point — Rappel de séance J-2",msg);
-   await h.email(env,b.parent_email,"Bon Point — Votre séance approche",msg);
-   await env.DB.prepare("UPDATE booking_requests SET reminder_sent_at=? WHERE id=? AND reminder_sent_at IS NULL").bind(utcNow(),b.id).run();
-  }catch(e){console.error("Reminder failed",e.message)}
- }
+ await processBookingMail(env,h);
 }

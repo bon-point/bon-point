@@ -4,7 +4,7 @@ import {generateKeyPairSync,sign} from "node:crypto";
 import fs from "node:fs";
 
 const js=fs.readFileSync("discord-bot/src/index.js","utf8");
-const {default:worker}=await import("data:text/javascript;base64,"+Buffer.from(js).toString("base64"));
+const {default:worker,chooseFixedRoom,fixedRoomIds}=await import("data:text/javascript;base64,"+Buffer.from(js).toString("base64"));
 const {privateKey,publicKey}=generateKeyPairSync("ed25519");
 const pubHex=publicKey.export({format:"der",type:"spki"}).subarray(-32).toString("hex");
 const env={DISCORD_PUBLIC_KEY:pubHex,DISCORD_GUILD_ID:"123456789012345678",DISCORD_NOTIFICATIONS_ENABLED:"false"};
@@ -52,4 +52,35 @@ test("Scheduled synchronization stays inactive without credentials",async()=>{
  await worker.scheduled({},env,{waitUntil:p=>{task=p}});
  await task;
  assert.ok(true,"No Discord or D1 calls were made");
+});
+
+test("Only the two fixed private-room IDs are accepted",()=>{
+ const ids=["1558922846896529418","1558922881386418276"];
+ assert.deepEqual(fixedRoomIds({DISCORD_ROOM_1_ID:ids[0],DISCORD_ROOM_2_ID:ids[1]}),ids);
+ assert.deepEqual(fixedRoomIds({DISCORD_ROOM_1_ID:ids[0],DISCORD_ROOM_2_ID:ids[0]}),[]);
+ assert.deepEqual(fixedRoomIds({DISCORD_ROOM_1_ID:"abc",DISCORD_ROOM_2_ID:ids[1]}),[]);
+});
+test("First available room is allocated; overlaps take second room",()=>{
+ const ids=["1558922846896529418","1558922881386418276"];
+ const first={startsAt:"2026-11-07T12:00:00.000Z",endsAt:"2026-11-07T13:00:00.000Z",roomIds:ids};
+ assert.equal(chooseFixedRoom(first),ids[0]);
+ const booked=[{room_id:ids[0],starts_at_utc:"2026-11-07T11:45:00.000Z",ends_at_utc:"2026-11-07T12:45:00.000Z",state:"planned"}];
+ assert.equal(chooseFixedRoom({...first,booked}),ids[1]);
+ booked.push({...booked[0],room_id:ids[1],state:"active"});
+ assert.equal(chooseFixedRoom({...first,booked}),null);
+});
+test("Ten-minute safety buffer and closed allocations work",()=>{
+ const ids=["1558922846896529418","1558922881386418276"];
+ const slot={startsAt:"2026-11-07T12:00:00.000Z",endsAt:"2026-11-07T13:00:00.000Z",roomIds:ids};
+ const occupied={room_id:ids[0],starts_at_utc:"2026-11-07T11:00:00.000Z",ends_at_utc:"2026-11-07T11:55:00.000Z",state:"active"};
+ assert.equal(chooseFixedRoom({...slot,booked:[occupied]}),ids[1]);
+ assert.equal(chooseFixedRoom({...slot,booked:[{...occupied,state:"completed"}]}),ids[0]);
+ assert.equal(chooseFixedRoom({...slot,booked:[{...occupied,ends_at_utc:"2026-11-07T11:50:00.000Z"}]}),ids[0]);
+ assert.equal(chooseFixedRoom({...slot,endsAt:"2026-11-07T11:00:00.000Z"}),null);
+});
+test("Read-only audit does not grant public or private Discord access",()=>{
+ assert.match(js,/DISCORD_ROOM_AUDIT_ENABLED/);
+ assert.match(js,/discord_room_audits/);
+ assert.doesNotMatch(js,/\/channels\/[^\n]+\/permissions/);
+ assert.doesNotMatch(js,/method:\s*["'](?:PATCH|PUT|DELETE)["'][^\n]*permissions/);
 });

@@ -49,10 +49,9 @@ function parisToUTC(day,time){
 function acceptedSchedule(day,time,kind='intro'){
  const [hh,mm]=time.split(":").map(Number),clock=hh*60+mm;
  const n=new Date(day+"T12:00:00Z").getUTCDay();
- if(n===0||n===6)return clock>=8*60&&clock+(kind==='course'?60:20)<=18*60;
+ if(n===0)return false;
  const minutes=kind==='course'?60:20;
- if(n===4)return clock>=13*60+30&&clock+minutes<=22*60;
- return clock>=18*60&&clock+minutes<=22*60;
+ return clock>=9*60&&clock+minutes<=20*60;
 }
 function validSlot(date,time,kind='intro'){const iso=parisToUTC(date,time);return iso&&Date.parse(iso)>=Date.now()+48*3600000&&Date.parse(iso)<Date.now()+91*86400000&&acceptedSchedule(date,time,kind)?iso:null}
 async function previewSlots(req,env,h,url){

@@ -17,3 +17,10 @@
 .parent-documents{display:flex;gap:10px;flex-direction:column;align-items:flex-start;border-top:1px solid #e9edee;padding-top:15px;margin-top:5px}
 .parent-documents .btn{max-width:100%;overflow-wrap:anywhere}
 @media(max-width:700px){.parent-summary{grid-template-columns:1fr;gap:9px}.parent-stat{padding:13px 16px}.parent-lesson{padding:16px}}
+
+/* Brouillon accessible : recours au copier/coller sans logiciel de messagerie. */
+.mail-backup{margin:18px 0;padding:18px;background:#f0f5f6;border:1px solid #d4e3e7;border-radius:12px;color:var(--ink)}
+.mail-backup p{color:var(--sub);margin:8px 0 12px}
+.mail-backup-text{display:block;width:100%;min-height:170px;resize:vertical;border:1px solid #b8c5cc;border-radius:9px;background:white;padding:12px;color:var(--ink);font:inherit;line-height:1.5;margin:0 0 12px}
+.mail-backup-text:focus-visible{outline:3px solid var(--rust);outline-offset:3px}
+.mail-backup .actions{align-items:flex-start}.mail-backup .actions .quiet{flex:1;min-width:170px}

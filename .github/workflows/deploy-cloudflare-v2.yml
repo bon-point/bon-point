@@ -1,9 +1,10 @@
-name: Deploy Bon Point Cloudflare v2 (manual only)
+name: Deploy Bon Point Cloudflare v2 (manual, guarded)
 on:
   workflow_dispatch:
 jobs:
   deploy:
-    if: github.ref_name == 'refonte-premium-lancement-2026'
+    # Do not deploy old branches or run database migrations in a release.
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     environment: cloudflare-staging
     permissions:
@@ -13,7 +14,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check Cloudflare authorization
+      - name: Verify payment and public-intake safety flags
+        run: |
+          grep -q '^PAYMENTS_ENABLED = "false"$' cloudflare-v2/wrangler.toml
+          grep -q '^STRIPE_MODE = "test"$' cloudflare-v2/wrangler.toml
+          grep -q '^SITE_INTAKE_ENABLED = "false"$' cloudflare-v2/wrangler.toml
+          grep -q '^REQUIRE_CONFIRMED_BOOKING = "true"$' cloudflare-v2/wrangler.toml
+      - name: Run Stripe simulation and booking checks without network payments
+        run: |
+          node --test cloudflare-v2/scripts/test-stripe-checkout-mock.mjs
+          node --test cloudflare-v2/scripts/test-booking-e2e.mjs
+      - name: Verify Cloudflare deployment permissions
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -21,11 +32,11 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
       - name: Install Wrangler
         run: npm install --no-save wrangler@4
-      - name: Apply D1 schema then deploy the isolated Worker
+      - name: Deploy only Worker code with gated flags, no D1 schema changes
         working-directory: cloudflare-v2
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          npx wrangler d1 migrations apply bon-point-v2 --remote
-          npx wrangler deploy
+        run: npx wrangler deploy
+      # Deliberately NO 'wrangler d1 migrations apply' here:
+      # migration history requires independent backup and verification.

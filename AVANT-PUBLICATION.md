@@ -16,6 +16,22 @@ Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observatio
 - [ ] Valider les CGV, prix, échéanciers éventuels, annulations, rétractations et facturation ; vérifier aussi la fonctionnalité de rétractation en ligne applicable aux contrats conclus en ligne.
 - [ ] Finaliser l'information RGPD, les durées de conservation, les fournisseurs et éventuels transferts de données.
 
+## Préparation des encaissements — travaux sans médiateur (13 octobre 2026)
+
+- [x] CGV enrichies : réservation distincte de la commande, propositions nominatives, information sur le délai de rétractation de 14 jours et modèle de notification.
+- [x] Paiement fractionné clarifié dans les CGV : **non disponible** dans le tunnel Stripe actuel, même si des échéanciers peuvent être étudiés.
+- [x] Fonctionnalité de rétractation en ligne préparée avec confirmation de référence et possibilité de copier/envoyer la déclaration si le service échoue ; test JavaScript automatisé réussi. L'envoi horodaté/accusé côté serveur nécessite encore un essai navigateur complet.
+- [x] Hébergeur GitHub Pages : lien d'assistance officielle complété dans les mentions, sans inventer de téléphone.
+- [x] Tableau d'analyse TVA documenté pour les cours personnels exonérés (sous conditions), la franchise et le régime taxable. Voir [validation TVA et factures](documents/validation-tva-factures.md).
+- [x] Modèle de facture complété avec champs de quantités, montants et référence de paiement, sans le faire passer pour une facture émise.
+- [x] Les nouveaux tests de préparation légale et de sécurité des paiements sont exécutés dans GitHub Actions.
+- [ ] Confirmation du régime de TVA et de la mention fiscale par le SIE ; décider des montants TTC définitifs.
+- [ ] Coordonnées professionnelles obligatoires et adresse de domiciliation publiable, **sans exposer automatiquement le domicile**.
+- [ ] Approbation des règles commerciales : reports, annulations, absences, remboursements, début anticipé des séances et échéances contractuelles.
+- [ ] Sandbox Stripe non accessible dans le connecteur actuel (seul le compte **live** est connecté) : créer/connecter ou autoriser un accès à la sandbox puis faire un paiement de test avec une carte de test ; aucun vrai paiement.
+- [ ] Secrets `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` non fournis et non installés sur Cloudflare ; ne jamais les publier dans GitHub/chat.
+- [ ] `PAYMENTS_ENABLED=false` et `STRIPE_MODE=test` conservés. La configuration live est **en attente de la validation contractuelle/légale**, de la sandbox et du médiateur.
+
 ## Site, réservations et notifications
 
 - [x] Site GitHub Pages, tableau de bord administrateur privé et authentification renforcée configurés.

@@ -73,9 +73,11 @@ async function refreshAvailability(){
  availability=null;drawSlots();hint.textContent='Vérification des créneaux occupés…';
  const endpoint=window.BonpointSite?.API;
  if(!endpoint){drawSlots();return}
+ const ctl=new AbortController();
+ const deadline=setTimeout(()=>ctl.abort(),6500);
  try{
   const url=endpoint+'/api/site/slots?date='+encodeURIComponent(date)+'&session_type='+encodeURIComponent(kind);
-  const response=await fetch(url,{headers:{Accept:'application/json'},cache:'no-store'});
+  const response=await fetch(url,{headers:{Accept:'application/json'},cache:'no-store',signal:ctl.signal});
   if(!response.ok)throw Error('preview-unavailable');
   const data=await response.json();
   if(token!==generation||selected!==date||kindEl.value!==kind)return;
@@ -83,7 +85,7 @@ async function refreshAvailability(){
  }catch(_err){
   if(token!==generation||selected!==date||kindEl.value!==kind)return;
   availability=null;drawSlots();
- }
+ }finally{clearTimeout(deadline)}
 }
 function select(s){
  if(!canPick(s))return;

@@ -1,12 +1,13 @@
 # Bon Point — checklist de préparation au lancement
 
-Mise à jour le 12 octobre 2026. Les cases vérifiées concernent des observations techniques ou une validation de formalité communiquée par le responsable. Elles ne constituent pas une attestation de conformité juridique ou fiscale. Liste détaillée : [Vérification avant lancement](documents/verification-avant-lancement.md).
+Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observations techniques ou une validation de formalité communiquée par le responsable. Elles ne constituent pas une attestation de conformité juridique ou fiscale. Liste détaillée : [Vérification avant lancement](documents/verification-avant-lancement.md).
 
 ## Entreprise et légalité
 
 - [x] Formalité d'entreprise individuelle (EI) déclarée comme validée auprès de l'INPI.
 - [x] Identification EI et SIREN déjà présents dans les projets de mentions légales.
-- [ ] Obtenir/vérifier le SIRET officiel et le document Sirene, sans extrapoler un numéro.
+- [x] SIRET du siège vérifié grâce à l'avis Sirene du 13/10/2026 : **131 360 802 00014** ; nom commercial officiel **BONPOINT**.
+- [ ] Prendre en compte le début d'activité déclaré au **20 octobre 2026**, avant toute première vente.
 - [ ] Vérifier la capacité juridique d'exercice et les conditions du statut, ainsi que le titulaire autorisé des services de paiement, avec les interlocuteurs habilités si nécessaire.
 - [ ] Déterminer le traitement TVA applicable avec les services fiscaux ou un professionnel compétent.
 - [ ] Choisir les coordonnées professionnelles publiables : domiciliation et téléphone professionnel, sans divulguer d'adresse résidentielle privée ici.

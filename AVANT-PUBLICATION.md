@@ -52,6 +52,20 @@ Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observatio
 - [x] Audit Stripe du 13/10/2026 : compte français connecté, capacités techniques de paiement et de versement actives dans Stripe ; **aucune conclusion sur l'éligibilité juridique et aucune activation Cloudflare**. Voir [le dossier Stripe](documents/stripe-avant-encaissement-2026-10-13.md).
 - [ ] Avant mise en vente : capacité juridique du titulaire et rôle éventuel du représentant légal vérifiés, médiateur et CGV finalisés, secrets Stripe sécurisés, tests Stripe dans l'environnement éligible, protections contre les doubles paiements, facturation et remboursements.
 
+## Dernières corrections techniques (13 octobre 2026)
+
+- [x] Vérification Stripe côté Worker adaptée à l'administration moderne protégée par code e-mail ; une clé administrateur de l'ancien système n'est plus exigée pour déclarer Checkout prêt.
+- [x] Le secret du webhook Stripe doit avoir le préfixe attendu `whsec_`, et le mode de clé doit correspondre au mode `STRIPE_MODE`.
+- [x] Durée de vie d'une session Stripe Checkout fixée à une heure afin d'éviter le rejet de Stripe à la limite minimale de 30 minutes.
+- [x] Tests automatisés associés : mode test/live, webhook signé, duplications, échec Stripe, absence de clé d'administration héritée et expiration Checkout.
+- [x] Page de commande : échéanciers non disponibles en ligne signalés explicitement.
+- [x] Tableau de bord administrateur : état des paiements, formulaires et espace parents interrogé depuis le serveur.
+- [x] Ancien `README.md` remplacé par une synthèse exacte de l'état du site et des services.
+- [x] Workflow Cloudflare corrigé : déploiement **manuel depuis main**, avec garde-fous `PAYMENTS_ENABLED=false`, `STRIPE_MODE=test` et `SITE_INTAKE_ENABLED=false`, et **sans migrations D1 automatiques**.
+- [ ] **Publier la dernière version du code Worker sur Cloudflare** via ce nouveau workflow manuel après contrôle de l'autorisation GitHub/Cloudflare. Les modifications du code serveur sur GitHub ne sont pas nécessairement déployées par le déploiement GitHub Pages.
+- [ ] Un vrai paiement sandbox Stripe, son webhook et un accusé de paiement doivent encore être validés dans un environnement isolé.
+- [ ] Conditions contractuelles, fiscales et médiation validées avant d'envisager `PAYMENTS_ENABLED=true` et une clé `sk_live_`.
+
 ## Rapports de contrôle
 
 - [Test de réservation et nettoyage](documents/verification-reservations-2026-10-12.md)

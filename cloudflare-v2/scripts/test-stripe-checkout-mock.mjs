@@ -19,9 +19,9 @@ function testDatabase(){
  CREATE TABLE orders (id TEXT PRIMARY KEY,token_hash TEXT,offer_id TEXT,locked_price_cents INTEGER,parent_email TEXT,grade TEXT,method TEXT,meet_url TEXT,expires_at TEXT,payment_plan TEXT,state TEXT,created_at TEXT,stripe_session_id TEXT,parent_terms_at TEXT,paid_at TEXT);
  CREATE TABLE booking_requests (order_id TEXT,session_type TEXT,starts_at_utc TEXT,status TEXT,parent_email TEXT,offer_id TEXT);
  CREATE TABLE outbox (id TEXT PRIMARY KEY,order_id TEXT,kind TEXT,state TEXT,created_at TEXT,claimed_at TEXT,attempts INTEGER DEFAULT 0,sent_at TEXT);`);
- db.prepare('INSERT INTO offers VALUES(?,?,?,?,?,?)').run('seance','Séance ciblée','Mathématiques en visio',6500,1,1);
+ db.prepare('INSERT INTO offers VALUES(?,?,?,?,?,?)').run('seance','Séance ciblée','Mathématiques en visio',5000,1,1);
  db.prepare('INSERT INTO orders(id,token_hash,offer_id,locked_price_cents,parent_email,grade,method,meet_url,expires_at,payment_plan,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')
- .run(ORDER,createHash('sha256').update(TOKEN).digest('hex'),'seance',6500,EMAIL,'terminale','meet','https://meet.google.com/abc-defg-hij',dateInDays(7),'once','proposed',new Date().toISOString());
+ .run(ORDER,createHash('sha256').update(TOKEN).digest('hex'),'seance',5000,EMAIL,'terminale','meet','https://meet.google.com/abc-defg-hij',dateInDays(7),'once','proposed',new Date().toISOString());
  db.prepare('INSERT INTO booking_requests VALUES(?,?,?,?,?,?)').run(ORDER,'course',dateInDays(4),'confirmed',EMAIL,'seance');
  const DB={
   prepare(sql){
@@ -67,7 +67,7 @@ async function request(env,path,body,headers={}){
 function signedEvent(overrides={}){
  const data={id:'evt_test_mock',type:'checkout.session.completed',livemode:false,data:{object:{
   id:'cs_test_mock001',metadata:{order_id:ORDER},mode:'payment',payment_status:'paid',currency:'eur',
-  amount_total:6500,customer_details:{email:EMAIL}
+  amount_total:5000,customer_details:{email:EMAIL}
  }}};
  const event={...data,...overrides,data:{...data.data,...overrides.data}};
  const raw=JSON.stringify(event),timestamp=Math.floor(Date.now()/1000);
@@ -110,7 +110,7 @@ test('Seul un créneau confirmé et les CGV acceptées autorisent la simulation 
   assert.equal(r.status,200);
   assert.match((await r.json()).url,/^https:\/\/checkout\.stripe\.com\//);
   assert.equal(network.seen.stripe.length,1);
-  assert.equal(network.seen.stripe[0].body.get('line_items[0][price_data][unit_amount]'),'6500');
+  assert.equal(network.seen.stripe[0].body.get('line_items[0][price_data][unit_amount]'),'5000');
   const checkoutExpires=Number(network.seen.stripe[0].body.get('expires_at'));
   assert.ok(checkoutExpires-Math.floor(Date.now()/1000)>3000,'Stripe Checkout expiry must safely exceed the 30-minute minimum');
   assert.equal(network.seen.stripe[0].body.get('metadata[order_id]'),ORDER);

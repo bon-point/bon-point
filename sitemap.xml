@@ -1,2 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://bon-point.github.io/bon-point/</loc></url></urlset>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://bon-point.github.io/bon-point/</loc></url>
+  <url><loc>https://bon-point.github.io/bon-point/reserver.html</loc></url>
+  <url><loc>https://bon-point.github.io/bon-point/diagnostic.html</loc></url>
+</urlset>

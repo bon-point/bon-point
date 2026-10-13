@@ -1,0 +1,36 @@
+name: Temporary Bon Point Stripe Sandbox Check
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/stripe-sandbox-one-shot.yml
+jobs:
+  sandbox:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Stripe test API creates a sandbox-only unpaid Checkout Session
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const url='https://bon-point-v2.soutien-bonpoint.workers.dev/_bonpoint_stripe_test_feafe071-06b5-4626-af21-ccb07fc019642e267d47-2d76-445c-b256-9d4b73013b2f';
+          const ctrl=new AbortController();
+          const stop=setTimeout(()=>ctrl.abort(),16000);
+          try{
+            const r=await fetch(url,{method:'POST',signal:ctrl.signal});
+            const result=await r.json();
+            console.log('Sandbox response (no secrets):',JSON.stringify(result));
+            assert.equal(r.status,200,'Stripe sandbox API must respond successfully');
+            assert.equal(result.stripe_http_status,200);
+            assert.equal(result.session_created,true);
+            assert.equal(result.session_test_only,true);
+            assert.equal(result.real_payment,false);
+            assert.equal(result.mode,'test');
+          }finally{clearTimeout(stop)}
+          NODE

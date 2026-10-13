@@ -55,5 +55,7 @@ jobs:
         run: node --check discord-bot/scripts/register-commands.mjs
       - name: Check shared site scripts
         run: node --check services.js && node --check calendrier.js
+      - name: Test no-mail-app booking fallback and public discovery
+        run: node scripts/test-mail-fallback.mjs
       - name: Check JS, internal links and price consistency
         run: node scripts/check-site.mjs

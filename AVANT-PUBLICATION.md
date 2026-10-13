@@ -9,7 +9,7 @@ Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observatio
 - [x] Contrôle automatique distant de l'endpoint `/stripe/webhook` : une requête à **signature délibérément invalide** obtient HTTP 400, ce qui vérifie la présence du secret de signature et le refus de falsification (mais **pas** la livraison d'un webhook Stripe authentique).
 - [x] Contrôle distant `/api/checkout` : HTTP 503 tant que les paiements sont volontairement désactivés, sans création de commande.
 - [x] Vérifications GitHub Actions : **live smoke**, contrôles statiques et GitHub Pages réussis.
-- [ ] Vérifier le préfixe `sk_test_` de la clé dans une connexion authentique à Stripe (sa valeur est volontairement inaccessible depuis les outils de lecture Cloudflare).
+- [x] Vérification de la clé de sandbox sans révéler son contenu : appel réel à l'API Stripe Checkout réussi (HTTP 200), retour de session `cs_test_`, `livemode=false`, prix 50 €, sans carte ni règlement.
 - [ ] Confirmer le cycle complet sandbox : une commande de démonstration avec créneau confirmé, Stripe Checkout test, événement webhook signé et confirmation en D1. Aucun encaissement réel ne doit être autorisé.
 
 ## Contrôle technique confirmé le 13 octobre 2026 (soir)
@@ -19,7 +19,7 @@ Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observatio
 - [x] Test à distance GitHub Actions de `/health`, `/api/offers` et `/api/site/status` réussi : le Worker répond, prix `50 €/190 €/350 €` confirmés, programmes `790 €/1 290 €` inchangés.
 - [x] Réservations du site revenues aux horaires initiaux ; tests du calendrier et réservations réussis dans GitHub Actions.
 - [x] `PAYMENTS_ENABLED=false`, `SITE_INTAKE_ENABLED=false` et `STRIPE_MODE=test` confirmés sur le Worker déployé.
-- [ ] Sandbox Stripe : **aucune** des deux variables secrètes `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` n'est encore enregistrée dans Cloudflare. Le connecteur Stripe accessible ici ne voit que le compte **live**, pas de sandbox.
+- [x] Les variables secrètes Stripe de test sont bien enregistrées dans Cloudflare ; l'essai réel de création d'une session Checkout en sandbox est réussi. Le connecteur Stripe dans le chat ne donne toujours accès qu'au compte **live** ; l'essai a été fait via le Worker, sans utilisation de ce connecteur.
 - [ ] Validation d'un parcours test Stripe avec un webhook signé dans un environnement isolé, sans encaissement réel.
 - [ ] Informations légalement obligatoires encore à finaliser (médiateur effectif, domiciliation/coordonnées professionnelles, vérification fiscale et contractuelle).
 - [ ] **Ne pas lancer la vente réelle avant les validations requises et la date d'entrée en activité prévue le 20 octobre 2026.**
@@ -52,8 +52,8 @@ Le workflow manuel GitHub Cloudflare a échoué au contrôle des secrets GitHub 
 - [ ] Confirmation du régime de TVA et de la mention fiscale par le SIE ; décider des montants TTC définitifs.
 - [ ] Coordonnées professionnelles obligatoires et adresse de domiciliation publiable, **sans exposer automatiquement le domicile**.
 - [ ] Approbation des règles commerciales : reports, annulations, absences, remboursements, début anticipé des séances et échéances contractuelles.
-- [ ] Sandbox Stripe non accessible dans le connecteur actuel (seul le compte **live** est connecté) : créer/connecter ou autoriser un accès à la sandbox puis faire un paiement de test avec une carte de test ; aucun vrai paiement.
-- [ ] Secrets `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` non fournis et non installés sur Cloudflare ; ne jamais les publier dans GitHub/chat.
+- [x] Sandbox Stripe vérifiée par appel réel du Worker (création d'une session Checkout **impayée**). [ ] Paiement fictif de bout en bout à effectuer ensuite dans un environnement contrôlé ; aucun vrai paiement.
+- [x] Secrets `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` installés dans Cloudflare comme données chiffrées ; ne jamais les publier dans GitHub/chat.
 - [ ] `PAYMENTS_ENABLED=false` et `STRIPE_MODE=test` conservés. La configuration live est **en attente de la validation contractuelle/légale**, de la sandbox et du médiateur.
 
 ## Site, réservations et notifications
@@ -86,7 +86,7 @@ Le workflow manuel GitHub Cloudflare a échoué au contrôle des secrets GitHub 
 - [x] Tableau de bord administrateur : état des paiements, formulaires et espace parents interrogé depuis le serveur.
 - [x] Ancien `README.md` remplacé par une synthèse exacte de l'état du site et des services.
 - [x] Workflow Cloudflare corrigé : déploiement **manuel depuis main**, avec garde-fous `PAYMENTS_ENABLED=false`, `STRIPE_MODE=test` et `SITE_INTAKE_ENABLED=false`, et **sans migrations D1 automatiques**.
-- [ ] **Publier la dernière version du code Worker sur Cloudflare** via ce nouveau workflow manuel après contrôle de l'autorisation GitHub/Cloudflare. Les modifications du code serveur sur GitHub ne sont pas nécessairement déployées par le déploiement GitHub Pages.
+- [x] Dernière version sécurisée du Worker publiée directement sur Cloudflare. Le workflow GitHub pour les déploiements futurs nécessite toujours des autorisations spécifiques.
 - [ ] Un vrai paiement sandbox Stripe, son webhook et un accusé de paiement doivent encore être validés dans un environnement isolé.
 - [ ] Conditions contractuelles, fiscales et médiation validées avant d'envisager `PAYMENTS_ENABLED=true` et une clé `sk_live_`.
 

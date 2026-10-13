@@ -81,7 +81,7 @@ async function stripeCheckout(env,order,offer,privateToken){
  const body=new URLSearchParams({
   "mode":"payment","payment_method_types[0]":"card",
   "customer_email":order.parent_email,
-  "expires_at":String(Math.floor(Date.now()/1000)+1800),
+  "expires_at":String(Math.floor(Date.now()/1000)+3600),
   "line_items[0][price_data][currency]":"eur",
   "line_items[0][price_data][unit_amount]":String(order.locked_price_cents),
   "line_items[0][price_data][product_data][name]":offer.title,

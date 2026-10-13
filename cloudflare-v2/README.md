@@ -1,6 +1,6 @@
 # Bon Point — Cloudflare Worker v2
 
-État vérifié au **11 octobre 2026** : le Worker `bon-point-v2` est déployé sur Cloudflare à l'adresse `https://bon-point-v2.soutien-bonpoint.workers.dev`, sur une base D1 distincte de l'ancien `bon-point-auto` (qui n'a pas été modifié).
+État vérifié au **13 octobre 2026 (soir)** : le Worker `bon-point-v2` est déployé sur Cloudflare à l'adresse `https://bon-point-v2.soutien-bonpoint.workers.dev`. Version active : `77771e6a-6826-4596-bf72-67ee60852810`. Le déploiement direct a conservé les 21 bindings existants et n'a appliqué aucune migration D1. Le contrôle de production en lecture seule a confirmé les cinq prix et l'état des accès. La base D1 reste distincte de l'ancien `bon-point-auto`.
 
 ## Drapeaux de sécurité actuels
 
@@ -28,6 +28,15 @@ Les tables de la migration **0003** ont été créées directement sur la base D
 - `SITE-SERVICES.md` : explications de toutes les pages publiques, endpoints, gestion des comptes parents, activations et contrôles de sécurité.
 - `GOOGLE-MEET.md` : organisation des cours à distance.
 - `../INFOS-LEGALES-A-COMPLETER.md` : points juridiques à terminer.
+
+## Contrôle réel de publication (13 octobre 2026)
+
+- [Tests de production en lecture seule](../scripts/test-live-worker.mjs) : `/health`, `/api/offers`, `/api/site/status` validés depuis un exécuteur GitHub.
+- La console de Cloudflare confirme les valeurs `PAYMENTS_ENABLED=false`, `SITE_INTAKE_ENABLED=false`, `STRIPE_MODE=test`.
+- Prix D1 : séance 50 €, forfait 4 h 190 €, forfait 8 h 350 € ; parcours Brevet 790 € et Bac 1 290 € non modifiés.
+- Les accès administrateur et parent ont conservé leurs liaisons existantes, mais ne sont pas validés ici par une nouvelle connexion humaine.
+- Aucun secret Stripe de test n'est présent, aucune session de paiement réel n'a été créée.
+- Le workflow GitHub manuel de publication a échoué faute d'identifiants Cloudflare dans les secrets GitHub Actions. Le déploiement Cloudflare direct a réussi ; le workflow GitHub est conservé pour usage futur seulement après configuration de ses secrets.
 
 ## Points à finaliser avant toute activation
 

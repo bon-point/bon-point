@@ -3,9 +3,9 @@
 Ce questionnaire sert à finaliser les mentions légales, CGV, confidentialité et mise en vente. **Ne pas compléter avec des informations inventées**.
 
 ## À confirmer par le responsable de l'activité
-- **Déjà connu :** création d'une entreprise individuelle (EI) déclarée et affichée comme validée par l'INPI le 12/10/2026. Le SIREN figure déjà dans les projets de mentions. Cela ne certifie ni le SIRET, ni le régime fiscal, ni la capacité juridique d'exercice, qui doivent être vérifiés séparément.
-- Vérifier la cohérence de la dénomination/du nom commercial avec l'avis RNE/Sirene ; relever le **SIRET officiel** lorsqu'il sera disponible ; déterminer le régime de TVA et le numéro intracommunautaire le cas échéant.
-- Adresse professionnelle de publication (pour protéger la vie privée, préférer une domiciliation appropriée si l'adresse est le domicile). Ne pas partager d'adresse résidentielle confidentielle dans une conversation.
+- **Déjà connu :** création d'une entreprise individuelle (EI) déclarée et affichée comme validée par l'INPI le 12/10/2026. Le SIREN figure déjà dans les projets de mentions. L'avis Sirene du 13/10/2026 confirme le **SIRET 131 360 802 00014** et le nom commercial **BONPOINT**, avec une date de début d'activité au **20/10/2026**. Cela ne certifie ni le régime fiscal, ni la capacité juridique d'exercice, qui doivent être vérifiés séparément.
+- [x] Nom commercial **BONPOINT**, SIREN et SIRET confirmés par l'avis Sirene. [ ] Déterminer le régime de TVA, les mentions fiscales applicables et le numéro intracommunautaire le cas échéant.
+- Adresse de l'établissement figurant dans l'avis : **ne pas recopier dans le dépôt GitHub public sans autorisation de publication explicite**. Pour protéger la vie privée, préférer une domiciliation appropriée si cette adresse est le domicile.
 - Adresse e-mail **professionnelle** et numéro de téléphone **professionnel** à publier.
 - Coordonnées du médiateur de la consommation désigné (nom, site, adresse) ou état d'avancement de l'adhésion.
 - Facturation : confirmation des montants TTC et éventuels frais de déplacement/domicile.

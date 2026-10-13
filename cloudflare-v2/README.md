@@ -35,7 +35,7 @@ Les tables de la migration **0003** ont été créées directement sur la base D
 - La console de Cloudflare confirme les valeurs `PAYMENTS_ENABLED=false`, `SITE_INTAKE_ENABLED=false`, `STRIPE_MODE=test`.
 - Prix D1 : séance 50 €, forfait 4 h 190 €, forfait 8 h 350 € ; parcours Brevet 790 € et Bac 1 290 € non modifiés.
 - Les accès administrateur et parent ont conservé leurs liaisons existantes, mais ne sont pas validés ici par une nouvelle connexion humaine.
-- Aucun secret Stripe de test n'est présent, aucune session de paiement réel n'a été créée.
+- Les secrets Stripe de test (`STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET`) sont présents et chiffrés. L'essai réel de l'API sandbox a créé une session Checkout `cs_test_` non réglée à 50 € ; aucune transaction réelle ni commande client n'a été créée. Le Worker a été restauré avec `PAYMENTS_ENABLED=false`.
 - Le workflow GitHub manuel de publication a échoué faute d'identifiants Cloudflare dans les secrets GitHub Actions. Le déploiement Cloudflare direct a réussi ; le workflow GitHub est conservé pour usage futur seulement après configuration de ses secrets.
 
 ## Points à finaliser avant toute activation

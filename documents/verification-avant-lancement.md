@@ -1,12 +1,12 @@
 # Bon Point — Points à valider avant les premières ventes
-Mise à jour : 12 octobre 2026. Ce document est une liste de vérification, pas un avis juridique ni une attestation de conformité.
+Mise à jour : 13 octobre 2026. Ce document est une liste de vérification, pas un avis juridique ni une attestation de conformité.
 
 ## Immatriculation
 - [x] Formalité de création EI affichée « validée » par l'INPI le 12/10/2026 (d'après capture fournie).
 - [x] SIREN indiqué sur le récapitulatif : **131 360 802**.
 - [x] Code APE du récapitulatif : **85.59B — Autres enseignements**.
-- [ ] Obtenir le **SIRET à 14 chiffres**, distinct du SIREN. Ne pas ajouter de SIRET supposé aux documents.
-- [ ] Télécharger l'avis de situation au répertoire Sirene : https://avis-situation-sirene.insee.fr/ (une création récente peut nécessiter 24 heures ; la non-diffusion nécessite parfois FranceConnect).
+- [x] SIRET du siège confirmé dans l'avis de situation Sirene daté du 13/10/2026 : **131 360 802 00014** (ne pas le confondre avec le SIREN).
+- [x] Avis de situation Sirene du 13/10/2026 transmis et examiné : EI, nom commercial **BONPOINT**, APE **85.59B**. Il indique l'entreprise et l'établissement actifs **à compter du 20/10/2026** (date future au moment du contrôle). Ne pas confondre l'avis statistique avec une attestation de conformité ou de capacité juridique.
 - [ ] Vérifier que les données RNE, régime choisi et situation d'exercice sont cohérents. La validation informatique ne remplace pas le respect des conditions légales de capacité.
 
 ## Capacité juridique et compte de paiement
@@ -18,7 +18,7 @@ Mise à jour : 12 octobre 2026. Ce document est une liste de vérification, pas 
 ## Mentions obligatoires site et documents
 - [x] Mentions légales et CGV mises à jour pour ne plus qualifier l'activité de « non immatriculée ».
 - [x] Le SIREN, la qualité d'entrepreneur individuel (EI), l'activité et le contact e-mail figurent dans les projets de mentions.
-- [ ] **Adresse de domiciliation professionnelle**, même lorsqu'elle correspond au domicile personnel : exigence légale sur le site et factures. Les possibilités de domiciliation et de protection du domicile doivent être examinées avant toute publication.
+- [ ] **Adresse de domiciliation professionnelle** : présente dans l'avis INSEE transmis mais **non copiée dans le dépôt public**, dans l'attente de la décision du titulaire sur sa publication et la protection de son domicile éventuel. Vérifier les options de domiciliation avant publication.
 - [ ] **Numéro de téléphone professionnel** pour les coordonnées publiées ; décider d'un contact adéquat sans mettre une donnée privée non souhaitée en ligne.
 - [ ] Coordonnées complètes et à jour de l'hébergeur du site.
 - [ ] Compléter les CGV : modalités précises du contrat, réservation, exécution, prix, reports, rétractation, remboursement, médiateur de la consommation et lien vers le formulaire adapté. Pour les contrats à distance conclus en ligne, vérifier aussi la fonctionnalité de rétractation en ligne applicable depuis le 19/06/2026 (voir `retractation.html`).
@@ -47,7 +47,7 @@ Mise à jour : 12 octobre 2026. Ce document est une liste de vérification, pas 
 - [ ] Test complet d'une demande depuis un navigateur public avec Turnstile : **non réalisé**, ne pas le confondre avec la création manuelle dans l'administration.
 
 ## À fournir avant une mise en conformité définitive
-1. Le numéro **SIRET** du principal établissement ou un avis Sirene après publication.
+1. SIRET et avis Sirene : **reçus et vérifiés** le 13/10/2026. Vérifier le début d'activité annoncé au **20/10/2026** avant toute commercialisation.
 2. Une solution de **domiciliation et coordonnées de contact professionnelles** acceptable pour les mentions obligatoires.
 3. La situation de **capacité juridique** vérifiée (dont l'émancipation si applicable).
 4. La décision confirmée sur le **régime de TVA**.

@@ -27,7 +27,7 @@ async function requestJSON(req){
   if(Number(req.headers.get("content-length")||0)>10000)throw Error("Too large");
   return req.json();
 }
-function enabled(env){const mode=env.STRIPE_MODE;const validKey=mode==="test"?env.STRIPE_SECRET_KEY?.startsWith("sk_test_"):mode==="live"&&env.STRIPE_SECRET_KEY?.startsWith("sk_live_");return env.PAYMENTS_ENABLED==="true" && env.REQUIRE_CONFIRMED_BOOKING==="true" && !!(validKey&&env.DB&&env.STRIPE_WEBHOOK_SECRET&&env.ADMIN_API_KEY&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
+function enabled(env){const mode=env.STRIPE_MODE;const key=env.STRIPE_SECRET_KEY||"";const validKey=(mode==="test"&&key.startsWith("sk_test_"))||(mode==="live"&&key.startsWith("sk_live_"));return env.PAYMENTS_ENABLED==="true" && env.REQUIRE_CONFIRMED_BOOKING==="true" && !!(validKey&&env.DB&&env.STRIPE_WEBHOOK_SECRET?.startsWith("whsec_")&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
 function adminAllowed(req,env){
  const candidate=req.headers.get("X-Admin-Key")||"",known=env.ADMIN_API_KEY||"";
  if(candidate.length<32||known.length!==candidate.length)return false;

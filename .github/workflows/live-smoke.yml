@@ -1,0 +1,21 @@
+name: Bon Point live read-only health and offers
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - scripts/test-live-worker.mjs
+      - .github/workflows/live-smoke.yml
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public Worker without creating payments or bookings
+        run: node scripts/test-live-worker.mjs

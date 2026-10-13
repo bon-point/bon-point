@@ -58,7 +58,7 @@ test("Cannot create a booking without recorded parent request or within closed h
  const a=fixture();
  const missingConsent=await operations(a.request({...a.data,parent_request_received:false}),a.env,a.h);
  assert.equal(missingConsent.status,400);
- const outside=await operations(a.request({...a.data,time:"12:30"}),a.env,a.h);
+ const outside=await operations(a.request({...a.data,time:"08:30"}),a.env,a.h);
  assert.equal(outside.status,400);
  const noOffer=await operations(a.request({...a.data,session_type:"course",offer:""}),a.env,a.h);
  assert.equal(noOffer.status,400);

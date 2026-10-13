@@ -2,6 +2,20 @@
 
 Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observations techniques ou une validation de formalité communiquée par le responsable. Elles ne constituent pas une attestation de conformité juridique ou fiscale. Liste détaillée : [Vérification avant lancement](documents/verification-avant-lancement.md).
 
+## Contrôle technique confirmé le 13 octobre 2026 (soir)
+
+- [x] Version Worker `77771e6a-6826-4596-bf72-67ee60852810` **déployée à 100 %** depuis l'API Cloudflare, sans modifier le schéma D1.
+- [x] Les **21 bindings** existants ont été conservés, y compris les secrets d'administration, Brevo, l'authentification des parents et la base D1.
+- [x] Test à distance GitHub Actions de `/health`, `/api/offers` et `/api/site/status` réussi : le Worker répond, prix `50 €/190 €/350 €` confirmés, programmes `790 €/1 290 €` inchangés.
+- [x] Réservations du site revenues aux horaires initiaux ; tests du calendrier et réservations réussis dans GitHub Actions.
+- [x] `PAYMENTS_ENABLED=false`, `SITE_INTAKE_ENABLED=false` et `STRIPE_MODE=test` confirmés sur le Worker déployé.
+- [ ] Sandbox Stripe : **aucune** des deux variables secrètes `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` n'est encore enregistrée dans Cloudflare. Le connecteur Stripe accessible ici ne voit que le compte **live**, pas de sandbox.
+- [ ] Validation d'un parcours test Stripe avec un webhook signé dans un environnement isolé, sans encaissement réel.
+- [ ] Informations légalement obligatoires encore à finaliser (médiateur effectif, domiciliation/coordonnées professionnelles, vérification fiscale et contractuelle).
+- [ ] **Ne pas lancer la vente réelle avant les validations requises et la date d'entrée en activité prévue le 20 octobre 2026.**
+
+Le workflow manuel GitHub Cloudflare a échoué au contrôle des secrets GitHub Actions (`CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` absents dans l'environnement `cloudflare-staging`). **La correction a été directement déployée par le connecteur Cloudflare**, pas par GitHub Actions. Le workflow redevient manuel, pour éviter toute exécution automatique involontaire.
+
 ## Entreprise et légalité
 
 - [x] Formalité d'entreprise individuelle (EI) déclarée comme validée auprès de l'INPI.

@@ -44,11 +44,13 @@ table{width:100%;border-collapse:collapse;margin-top:22px}th,td{padding:13px;tex
 </div>
 <h2>Détail des prestations</h2>
 <table><thead><tr><th>Prestation</th><th>Quantité</th><th>Prix unitaire</th><th>Montant</th></tr></thead>
-<tbody><tr><td>Cours particulier de <span class="placeholder">[Matière et formule]</span><br><span class="muted">Séance du [date] ou acompte identifié</span></td><td>1</td><td><span class="placeholder">[€]</span></td><td><span class="placeholder">[€]</span></td></tr></tbody></table>
-<div class="totals"><div><strong>Total à régler</strong><strong><span class="placeholder">[€]</span></strong></div></div>
+<tbody><tr><td>Cours particulier de <span class="placeholder">[Matière et formule]</span><br><span class="muted">Séance du [date] ou acompte identifié ; nombre d'heures : [durée]</span></td><td><span class="placeholder">[Qté]</span></td><td><span class="placeholder">[Montant € et traitement TVA confirmé]</span></td><td><span class="placeholder">[Montant €]</span></td></tr></tbody></table>
+<div class="totals"><div><strong>Montant total à régler</strong><strong><span class="placeholder">[€ TTC, exonéré ou en franchise selon le régime confirmé]</span></strong></div></div>
 <div class="footer">
 <p><strong>Traitement de la TVA :</strong> <span class="placeholder">[Mention à choisir après vérification du régime : exonération de cours particuliers sous conditions (CGI art. 261, 4-4°-b), franchise en base ou TVA applicable. Ne pas combiner.]</span></p>
 <p><strong>Règlement :</strong> <span class="placeholder">[moyen, date, échéance ; acompte ou solde le cas échéant]</span></p>
+<p><strong>Référence du paiement :</strong> <span class="placeholder">[référence de transaction Stripe, virement ou reçu, si applicable — ne jamais inscrire de numéro de carte]</span></p>
+<p><strong>Contrôle préalable :</strong> le SIRET ne suffit pas : renseigner une adresse professionnelle légalement valable dans le document privé adressé au client, le régime TVA confirmé et les informations obligatoires du client ; ne pas publier la facture remplie sur GitHub.</p>
 <p><strong>Facture :</strong> le numéro doit appartenir à une séquence chronologique et continue, sans réutilisation. Ne générer un document définitif qu'après vérification des éléments légaux, contractuels et fiscaux.</p>
 </div>
 </main>

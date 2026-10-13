@@ -19,6 +19,15 @@ assert.match(invoice,/TVA/,'Mention TVA à renseigner');
 assert.match(config,/PAYMENTS_ENABLED\s*=\s*"false"/,'Les vrais paiements doivent rester désactivés');
 assert.match(config,/STRIPE_MODE\s*=\s*"test"/,'Mode Stripe test obligatoire avant validation');
 assert.match(worker,/REQUIRE_CONFIRMED_BOOKING/,'Créneau confirmé obligatoire pour un paiement');
+const checkout=html('checkout.html'),admin=html('admin.html');
+assert.match(checkout,/pas encore disponible en ligne/,'Échéanciers de commande non activés annoncés honnêtement');
+assert.match(admin,/id="serviceHealth"/,'Console affiche désormais les états des services');
+assert.match(admin,/api\/site\/status/,'La console doit vérifier les formulaires sur le serveur');
+const deployment=fs.readFileSync('.github/workflows/deploy-cloudflare-v2.yml','utf8');
+assert.match(deployment,/github\.ref_name == 'main'/,'Déploiement manuel Worker depuis la branche principale uniquement');
+assert.match(deployment,/PAYMENTS_ENABLED = "false"/,'Lancement de déploiement manuel protège les paiements réels');
+assert.doesNotMatch(deployment,/^\s+run:.*wrangler d1 migrations apply/m,'Ne pas exécuter des migrations D1 non contrôlées en déploiement');
+
 assert.match(withdrawal,/id="backupText"/,'Rétractation : secours manuel sans logiciel e-mail');
 assert.match(withdrawal,/id="copy"/,'Rétractation : option copier');
 for(const m of withdrawal.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){

@@ -14,12 +14,12 @@ Worker Cloudflare : `bon-point-v2` (base D1 privée), distinct de l'ancien syst�
 - Bot Discord Bon Point et deux salles vocales privées, sans permissions publiques ; les accès payants ne sont pas accordés avant vérification du paiement.
 - Brevo : tests administratifs de notifications de réservation validés le **12 octobre 2026** (demande, confirmation, annulation), dossier fictif supprimé après vérification.
 - Cloudflare Turnstile configuré pour la future réception publique automatisée.
-- Stripe Checkout : **code intégré et testé en simulation sans aucune transaction réelle**, avec tests de validation du rendez-vous, refus des doubles demandes, webhook signé, erreurs de paiement et compatibilité du mode test.
+- Stripe Checkout : **code intégré, testé par simulation et par appel réel à la sandbox Stripe**, sans carte ni transaction réelle. Les vérifications du webhook authentique et du traitement d'une commande complète restent à faire.
 
 ## Ce qui n'est PAS encore ouvert
 
 - **Paiements réels : désactivés** (`PAYMENTS_ENABLED=false`).
-- **Stripe : mode test seulement** (`STRIPE_MODE=test`), sans secrets Stripe enregistrés dans le Worker ; le véritable paiement sandbox et le webhook sandbox restent à effectuer.
+- **Stripe : mode test uniquement** (`STRIPE_MODE=test`). Les clés secrètes de test et de signature webhook sont enregistrées dans Cloudflare. Un appel réel de l’API sandbox a créé une session Checkout `cs_test_` impayée à 50 € et le serveur a été remis en mode paiements désactivés. Un **paiement fictif complet avec webhook Stripe authentique** reste à effectuer avant tout lancement commercial.
 - **Réception automatique des demandes publiques : désactivée** (`SITE_INTAKE_ENABLED=false`). Le contact par e-mail manuel reste possible.
 - Les paiements échelonnés des programmes Excellence ne sont **pas activés** dans Checkout.
 - Aucun contrat client, facture réelle, abonnement de médiation ou encaissement n'a été créé par les travaux techniques ici.

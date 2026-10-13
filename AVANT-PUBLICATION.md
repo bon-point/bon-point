@@ -2,6 +2,14 @@
 
 Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observations techniques ou une validation de formalité communiquée par le responsable. Elles ne constituent pas une attestation de conformité juridique ou fiscale. Liste détaillée : [Vérification avant lancement](documents/verification-avant-lancement.md).
 
+## Test de bout en bout isolé — 13 octobre 2026 (fin de soirée)
+
+- [x] Nouveau test automatisé `cloudflare-v2/scripts/test-complete-payment-lifecycle.mjs` intégré à `.github/workflows/validate.yml` : réservation de démonstration par la console protégée, confirmation du créneau, proposition nominative à **50 €**, validation des CGV, Checkout, événement webhook HMAC signé, confirmation et vérification de l'absence de doublon.
+- [x] Exécution réussie dans GitHub Actions avec **SQLite temporaire et Stripe/Brevo simulés**, sans utiliser la D1 du Worker public ni faire d'appel réseau financier.
+- [x] Les anciens tests Stripe ont été réalignés sur le tarif horaire actuel de **50 €** (au lieu de l'ancien tarif de 65 €).
+- [ ] L'acheminement **réel** du webhook Stripe vers l'endpoint public reste à valider depuis la destination de test sur Stripe. Une simulation HMAC locale ne prouve pas que l'abonnement à l'événement, l'URL et le secret de la destination Stripe sont corrects.
+- [ ] Ne pas activer les ventes aux familles avant validation des obligations commerciales et administratives, indépendamment des tests techniques.
+
 ## Test Stripe après installation des secrets — 13 octobre 2026
 
 - [x] Le Worker déployé sur Cloudflare dispose de `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET`, tous deux enregistrés comme `secret_text`; le contenu des clés n'a pas été lu ni publié.

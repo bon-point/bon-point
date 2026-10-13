@@ -27,6 +27,8 @@ jobs:
         run: node --test cloudflare-v2/scripts/test-admin.mjs
       - name: Test Brevo transactional delivery safety
         run: node --test cloudflare-v2/scripts/test-mail-smoke.mjs
+      - name: Simulate Stripe Checkout payments, signed webhooks and duplicate prevention (no external API)
+        run: node --test cloudflare-v2/scripts/test-stripe-checkout-mock.mjs
       - name: Check atomic booking slot migrations
         run: python3 scripts/test-booking-db.py
       - name: Test Brevo booking email queue and retry behavior

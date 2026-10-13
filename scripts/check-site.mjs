@@ -77,6 +77,8 @@ assert.ok(!page.includes('href="ressources.html"'),'No broken library link on ho
 assert.match(fs.readFileSync('admin.html','utf8'),/api\/staff\/verify/,'Admin 2FA required');
 assert.match(fs.readFileSync('admin.html','utf8'),/data-view="progress"/,'Progress administration required');
 assert.match(fs.readFileSync('parents.html','utf8'),/Télécharger le document PDF/,'Parent private PDF download required');
+assert.match(fs.readFileSync('parents.html','utf8'),/data=null;email='';sessionStorage\.removeItem\(AUTH_KEY\)/,'Parent logout must clear personal information from memory');
+assert.match(fs.readFileSync('parents.html','utf8'),/document\.getElementById\('dataList'\)\.replaceChildren\(\)/,'Parent logout must clear rendered lesson records');
 assert.match(services,/PARENT_SELF_SERVICE_CODES/,'Parent OTP issuance must be admin controlled');
 const operations=fs.readFileSync('cloudflare-v2/src/operations.js','utf8');
 assert.match(operations,/ADMIN_PANEL_ENABLED/,'Administration should be feature gated');

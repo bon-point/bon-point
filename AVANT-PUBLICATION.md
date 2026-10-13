@@ -33,7 +33,8 @@ Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observatio
 - [ ] Confirmer les plages horaires, les offres et les tarifs réellement proposés.
 - [ ] Vérifier l'expérience sur téléphone et ordinateur, les liens, l'accessibilité et les coordonnées affichées.
 - [ ] Vérifier la véracité et les autorisations de publication des éventuels portraits, avis et résultats.
-- [ ] Avant mise en vente : tests Stripe dans le compte éligible, protections contre les doubles paiements et traitement des retraits/remboursements.
+- [x] Audit Stripe du 13/10/2026 : compte français connecté, capacités techniques de paiement et de versement actives dans Stripe ; **aucune conclusion sur l'éligibilité juridique et aucune activation Cloudflare**. Voir [le dossier Stripe](documents/stripe-avant-encaissement-2026-10-13.md).
+- [ ] Avant mise en vente : capacité juridique du titulaire et rôle éventuel du représentant légal vérifiés, médiateur et CGV finalisés, secrets Stripe sécurisés, tests Stripe dans l'environnement éligible, protections contre les doubles paiements, facturation et remboursements.
 
 ## Rapports de contrôle
 

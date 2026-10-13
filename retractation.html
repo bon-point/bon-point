@@ -1,21 +1,35 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Exercer son droit de rétractation — Bon Point</title><style>body{background:#faf8f4;color:#142235;font:16px/1.7 system-ui,sans-serif;margin:0}main{max-width:750px;margin:60px auto;padding:0 22px}h1{font:600 2.5rem Georgia,serif}label{display:block;font-weight:750;margin:15px 0 5px}input,textarea{box-sizing:border-box;width:100%;border:1px solid #b4c4cc;padding:12px;border-radius:9px;font:inherit}textarea{min-height:100px}button{background:#142235;color:white;padding:12px 20px;border:0;border-radius:8px;font:inherit;cursor:pointer}a{color:#142235}.warning{background:#fff0d9;padding:15px;border:1px solid #e8c995;border-radius:9px}small{color:#5b6574}</style></head><body><main><p><a href="index.html">← Retour au site Bon Point</a></p><h1>Demande de rétractation</h1><p>Vous souhaitez exercer un droit de rétractation relatif à une commande en ligne ? Vous pouvez préparer votre demande ici. Son applicabilité dépend de la date et des conditions légales de la commande.</p><p class="warning" id="notice">Le service de rétractation en ligne doit encore être activé. En attendant, envoyez votre déclaration par e-mail à <a href="mailto:soutien.bonpoint@gmail.com">soutien.bonpoint@gmail.com</a>. Un e-mail envoyé depuis cette page est une déclaration de votre part, mais pas un accusé automatique.</p><form id="form"><label for="nom">Nom du client / responsable légal</label><input id="nom" required maxlength="120"><label for="email">Adresse e-mail de commande</label><input id="email" required type="email" maxlength="180"><label for="reference">Référence de commande (si connue)</label><input id="reference" maxlength="120"><label for="message">Précisions facultatives</label><textarea id="message" maxlength="1000"></textarea><p><button type="submit">Préparer et envoyer ma demande par e-mail</button></p><p id="state" role="status" aria-live="polite"></p><small>Vous pouvez également écrire directement à <a href="mailto:soutien.bonpoint@gmail.com">soutien.bonpoint@gmail.com</a>. Les modalités légales sont précisées dans les <a href="cgv.html">CGV</a>.</small></form></main><script src="config-paiement.js"></script><script>
-const form=document.getElementById('form');
-const url=String(window.BONPOINT_CHECKOUT_API||'').replace(/\/$/,'');
-const note=document.getElementById('notice');
-note.textContent=url?'Vous pouvez transmettre votre demande en ligne. Un accusé vous sera adressé par e-mail si le service est disponible. Sinon, écrivez directement à soutien.bonpoint@gmail.com.':'La transmission automatique est actuellement indisponible. Le formulaire ouvrira votre messagerie, à vous d’envoyer l’e-mail.';
-form.addEventListener('submit',async function(e){
- e.preventDefault();
- const v=id=>document.getElementById(id).value;
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Exercer son droit de rétractation — Bon Point</title><style>body{background:#faf8f4;color:#142235;font:16px/1.7 system-ui,sans-serif;margin:0}main{max-width:750px;margin:60px auto;padding:0 22px}h1{font:600 2.5rem Georgia,serif}label{display:block;font-weight:750;margin:15px 0 5px}input,textarea{box-sizing:border-box;width:100%;border:1px solid #b4c4cc;padding:12px;border-radius:9px;font:inherit}textarea{min-height:100px}button{background:#142235;color:white;padding:12px 20px;border:0;border-radius:8px;font:inherit;cursor:pointer}a{color:#142235}.warning{background:#fff0d9;padding:15px;border:1px solid #e8c995;border-radius:9px}small{color:#5b6574}.backup{margin:15px 0;padding:16px;border:1px solid #c8d9df;border-radius:10px;background:white}.backup textarea{min-height:170px}.backup button{margin-top:12px;background:white;color:#142235;border:1px solid #142235}.backup p{margin:8px 0}@media(max-width:600px){main{margin:26px auto}h1{font-size:2rem}}</style></head><body><main><p><a href="index.html">← Retour au site Bon Point</a></p><h1>Demande de rétractation</h1><p>Vous souhaitez exercer un droit de rétractation relatif à une commande en ligne ? Vous pouvez préparer votre demande ici. Son applicabilité dépend de la date et des conditions légales de la commande.</p><p class="warning" id="notice">Le service de rétractation en ligne doit encore être activé. En attendant, envoyez votre déclaration par e-mail à <a href="mailto:soutien.bonpoint@gmail.com">soutien.bonpoint@gmail.com</a>. Un e-mail envoyé depuis cette page est une déclaration de votre part, mais pas un accusé automatique.</p><form id="form"><label for="nom">Nom du client / responsable légal</label><input id="nom" required maxlength="120"><label for="email">Adresse e-mail de commande</label><input id="email" required type="email" maxlength="180"><label for="reference">Référence de commande (si connue)</label><input id="reference" maxlength="120"><label for="message">Précisions facultatives</label><textarea id="message" maxlength="1000"></textarea><p><button type="submit">Préparer et envoyer ma demande par e-mail</button></p><p id="state" role="status" aria-live="polite"></p><section id="backup" class="backup" hidden aria-label="Envoi manuel de votre déclaration"><strong>Votre messagerie ne s’ouvre pas ?</strong><p>Copiez ce texte puis envoyez-le depuis votre boîte e-mail à soutien.bonpoint@gmail.com. Tant qu’il n’a pas été envoyé, Bon Point n’a pas reçu votre déclaration.</p><textarea id="backupText" aria-label="Texte à copier" readonly></textarea><button id="copy" type="button">Copier la déclaration</button><p id="copyState" role="status"></p></section><small>Vous pouvez également écrire directement à <a href="mailto:soutien.bonpoint@gmail.com">soutien.bonpoint@gmail.com</a>. Les modalités légales sont précisées dans les <a href="cgv.html">CGV</a>.</small></form></main><script src="config-paiement.js"></script><script>
+(function(){
+'use strict';
+const form=document.getElementById('form'),url=String(window.BONPOINT_CHECKOUT_API||'').replace(/\\/$/,'');
+const note=document.getElementById('notice'),backup=document.getElementById('backup');
+const draft=document.getElementById('backupText'),copy=document.getElementById('copy');
+note.textContent=url?'Si votre contrat a été conclu en ligne, vous pouvez transmettre votre déclaration directement par ce formulaire ; conservez la référence d’enregistrement. En cas d’indisponibilité, envoyez votre demande par e-mail à soutien.bonpoint@gmail.com.':'Le service d’envoi automatique est indisponible : ce formulaire prépare un e-mail à envoyer depuis votre messagerie.';
+const v=id=>document.getElementById(id).value;
+copy.addEventListener('click',async()=>{
+ try{if(!navigator.clipboard?.writeText)throw Error('No clipboard');await navigator.clipboard.writeText(draft.value);document.getElementById('copyState').textContent='Texte copié. Envoyez-le depuis votre messagerie.';}
+ catch{draft.focus();draft.select();document.getElementById('copyState').textContent='Texte sélectionné : copiez-le manuellement puis envoyez-le.';}
+});
+form.addEventListener('submit',async e=>{
+ e.preventDefault();if(!form.reportValidity())return;
  const state=document.getElementById('state');
- const body=['Bonjour,','Je vous notifie ma demande de rétractation relative à une prestation Bon Point.','Nom : '+v('nom'),'E-mail : '+v('email'),'Référence : '+v('reference'),'Précisions : '+v('message')].join('\n');
+ const lines=['À : soutien.bonpoint@gmail.com','Objet : Notification de rétractation — Bon Point','','Bonjour,','Je vous notifie ma demande de rétractation relative à une prestation Bon Point.','Nom : '+v('nom'),'E-mail : '+v('email'),'Référence de commande : '+(v('reference')||'Non connue'),'Précisions : '+(v('message')||'Aucune')];
+ const body=lines.slice(4).join('\\n');
  if(url){
   try{
-   const res=await fetch(url+'/api/withdrawal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v('nom'),email:v('email'),reference:v('reference')})});
+   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);
+   let res;
+   try{res=await fetch(url+'/api/withdrawal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v('nom'),email:v('email'),reference:v('reference')}),signal:ctl.signal});}
+   finally{clearTimeout(timer)}
    const j=await res.json();
-   if(res.ok&&j.received){state.textContent='Demande enregistrée sous la référence '+j.reference+'. Un accusé sera transmis par e-mail.';form.reset();return}
-   state.textContent='Transmission automatique indisponible ('+(j.error||res.status)+'). Vous pouvez envoyer la demande par e-mail depuis votre messagerie.';
-  }catch(error){state.textContent='Service indisponible. Vous pouvez envoyer la demande par e-mail.'}
- }
+   if(res.ok&&j.received){
+    state.textContent='Demande reçue par le serveur sous la référence '+j.reference+'. Conservez cette référence. Un accusé de réception sera envoyé par e-mail.';form.reset();backup.hidden=true;return;
+   }
+   state.textContent='L’enregistrement en ligne a échoué. Envoyez la déclaration par e-mail ou utilisez le texte à copier.';
+  }catch{state.textContent='L’enregistrement en ligne est momentanément indisponible. Utilisez votre messagerie ou copiez le texte ci-dessous.';}
+ }else{state.textContent='Un brouillon peut s’ouvrir dans votre messagerie. Il faut cliquer sur Envoyer pour transmettre votre déclaration.';}
+ draft.value=lines.join('\\n');backup.hidden=false;
  location.href='mailto:soutien.bonpoint@gmail.com?subject='+encodeURIComponent('Notification de rétractation — Bon Point')+'&body='+encodeURIComponent(body);
 });
+})();
 </script></body></html>

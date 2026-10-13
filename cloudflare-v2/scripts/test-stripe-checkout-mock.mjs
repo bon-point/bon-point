@@ -111,6 +111,8 @@ test('Seul un créneau confirmé et les CGV acceptées autorisent la simulation 
   assert.match((await r.json()).url,/^https:\/\/checkout\.stripe\.com\//);
   assert.equal(network.seen.stripe.length,1);
   assert.equal(network.seen.stripe[0].body.get('line_items[0][price_data][unit_amount]'),'6500');
+  const checkoutExpires=Number(network.seen.stripe[0].body.get('expires_at'));
+  assert.ok(checkoutExpires-Math.floor(Date.now()/1000)>3000,'Stripe Checkout expiry must safely exceed the 30-minute minimum');
   assert.equal(network.seen.stripe[0].body.get('metadata[order_id]'),ORDER);
   assert.equal(network.seen.stripe[0].headers.Authorization,'Bearer '+STRIPE_KEY);
   assert.equal(db.prepare('SELECT state FROM orders WHERE id=?').get(ORDER).state,'awaiting_payment');

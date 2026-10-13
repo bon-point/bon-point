@@ -24,9 +24,8 @@ const canPick=s=>s>=first&&s<=last;
 function schedule(s,kind=kindEl.value){
  const n=dayOfWeek(s),result=[];
  const duration=kind==='course'?60:20;
- let start=18*60,end=22*60;
- if(n===4)start=13*60+30;
- else if(n===0||n===6){start=8*60;end=18*60}
+ if(n===0)return result;
+ const start=9*60,end=20*60;
  for(let min=start;min+duration<=end;min+=30)result.push(two(Math.floor(min/60))+':'+two(min%60));
  return result;
 }

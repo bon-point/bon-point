@@ -22,6 +22,11 @@ Mise à jour le 12 octobre 2026. Les cases vérifiées concernent des observatio
 - [x] Parcours de démonstration de bout en bout testé le 12/10/2026 : demande → Discord → confirmation → Brevo/Gmail → annulation → Discord/Gmail.
 - [x] Données de la réservation fictive supprimées de Cloudflare D1 après vérification (0 réservation restante).
 - [x] Widget Cloudflare Turnstile créé pour `bon-point.github.io` et secrets configurés dans le Worker.
+- [x] Formulaires de contact, réservation et diagnostic : secours manuel de copie du brouillon si aucun logiciel e-mail n'est configuré, sans envoi serveur implicite.
+- [x] Vérification des créneaux bornée à 6,5 secondes ; état indicatif préservé en cas d'indisponibilité.
+- [x] Déconnexion de l'espace parents : suppression immédiate du jeton de session côté navigateur et des informations affichées dans la page.
+- [x] Sitemap public enrichi (accueil, réservation, diagnostic) et tests automatisés correspondants intégrés à GitHub Actions.
+- [ ] Test de navigation réel sur PC et smartphone des nouveaux secours e-mail et de la déconnexion parents.
 - [x] Paiements et réception publique automatisée de réservations maintenus désactivés.
 - [ ] Tester le formulaire public et Turnstile dans un vrai navigateur, sous conditions de lancement validées.
 - [ ] Confirmer les plages horaires, les offres et les tarifs réellement proposés.

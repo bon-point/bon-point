@@ -59,5 +59,7 @@ jobs:
         run: node --check services.js && node --check calendrier.js
       - name: Test no-mail-app booking fallback and public discovery
         run: node scripts/test-mail-fallback.mjs
+      - name: Check legal drafts, withdrawal script and real-payment safety gates
+        run: node scripts/test-legal-payment-readiness.mjs
       - name: Check JS, internal links and price consistency
         run: node scripts/check-site.mjs

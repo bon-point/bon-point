@@ -2,6 +2,16 @@
 
 Mise à jour le 13 octobre 2026. Les cases vérifiées concernent des observations techniques ou une validation de formalité communiquée par le responsable. Elles ne constituent pas une attestation de conformité juridique ou fiscale. Liste détaillée : [Vérification avant lancement](documents/verification-avant-lancement.md).
 
+## Test Stripe après installation des secrets — 13 octobre 2026
+
+- [x] Le Worker déployé sur Cloudflare dispose de `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET`, tous deux enregistrés comme `secret_text`; le contenu des clés n'a pas été lu ni publié.
+- [x] Les paramètres restent `STRIPE_MODE=test`, `PAYMENTS_ENABLED=false`, `SITE_INTAKE_ENABLED=false` et `REQUIRE_CONFIRMED_BOOKING=true`.
+- [x] Contrôle automatique distant de l'endpoint `/stripe/webhook` : une requête à **signature délibérément invalide** obtient HTTP 400, ce qui vérifie la présence du secret de signature et le refus de falsification (mais **pas** la livraison d'un webhook Stripe authentique).
+- [x] Contrôle distant `/api/checkout` : HTTP 503 tant que les paiements sont volontairement désactivés, sans création de commande.
+- [x] Vérifications GitHub Actions : **live smoke**, contrôles statiques et GitHub Pages réussis.
+- [ ] Vérifier le préfixe `sk_test_` de la clé dans une connexion authentique à Stripe (sa valeur est volontairement inaccessible depuis les outils de lecture Cloudflare).
+- [ ] Confirmer le cycle complet sandbox : une commande de démonstration avec créneau confirmé, Stripe Checkout test, événement webhook signé et confirmation en D1. Aucun encaissement réel ne doit être autorisé.
+
 ## Contrôle technique confirmé le 13 octobre 2026 (soir)
 
 - [x] Version Worker `77771e6a-6826-4596-bf72-67ee60852810` **déployée à 100 %** depuis l'API Cloudflare, sans modifier le schéma D1.

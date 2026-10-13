@@ -1,10 +1,15 @@
 name: Deploy Bon Point Cloudflare v2 (manual, guarded)
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/deploy-cloudflare-v2.yml
 jobs:
   deploy:
     # Do not deploy old branches or run database migrations in a release.
-    if: github.ref_name == 'main'
+    if: github.ref_name == 'main' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy-worker-v2]'))
     runs-on: ubuntu-latest
     environment: cloudflare-staging
     permissions:

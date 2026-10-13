@@ -17,11 +17,11 @@ const date=futureThursday();
 const start=parisToUTC(date,"14:00");
 const confirmed=[{starts_at_utc:start,session_type:"course",parent_email:"sensitive@example.invalid",parent_name:"NE JAMAIS AFFICHER"}];
 test("Weekend and weekday session must finish within the announced opening hours",()=>{
- assert.equal(acceptedSchedule("2026-10-15","19:00","course"),true);
- assert.equal(acceptedSchedule("2026-10-15","19:30","course"),false);
- assert.equal(acceptedSchedule("2026-10-15","19:30","intro"),true);
- assert.equal(acceptedSchedule("2026-10-15","20:00","intro"),false);
- assert.equal(acceptedSchedule("2026-10-17","19:30","intro"),true);
+ assert.equal(acceptedSchedule("2026-10-15","21:00","course"),true);
+ assert.equal(acceptedSchedule("2026-10-15","21:30","course"),false);
+ assert.equal(acceptedSchedule("2026-10-15","21:30","intro"),true);
+ assert.equal(acceptedSchedule("2026-10-15","22:00","intro"),false);
+ assert.equal(acceptedSchedule("2026-10-18","17:30","intro"),true);
  assert.equal(acceptedSchedule("2026-10-18","17:30","course"),false);
 });
 test("A confirmed 1-hour class blocks its whole duration and ten-minute buffer",()=>{

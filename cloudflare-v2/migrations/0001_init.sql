@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS offers (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 INSERT OR IGNORE INTO offers(id,title,description,price_cents,sort_order) VALUES
- ('seance','Séance ciblée','1 heure individuelle en visioconférence',6500,1),
- ('progression','Progression','4 heures individuelles réparties sur 4 semaines',24900,2),
- ('ambition','Ambition','8 heures individuelles réparties sur 4 semaines',44900,3),
+ ('seance','Séance ciblée','1 heure individuelle en visioconférence',5000,1),
+ ('progression','Progression','4 heures individuelles réparties sur 4 semaines',19000,2),
+ ('ambition','Ambition','8 heures individuelles réparties sur 4 semaines',35000,3),
  ('brevet','Brevet Excellence','12 heures de préparation au brevet',79000,4),
  ('bac','Bac Excellence','20 heures de préparation au bac',129000,5);
 CREATE TABLE IF NOT EXISTS orders (

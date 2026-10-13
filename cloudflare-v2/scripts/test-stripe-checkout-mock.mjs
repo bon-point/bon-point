@@ -87,6 +87,16 @@ test('Paiement bloqué par défaut et clé du mauvais mode refusée',async()=>{
   assert.equal(network.seen.stripe.length,0);
  }finally{network.restore();db.close()}
 });
+test('La console protégée par OTP n’exige pas de clé administrateur héritée pour la disponibilité Stripe',async()=>{
+ const {db,env}=testDatabase(),network=mockNetwork();
+ try{
+  env.PAYMENTS_ENABLED='true';delete env.ADMIN_API_KEY;
+  let r=await request(env,'/health');assert.equal((await r.json()).payment_enabled,true);
+  env.STRIPE_WEBHOOK_SECRET='';
+  r=await request(env,'/health');assert.equal((await r.json()).payment_enabled,false);
+  assert.equal(network.seen.stripe.length,0);
+ }finally{network.restore();db.close()}
+});
 test('Seul un créneau confirmé et les CGV acceptées autorisent la simulation Checkout',async()=>{
  const {db,env}=testDatabase();const network=mockNetwork();env.PAYMENTS_ENABLED='true';
  try{

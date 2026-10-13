@@ -17,7 +17,7 @@ export function freeFromConflicts(iso,kind,confirmed=[]){
 export function parisSlotTimes(date,kind,parisToUTC,validSlot){
  const out=[];
  if(!SESSION_DURATION_MINUTES[kind])return out;
- for(let mins=9*60;mins<20*60;mins+=30){
+ for(let mins=8*60;mins<22*60;mins+=30){
   const time=String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
   const iso=validSlot(date,time,kind);
   if(iso&&parisToUTC(date,time)===iso)out.push({time,starts_at_utc:iso});

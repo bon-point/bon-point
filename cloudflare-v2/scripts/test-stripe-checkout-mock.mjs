@@ -87,6 +87,26 @@ test('Paiement bloqué par défaut et clé du mauvais mode refusée',async()=>{
   assert.equal(network.seen.stripe.length,0);
  }finally{network.restore();db.close()}
 });
+test('Le mode live ne peut pas réutiliser les secrets Stripe du mode test',async()=>{
+ const {db,env}=testDatabase();
+ try{
+  env.PAYMENTS_ENABLED='true';env.STRIPE_MODE='live';
+  // Même une clé live placée dans l'ancien binding de test ne doit pas suffire.
+  env.STRIPE_SECRET_KEY='sk_live_FAKE_WRONG_BINDING';
+  let r=await request(env,'/health');
+  assert.equal((await r.json()).payment_enabled,false);
+  env.STRIPE_SECRET_KEY_LIVE='sk_live_FAKE_DEDICATED';
+  r=await request(env,'/health');
+  assert.equal((await r.json()).payment_enabled,false,'Secret live du webhook absent');
+  env.STRIPE_WEBHOOK_SECRET_LIVE_STANDBY='whsec_FAKE_LIVE_NO_NETWORK';
+  r=await request(env,'/health');
+  assert.equal((await r.json()).payment_enabled,true,'Deux secrets distincts exigés avant tout mode live');
+  env.PAYMENTS_ENABLED='false';
+  r=await request(env,'/health');
+  assert.equal((await r.json()).payment_enabled,false,'Interrupteur de sécurité prioritaire');
+ }finally{db.close()}
+});
+
 test('La console protégée par OTP n’exige pas de clé administrateur héritée pour la disponibilité Stripe',async()=>{
  const {db,env}=testDatabase(),network=mockNetwork();
  try{

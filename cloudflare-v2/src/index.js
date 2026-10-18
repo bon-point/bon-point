@@ -27,7 +27,10 @@ async function requestJSON(req){
   if(Number(req.headers.get("content-length")||0)>10000)throw Error("Too large");
   return req.json();
 }
-function enabled(env){const mode=env.STRIPE_MODE;const key=env.STRIPE_SECRET_KEY||"";const validKey=(mode==="test"&&key.startsWith("sk_test_"))||(mode==="live"&&key.startsWith("sk_live_"));return env.PAYMENTS_ENABLED==="true" && env.REQUIRE_CONFIRMED_BOOKING==="true" && !!(validKey&&env.DB&&env.STRIPE_WEBHOOK_SECRET?.startsWith("whsec_")&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
+// Conserver les secrets Stripe test et live séparés : aucun basculement implicite.
+const stripeSecretKey=env=>env.STRIPE_MODE==="live"?(env.STRIPE_SECRET_KEY_LIVE||""):(env.STRIPE_SECRET_KEY||"");
+const stripeWebhookSecret=env=>env.STRIPE_MODE==="live"?(env.STRIPE_WEBHOOK_SECRET_LIVE_STANDBY||""):(env.STRIPE_WEBHOOK_SECRET||"");
+function enabled(env){const mode=env.STRIPE_MODE;const key=stripeSecretKey(env);const validKey=(mode==="test"&&key.startsWith("sk_test_"))||(mode==="live"&&key.startsWith("sk_live_"));return env.PAYMENTS_ENABLED==="true" && env.REQUIRE_CONFIRMED_BOOKING==="true" && !!(validKey&&env.DB&&stripeWebhookSecret(env).startsWith("whsec_")&&env.MAIL_API_KEY&&env.MAIL_SENDER)}
 function adminAllowed(req,env){
  const candidate=req.headers.get("X-Admin-Key")||"",known=env.ADMIN_API_KEY||"";
  if(candidate.length<32||known.length!==candidate.length)return false;
@@ -93,7 +96,7 @@ async function stripeCheckout(env,order,offer,privateToken){
  });
  const res=await fetch("https://api.stripe.com/v1/checkout/sessions",{
   method:"POST",
-  headers:{"Authorization":"Bearer "+env.STRIPE_SECRET_KEY,"content-type":"application/x-www-form-urlencoded","Idempotency-Key":"bonpoint-v2-"+order.id},
+  headers:{"Authorization":"Bearer "+stripeSecretKey(env),"content-type":"application/x-www-form-urlencoded","Idempotency-Key":"bonpoint-v2-"+order.id},
   body
  });
  const data=await res.json();
@@ -137,9 +140,10 @@ async function verifyStripe(raw,header,secret){
  return sigs.some(s=>s.length===want.length&&[...s].reduce((mask,c,i)=>mask|(c.charCodeAt(0)^want.charCodeAt(i)),0)===0);
 }
 async function stripeWebhook(req,env){
- if(!env.DB||!env.STRIPE_WEBHOOK_SECRET)return fail("Pas configuré",503);
+ const secret=stripeWebhookSecret(env);
+ if(!env.DB||!secret)return fail("Pas configuré",503);
  const raw=await req.text();
- if(!await verifyStripe(raw,req.headers.get("stripe-signature"),env.STRIPE_WEBHOOK_SECRET))return fail("Signature incorrecte",400);
+ if(!await verifyStripe(raw,req.headers.get("stripe-signature"),secret))return fail("Signature incorrecte",400);
  const event=JSON.parse(raw);
  if(!["checkout.session.completed","checkout.session.async_payment_succeeded"].includes(event.type))return json({received:true});
  const s=event.data?.object||{};
